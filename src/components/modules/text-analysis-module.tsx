@@ -50,7 +50,6 @@ export function TextAnalysisModule() {
         setDiagnosisInputData(prevDiagnosisInput => {
           const currentDiagnosisText = String(prevDiagnosisInput || '');
           if (currentDiagnosisText.includes(summaryBlockToAdd)) {
-            // Formatted summary block already exists, do nothing for auto-transfer
             return currentDiagnosisText;
           }
 
@@ -110,20 +109,40 @@ export function TextAnalysisModule() {
   };
 
   const handleCopyToClipboard = () => {
-    if (textAnalysisSummary) {
-      navigator.clipboard.writeText(textAnalysisSummary)
+    const currentSummary = String(textAnalysisSummary || '').trim();
+    if (currentSummary) {
+      navigator.clipboard.writeText(currentSummary)
         .then(() => toast({ title: "Resumen Copiado", description: "El resumen ha sido copiado al portapapeles." }))
-        .catch(() => toast({ title: "Error al Copiar", variant: "destructive" }));
+        .catch(() => toast({ title: "Error al Copiar", description: "No se pudo copiar el resumen.", variant: "destructive" }));
+    } else {
+      toast({ title: "Sin Resumen", description: "No hay resumen para copiar.", variant: "default"});
     }
   };
 
-  const handleSendToDiagnosis = () => { 
+  const handleSendToDiagnosis = () => {
     const currentSummary = String(textAnalysisSummary || '').trim();
     if (!currentSummary) {
-      toast({ title: "Sin Resumen", description: "Primero analice las notas para obtener un resumen.", variant: "default"});
+      toast({ title: "Sin Resumen", description: "Primero analice las notas para obtener un resumen que usar.", variant: "default"});
       return;
     }
 
+    // 1. Copiar al portapapeles
+    navigator.clipboard.writeText(currentSummary)
+      .then(() => {
+        toast({ 
+          title: "Resumen Copiado", 
+          description: "El resumen se ha copiado al portapapeles." 
+        });
+      })
+      .catch(() => {
+        toast({ 
+          title: "Error al Copiar", 
+          description: "No se pudo copiar el resumen al portapapeles.", 
+          variant: "destructive" 
+        });
+      });
+
+    // 2. Trasladar a Diagnóstico
     const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${currentSummary}`;
 
     setDiagnosisInputData(prev => {
@@ -131,16 +150,23 @@ export function TextAnalysisModule() {
 
       if (currentInput.includes(summaryBlockToAdd)) {
         toast({
-          title: "Resumen ya Incluido",
+          title: "Resumen ya Incluido en Diagnóstico",
           description: "El resumen formateado ya se encuentra en el campo de diagnóstico.",
-          variant: "default",
+          variant: "default", // Usar un tono menos intrusivo si solo se informa que ya existe
         });
-        return currentInput; 
+        return currentInput;
       } else {
         const newText = `${currentInput ? currentInput + '\n\n' : ''}${summaryBlockToAdd}`;
+        // No mostrar un toast aquí si ya se mostró el de "Resumen Copiado"
+        // O considerar un toast combinado si la copia fue exitosa.
+        // Por ahora, el toast de "Resumen Añadido" se mostrará solo si no estaba ya.
+        // Si queremos un solo toast:
+        // if (copiadoExitoso) { toast({ title: "Resumen Copiado y Añadido", ... }) }
+        // else { toast({ title: "Resumen Añadido", ...})}
+        // Simplificando, mantenemos el toast de "añadido" si es una nueva adición.
         toast({
           title: "Resumen Añadido a Diagnóstico",
-          description: "El resumen se ha añadido para soporte diagnóstico.",
+          description: "El resumen también se ha añadido para soporte diagnóstico.",
         });
         
         setTimeout(() => {
@@ -229,11 +255,11 @@ export function TextAnalysisModule() {
               className="bg-muted/30"
             />
             <div className="flex space-x-2">
-              <Button onClick={handleCopyToClipboard} variant="outline" size="sm" disabled={!textAnalysisSummary}>
+              <Button onClick={handleCopyToClipboard} variant="outline" size="sm" disabled={!textAnalysisSummary && textAnalysisSummary !== ''}>
                 <Copy className="mr-2 h-4 w-4" />
                 Copiar Resumen
               </Button>
-              <Button onClick={handleSendToDiagnosis} variant="default" size="sm" disabled={!textAnalysisSummary}>
+              <Button onClick={handleSendToDiagnosis} variant="default" size="sm" disabled={!textAnalysisSummary && textAnalysisSummary !== ''}>
                 <Send className="mr-2 h-4 w-4" />
                 Usar Resumen para Diagnóstico
               </Button>
@@ -243,7 +269,7 @@ export function TextAnalysisModule() {
         {textAnalysisError && (
           <p className="text-sm text-destructive">Error: {textAnalysisError}</p>
         )}
-         {!isAutoSaveEnabled && (String(clinicalNotesInput || '').trim() || textAnalysisSummary || textAnalysisError) && (
+         {!isAutoSaveEnabled && (String(clinicalNotesInput || '').trim() || textAnalysisSummary || textAnalysisSummary === '' || textAnalysisError) && (
            <Button onClick={handleSaveManually} variant="secondary" className="w-full mt-2">
             <Save className="mr-2 h-4 w-4" /> Guardar en Historial
           </Button>
