@@ -18,7 +18,6 @@ export function TextAnalysisModule() {
     textAnalysisSummary, setTextAnalysisSummary,
     isTextAnalyzing, setIsTextAnalyzing,
     textAnalysisError, setTextAnalysisError,
-    diagnosisInputData, // Get current diagnosis input data for appending
     setDiagnosisInputData, 
     clearTextModule
   } = useClinicalData();
@@ -45,12 +44,32 @@ export function TextAnalysisModule() {
       
       // Automatically transfer summary to Diagnosis Module
       if (analysisOutput.summary) {
-        const summaryHeader = `[Resumen de Notas Clínicas]:\n${analysisOutput.summary}`;
-        const updatedDiagnosisInput = `${String(diagnosisInputData || '') ? String(diagnosisInputData || '') + '\n\n' : ''}${summaryHeader}`;
-        setDiagnosisInputData(updatedDiagnosisInput);
-        toast({
-          title: "Resumen Enviado a Diagnóstico",
-          description: "El resumen de notas se ha añadido automáticamente para soporte diagnóstico.",
+        const newSummaryContent = analysisOutput.summary;
+        
+        setDiagnosisInputData(prevDiagnosisInput => {
+          const currentInput = String(prevDiagnosisInput || '');
+          
+          if (currentInput.includes(newSummaryContent)) {
+            // Summary content already exists, do nothing for auto-transfer
+            return currentInput;
+          }
+          
+          const summaryHeader = `[Resumen de Notas Clínicas]:\n${newSummaryContent}`;
+          const newText = `${currentInput ? currentInput + '\n\n' : ''}${summaryHeader}`;
+          
+          toast({
+            title: "Resumen Enviado a Diagnóstico",
+            description: "El resumen de notas se ha añadido automáticamente para soporte diagnóstico.",
+          });
+          
+          setTimeout(() => {
+            const diagnosisModule = document.getElementById('diagnosis-support-module');
+            if (diagnosisModule) {
+              diagnosisModule.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }, 0);
+          
+          return newText;
         });
       }
 
@@ -101,14 +120,34 @@ export function TextAnalysisModule() {
   };
 
   const handleSendToDiagnosis = () => {
-    if (textAnalysisSummary) {
-      const summaryHeader = `[Resumen de Notas Clínicas]:\n${textAnalysisSummary}`;
-      setDiagnosisInputData(prev => 
-        `${String(prev || '') ? String(prev || '') + '\n\n' : ''}${summaryHeader}`
-      );
-      toast({ title: "Resumen Enviado a Diagnóstico", description: "El resumen se ha enviado para soporte diagnóstico." });
-      const diagnosisModule = document.getElementById('diagnosis-support-module');
-      diagnosisModule?.scrollIntoView({ behavior: 'smooth' });
+    if (textAnalysisSummary) { // This ensures textAnalysisSummary is a non-empty string
+      setDiagnosisInputData(prev => {
+        const currentInput = String(prev || '');
+        
+        if (currentInput.includes(textAnalysisSummary)) {
+          toast({
+            title: "Resumen ya Incluido",
+            description: "El contenido del resumen ya se encuentra en el campo de diagnóstico.",
+            variant: "default", 
+          });
+          return currentInput; // No change
+        } else {
+          const summaryHeader = `[Resumen de Notas Clínicas]:\n${textAnalysisSummary}`;
+          const newText = `${currentInput ? currentInput + '\n\n' : ''}${summaryHeader}`;
+          toast({
+            title: "Resumen Añadido a Diagnóstico",
+            description: "El resumen se ha añadido para soporte diagnóstico.",
+          });
+          
+          setTimeout(() => {
+            const diagnosisModule = document.getElementById('diagnosis-support-module');
+            if (diagnosisModule) {
+              diagnosisModule.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }, 0);
+          return newText;
+        }
+      });
     }
   };
   
