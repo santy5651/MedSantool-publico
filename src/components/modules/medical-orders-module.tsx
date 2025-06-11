@@ -145,9 +145,10 @@ export function MedicalOrdersModule() {
 
   const handleCompactText = () => {
     if (medicalOrderOutput.generatedOrderText) {
-      const compactedText = medicalOrderOutput.generatedOrderText.replace(/\n+/g, ' ').trim();
+      // Reemplaza dos o más saltos de línea consecutivos con un solo salto de línea.
+      const compactedText = medicalOrderOutput.generatedOrderText.replace(/\n{2,}/g, '\n').trim();
       setMedicalOrderOutput({ generatedOrderText: compactedText });
-      toast({ title: "Texto Compactado", description: "Se han eliminado los saltos de línea." });
+      toast({ title: "Texto Compactado", description: "Se han normalizado los saltos de línea múltiples." });
     }
   };
   
@@ -357,4 +358,3 @@ export function MedicalOrdersModule() {
     </ModuleCardWrapper>
   );
 }
-
