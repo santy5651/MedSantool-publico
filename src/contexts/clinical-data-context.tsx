@@ -17,6 +17,7 @@ const initialMedicalOrderInputs: MedicalOrderInputState = {
   isolation: "NO REQUIERE AISLAMIENTO",
   diet: "",
   medicationsInput: "",
+  noMedicationReconciliation: false, // Inicializado
   medicationReconciliationInput: "",
   fallRisk: "RIESGO DE CAIDAS Y LESIONES POR PRESION SEGUN ESCALAS POR PERSONAL DE ENFERMERIA",
   paduaScale: "",
@@ -74,15 +75,21 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setIsPdfExtracting = useCallback((loading: boolean) => setState(s => ({ ...s, isPdfExtracting: loading })), []);
   const setPdfExtractionError = useCallback((error: string | null) => setState(s => ({...s, pdfExtractionError: error})), []);
 
-  const setClinicalNotesInput = useCallback((notes: string) => setState(s => ({ ...s, clinicalNotesInput: notes })), []);
+  const setClinicalNotesInput = useCallback((notes: string | ((prev: string) => string)) => {
+    setState(s => ({ ...s, clinicalNotesInput: typeof notes === 'function' ? notes(s.clinicalNotesInput) : notes }));
+  }, []);
   const setTextAnalysisSummary = useCallback((summary: string | null) => setState(s => ({ ...s, textAnalysisSummary: summary })), []);
   const setIsTextAnalyzing = useCallback((loading: boolean) => setState(s => ({ ...s, isTextAnalyzing: loading })), []);
-  const setTextAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, textAnalysisError: error })), []);
+  const constSetTextAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, textAnalysisError: error })), []);
 
-  const setDiagnosisInputData = useCallback((data: string) => setState(s => ({ ...s, diagnosisInputData: data })), []);
+
+  const setDiagnosisInputData = useCallback((data: string | ((prev: string) => string)) => {
+    setState(s => ({ ...s, diagnosisInputData: typeof data === 'function' ? data(s.diagnosisInputData) : data }));
+  }, []);
   const setDiagnosisResults = useCallback((results: DiagnosisResult[] | null) => setState(s => ({ ...s, diagnosisResults: results })), []);
   const setIsDiagnosing = useCallback((loading: boolean) => setState(s => ({ ...s, isDiagnosing: loading })), []);
-  const setDiagnosisError = useCallback((error: string | null) => setState(s => ({...s, diagnosisError: error})), []);
+  const constSetDiagnosisError = useCallback((error: string | null) => setState(s => ({...s, diagnosisError: error})), []);
+
 
   // Medical Orders
   const setMedicalOrderInputs = useCallback((inputsOrUpdater: MedicalOrderInputState | ((prevState: MedicalOrderInputState) => MedicalOrderInputState)) => {
@@ -163,11 +170,11 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setClinicalNotesInput,
     setTextAnalysisSummary,
     setIsTextAnalyzing,
-    setTextAnalysisError,
+    setTextAnalysisError: constSetTextAnalysisError, // Corregido para usar la constante declarada
     setDiagnosisInputData,
     setDiagnosisResults,
     setIsDiagnosing,
-    setDiagnosisError,
+    setDiagnosisError: constSetDiagnosisError, // Corregido para usar la constante declarada
     setMedicalOrderInputs,
     setMedicalOrderOutput,
     setIsGeneratingMedicalOrder,
@@ -193,4 +200,3 @@ export const useClinicalData = (): ClinicalDataContextType => {
   }
   return context;
 };
-

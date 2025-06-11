@@ -44,6 +44,7 @@ export interface MedicalOrderInputState {
   isolation: string;
   diet: string;
   medicationsInput: string;
+  noMedicationReconciliation: boolean; // Nuevo campo
   medicationReconciliationInput: string;
   fallRisk: string;
   paduaScale: string;
@@ -103,12 +104,12 @@ export interface ClinicalDataContextActions {
   setIsPdfExtracting: (loading: boolean) => void;
   setPdfExtractionError: (error: string | null) => void;
 
-  setClinicalNotesInput: (notes: string) => void;
+  setClinicalNotesInput: (notes: string | ((prev: string) => string)) => void;
   setTextAnalysisSummary: (summary: string | null) => void;
   setIsTextAnalyzing: (loading: boolean) => void;
   setTextAnalysisError: (error: string | null) => void;
 
-  setDiagnosisInputData: (data: string) => void;
+  setDiagnosisInputData: (data: string | ((prev: string) => string)) => void;
   setDiagnosisResults: (results: DiagnosisResult[] | null) => void;
   setIsDiagnosing: (loading: boolean) => void;
   setDiagnosisError: (error: string | null) => void;

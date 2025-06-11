@@ -15,7 +15,7 @@ import { useHistoryStore } from '@/hooks/use-history-store';
 import { generateMedicalOrder, type GenerateMedicalOrderInput, type GenerateMedicalOrderOutput } from '@/ai/flows/generate-medical-order';
 import { useToast } from '@/hooks/use-toast';
 import { FileEdit, Eraser, Copy, Save, ChevronUp, ClipboardCopy } from 'lucide-react';
-import type { MedicalOrderType, TransferConditionType } from '@/types';
+import type { MedicalOrderType, TransferConditionType, MedicalOrderInputState } from '@/types';
 import { getTextSummary } from '@/lib/utils';
 
 export function MedicalOrdersModule() {
@@ -32,17 +32,25 @@ export function MedicalOrdersModule() {
   const moduleRef = useRef<HTMLDivElement>(null);
   const outputTextareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleInputChange = (field: keyof typeof medicalOrderInputs, value: any) => {
+  const handleInputChange = (field: keyof MedicalOrderInputState, value: any) => {
     setMedicalOrderInputs(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleNursingSurveillanceChange = (field: keyof typeof medicalOrderInputs.nursingSurveillance, checked: boolean) => {
+  const handleNursingSurveillanceChange = (field: keyof MedicalOrderInputState['nursingSurveillance'], checked: boolean) => {
     setMedicalOrderInputs(prev => ({
       ...prev,
       nursingSurveillance: {
         ...prev.nursingSurveillance,
         [field]: checked
       }
+    }));
+  };
+
+  const handleNoMedicationReconciliationChange = (checked: boolean) => {
+    setMedicalOrderInputs(prev => ({
+      ...prev,
+      noMedicationReconciliation: checked,
+      medicationReconciliationInput: checked ? "NO TIENE CONCILIACIÓN MEDICAMENTOSA" : ""
     }));
   };
   
@@ -66,7 +74,7 @@ export function MedicalOrdersModule() {
         isolation: medicalOrderInputs.isolation || "NO REQUIERE AISLAMIENTO",
         diet: medicalOrderInputs.orderType === "HOSPITALIZACIÓN" ? (medicalOrderInputs.diet || "Dieta por definir") : undefined,
         medicationsInput: medicalOrderInputs.medicationsInput || "NO REQUIERE MEDICAMENTOS",
-        medicationReconciliationInput: medicalOrderInputs.medicationReconciliationInput || "NO TIENE CONCILIACIÓN MEDICAMENTOSA",
+        medicationReconciliationInput: medicalOrderInputs.noMedicationReconciliation ? "NO TIENE CONCILIACIÓN MEDICAMENTOSA" : (medicalOrderInputs.medicationReconciliationInput || "NO TIENE CONCILIACIÓN MEDICAMENTOSA"),
         fallRisk: medicalOrderInputs.fallRisk || "RIESGO DE CAIDAS Y LESIONES POR PRESION SEGUN ESCALAS POR PERSONAL DE ENFERMERIA",
         paduaScale: medicalOrderInputs.paduaScale || "NO APLICA",
         surveillanceNursing: medicalOrderInputs.nursingSurveillance,
@@ -145,21 +153,19 @@ export function MedicalOrdersModule() {
     const output = medicalOrderError ? { error: medicalOrderError } : medicalOrderOutput;
     const outputSum = medicalOrderError ? 'Error en la generación' : getTextSummary(medicalOrderOutput.generatedOrderText, 100);
     
-    // Reconstruct input for AI for history entry
     const inputForAI: GenerateMedicalOrderInput = {
         orderType: medicalOrderInputs.orderType as MedicalOrderType,
         oxygen: medicalOrderInputs.oxygen || "NO REQUIERE OXÍGENO",
         isolation: medicalOrderInputs.isolation || "NO REQUIERE AISLAMIENTO",
         diet: medicalOrderInputs.orderType === "HOSPITALIZACIÓN" ? (medicalOrderInputs.diet || "Dieta por definir") : undefined,
         medicationsInput: medicalOrderInputs.medicationsInput || "NO REQUIERE MEDICAMENTOS",
-        medicationReconciliationInput: medicalOrderInputs.medicationReconciliationInput || "NO TIENE CONCILIACIÓN MEDICAMENTOSA",
+        medicationReconciliationInput: medicalOrderInputs.noMedicationReconciliation ? "NO TIENE CONCILIACIÓN MEDICAMENTOSA" : (medicalOrderInputs.medicationReconciliationInput || "NO TIENE CONCILIACIÓN MEDICAMENTOSA"),
         fallRisk: medicalOrderInputs.fallRisk || "RIESGO DE CAIDAS Y LESIONES POR PRESION SEGUN ESCALAS POR PERSONAL DE ENFERMERIA",
         paduaScale: medicalOrderInputs.paduaScale || "NO APLICA",
         surveillanceNursing: medicalOrderInputs.nursingSurveillance,
         transferConditions: medicalOrderInputs.transferConditions as TransferConditionType,
         specialConsiderations: medicalOrderInputs.specialConsiderations || "NO HAY CONSIDERACIONES ESPECIALES",
     };
-
 
     await addHistoryEntry({
       module: 'MedicalOrders',
@@ -217,10 +223,31 @@ export function MedicalOrdersModule() {
           <Label htmlFor="medicationsInput">Medicamentos (uno por línea)</Label>
           <Textarea id="medicationsInput" value={medicalOrderInputs.medicationsInput} onChange={(e) => handleInputChange('medicationsInput', e.target.value)} rows={4} placeholder="Ej: Acetaminofén, tabletas 500mg, 1g VO c/8h" disabled={isGeneratingMedicalOrder}/>
         </div>
-        <div>
+        
+        <div className="space-y-2">
           <Label htmlFor="medicationReconciliationInput">Conciliación Medicamentosa</Label>
-          <Textarea id="medicationReconciliationInput" value={medicalOrderInputs.medicationReconciliationInput} onChange={(e) => handleInputChange('medicationReconciliationInput', e.target.value)} rows={3} placeholder="Ej: Losartán 50mg VO c/día. Si no tiene, escriba 'NO TIENE CONCILIACIÓN MEDICAMENTOSA'" disabled={isGeneratingMedicalOrder}/>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="noMedicationReconciliation"
+              checked={medicalOrderInputs.noMedicationReconciliation}
+              onCheckedChange={(checked) => handleNoMedicationReconciliationChange(!!checked)}
+              disabled={isGeneratingMedicalOrder}
+            />
+            <Label htmlFor="noMedicationReconciliation" className="text-sm font-normal">
+              No tiene conciliación medicamentosa
+            </Label>
+          </div>
+          <Textarea 
+            id="medicationReconciliationInput" 
+            value={medicalOrderInputs.medicationReconciliationInput} 
+            onChange={(e) => handleInputChange('medicationReconciliationInput', e.target.value)} 
+            rows={3} 
+            placeholder="Ej: Losartán 50mg VO c/día." 
+            disabled={isGeneratingMedicalOrder || medicalOrderInputs.noMedicationReconciliation}
+            className={medicalOrderInputs.noMedicationReconciliation ? "bg-muted/50" : ""}
+          />
         </div>
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -236,7 +263,7 @@ export function MedicalOrdersModule() {
         <div>
           <Label>Vigilancia por Enfermería y Personal de Salud</Label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
-            {(Object.keys(medicalOrderInputs.nursingSurveillance) as Array<keyof typeof medicalOrderInputs.nursingSurveillance>).map((key) => (
+            {(Object.keys(medicalOrderInputs.nursingSurveillance) as Array<keyof MedicalOrderInputState['nursingSurveillance']>).map((key) => (
               <div key={key} className="flex items-center space-x-2">
                 <Checkbox
                   id={`nursing-${key}`}
@@ -318,4 +345,3 @@ export function MedicalOrdersModule() {
     </ModuleCardWrapper>
   );
 }
-
