@@ -54,23 +54,16 @@ const prompt = ai.definePrompt({
   name: 'generateMedicalOrderPrompt',
   input: {schema: PromptInputSchema}, // Use the extended schema for the prompt
   output: {schema: GenerateMedicalOrderOutputSchema},
-  prompt: `Genera un conjunto de órdenes médicas generales en español, utilizando un formato profesional y completo, similar al utilizado en entornos hospitalarios. Asegúrate de incluir todas las secciones. Si una sección no tiene información específica o no aplica, usa frases como "NO APLICA" o "NO REQUIERE".
+  prompt: `**ÓRDENES MÉDICAS GENERALES**
 
-**ÓRDENES MÉDICAS GENERALES**
-
-TIPO DE ORDEN:
 {{{orderType}}}
 
-OXÍGENO:
 {{{oxygen}}}
 
-AISLAMIENTO:
 {{{isolation}}}
 
-DIETA:
 {{#if isHospitalizacionOrder}}{{#if diet}}{{{diet}}}{{else}}Dieta por definir{{/if}}{{else}}NO APLICA{{/if}}
 
-MEDICAMENTOS:
 {{#if medicationsInput}}
 {{{medicationsInput}}}
 {{else}}
@@ -84,17 +77,13 @@ NO REQUIERE MEDICAMENTOS
 NO TIENE CONCILIACIÓN MEDICAMENTOSA
 {{/if}}
 
-RIESGO DE CAÍDAS Y LESIONES POR PRESIÓN:
 {{{fallRisk}}}
 
-ESCALA DE PADUA:
 {{{paduaScale}}}
 
-INDICACIONES PERMANENTES:
 Vigilar signos vitales
 Avisar cambios
 
-VIGILANCIA POR ENFERMERÍA Y PERSONAL DE SALUD:
 {{#if surveillanceNursing.thermalCurve}}- Curva térmica{{/if}}
 {{#if surveillanceNursing.monitorPain}}- Vigilar dolor{{/if}}
 {{#if surveillanceNursing.monitorWounds}}- Vigilar heridas{{/if}}
