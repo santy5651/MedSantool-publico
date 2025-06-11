@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useRef } from 'react';
@@ -26,7 +27,7 @@ export function TextAnalysisModule() {
   const moduleRef = useRef<HTMLDivElement>(null);
 
   const handleAnalyzeNotes = async () => {
-    if (!(clinicalNotesInput || '').trim()) {
+    if (String(clinicalNotesInput || '').trim() === '') {
       toast({ title: "Sin Notas", description: "Por favor, ingrese notas clínicas para analizar.", variant: "destructive" });
       return;
     }
@@ -36,7 +37,7 @@ export function TextAnalysisModule() {
     let analysisOutput: SummarizeClinicalNotesOutput | null = null;
 
     try {
-      analysisOutput = await summarizeClinicalNotes({ clinicalNotes: clinicalNotesInput });
+      analysisOutput = await summarizeClinicalNotes({ clinicalNotes: String(clinicalNotesInput || '') });
       setTextAnalysisSummary(analysisOutput.summary);
       toast({ title: "Análisis de Texto Completado", description: "Las notas han sido resumidas." });
       
@@ -44,9 +45,9 @@ export function TextAnalysisModule() {
         await addHistoryEntry({
           module: 'TextAnalysis',
           inputType: 'text/plain',
-          inputSummary: getTextSummary(clinicalNotesInput),
+          inputSummary: getTextSummary(String(clinicalNotesInput || '')),
           outputSummary: getTextSummary(analysisOutput.summary, 100),
-          fullInput: clinicalNotesInput,
+          fullInput: String(clinicalNotesInput || ''),
           fullOutput: analysisOutput,
           status: 'completed',
         });
@@ -60,9 +61,9 @@ export function TextAnalysisModule() {
          await addHistoryEntry({
           module: 'TextAnalysis',
           inputType: 'text/plain',
-          inputSummary: getTextSummary(clinicalNotesInput),
+          inputSummary: getTextSummary(String(clinicalNotesInput || '')),
           outputSummary: 'Error en el análisis',
-          fullInput: clinicalNotesInput,
+          fullInput: String(clinicalNotesInput || ''),
           fullOutput: { error: errorMessage },
           status: 'error',
           errorDetails: errorMessage,
@@ -98,7 +99,7 @@ export function TextAnalysisModule() {
   };
   
   const handleSaveManually = async () => {
-    if (!(clinicalNotesInput || '').trim() || (!textAnalysisSummary && !textAnalysisError)) {
+    if (String(clinicalNotesInput || '').trim() === '' || (!textAnalysisSummary && !textAnalysisError)) {
       toast({ title: "Nada que Guardar", description: "Analice algunas notas primero.", variant: "default" });
       return;
     }
@@ -110,9 +111,9 @@ export function TextAnalysisModule() {
     await addHistoryEntry({
       module: 'TextAnalysis',
       inputType: 'text/plain',
-      inputSummary: getTextSummary(clinicalNotesInput),
+      inputSummary: getTextSummary(String(clinicalNotesInput || '')),
       outputSummary: outputSum,
-      fullInput: clinicalNotesInput,
+      fullInput: String(clinicalNotesInput || ''),
       fullOutput: output,
       status: status,
       errorDetails: textAnalysisError || undefined,
@@ -144,7 +145,7 @@ export function TextAnalysisModule() {
         </div>
 
         <div className="flex space-x-2">
-          <Button onClick={handleAnalyzeNotes} disabled={!(clinicalNotesInput || '').trim() || isTextAnalyzing} className="flex-1">
+          <Button onClick={handleAnalyzeNotes} disabled={String(clinicalNotesInput || '').trim() === '' || isTextAnalyzing} className="flex-1">
             <ClipboardEdit className="mr-2 h-4 w-4" />
             Analizar Notas
           </Button>
