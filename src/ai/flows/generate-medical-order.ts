@@ -40,7 +40,7 @@ type PromptInput = z.infer<typeof PromptInputSchema>;
 
 
 const GenerateMedicalOrderOutputSchema = z.object({
-  generatedOrderText: z.string().describe('El texto completo de las órdenes médicas generales, formateado profesionalmente en español.'),
+  generatedOrderText: z.string().describe('El texto completo de las órdenes médicas generales, formateado profesionalmente en español y con correcciones de redacción aplicadas.'),
 });
 export type GenerateMedicalOrderOutput = z.infer<typeof GenerateMedicalOrderOutputSchema>;
 
@@ -54,7 +54,13 @@ const prompt = ai.definePrompt({
   name: 'generateMedicalOrderPrompt',
   input: {schema: PromptInputSchema}, // Use the extended schema for the prompt
   output: {schema: GenerateMedicalOrderOutputSchema},
-  prompt: `**ÓRDENES MÉDICAS GENERALES**
+  prompt: `Eres un asistente médico experto en la redacción de órdenes médicas hospitalarias.
+Tu tarea es generar un texto de orden médica profesional, claro y completo basado en la información proporcionada.
+**Importante: Revisa y corrige cualquier error de redacción o tipográfico evidente en los campos de texto libre, especialmente en la lista de medicamentos (nombres, presentaciones, dosis, vías, frecuencias) y en la conciliación medicamentosa. Asegúrate de mantener la intención original y no alterar significativamente la información médica. Por ejemplo, si se escribe "acetaifofen", corrígelo a "acetaminofén".**
+
+Utiliza la siguiente estructura y datos para generar la orden:
+
+**ÓRDENES MÉDICAS GENERALES**
 {{{orderType}}}
 {{{oxygen}}}
 {{{isolation}}}
