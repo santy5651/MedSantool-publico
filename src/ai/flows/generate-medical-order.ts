@@ -58,7 +58,9 @@ const prompt = ai.definePrompt({
 {{{orderType}}}
 {{{oxygen}}}
 {{{isolation}}}
-{{#if isHospitalizacionOrder}}{{#if diet}}{{{diet}}}{{else}}Dieta por definir{{/if}}{{else}}NO APLICA{{/if}}
+{{#if isHospitalizacionOrder}}
+{{#if diet}}{{{diet}}}{{else}}Dieta por definir{{/if}}
+{{/if}}
 {{#if medicationsInput}}
 {{{medicationsInput}}}
 {{else}}
