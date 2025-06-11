@@ -1,35 +1,33 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
-import type { HistoryEntry } from '@/types';
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain } from 'lucide-react'; // Added Brain
 
 const AUTOSAVE_STORAGE_KEY = 'medinsight-autosave-preference';
 
 export function useHistoryStore() {
   const { toast } = useToast();
-  // Initialize with a server-safe default. Client will update after mount.
   const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState<boolean>(false); 
 
   useEffect(() => {
-    // This effect runs only on the client, after hydration.
     const savedPreference = localStorage.getItem(AUTOSAVE_STORAGE_KEY);
     if (savedPreference !== null) {
       setIsAutoSaveEnabled(savedPreference === 'true');
     } else {
-      // If no preference is saved in localStorage, default to true (as per original logic) and save it.
       setIsAutoSaveEnabled(true);
       localStorage.setItem(AUTOSAVE_STORAGE_KEY, 'true');
     }
-  }, []); // Empty dependency array ensures this runs once on mount (client-side)
+  }, []);
 
   useEffect(() => {
-    // This effect synchronizes subsequent changes to isAutoSaveEnabled back to localStorage.
-    // It runs after the initial state is set by the above useEffect and whenever isAutoSaveEnabled changes.
-    if (typeof window !== 'undefined') { // Ensure localStorage is available
+    if (typeof window !== 'undefined') {
         localStorage.setItem(AUTOSAVE_STORAGE_KEY, String(isAutoSaveEnabled));
     }
   }, [isAutoSaveEnabled]);
@@ -47,7 +45,7 @@ export function useHistoryStore() {
         timestamp: Date.now(),
       };
       await db.history.add(newEntry);
-      toast({ title: "Guardado en Historial", description: `Entrada para ${entryData.module} guardada.` });
+      toast({ title: "Guardado en Historial", description: `Entrada para ${entryData.module.replace(/([A-Z])/g, ' $1').trim()} guardada.` });
     } catch (error) {
       console.error("Failed to add history entry:", error);
       toast({ variant: "destructive", title: "Error al Guardar", description: "No se pudo guardar la entrada en el historial." });
@@ -80,7 +78,7 @@ export function useHistoryStore() {
       return;
     }
     try {
-      const dataToExport = historyEntries.map(({ id, ...rest }) => rest); // Exclude Dexie's 'id'
+      const dataToExport = historyEntries.map(({ id, ...rest }) => rest); 
       const jsonString = JSON.stringify(dataToExport, null, 2);
       const blob = new Blob([jsonString], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -105,12 +103,10 @@ export function useHistoryStore() {
         const jsonString = event.target?.result as string;
         const importedEntries = JSON.parse(jsonString) as Omit<HistoryEntry, 'id'>[];
 
-        // Validate structure (basic check)
         if (!Array.isArray(importedEntries) || !importedEntries.every(e => e.module && e.timestamp && e.status)) {
           throw new Error("Formato de archivo inválido.");
         }
         
-        // Convert timestamp if it's a string (e.g. ISO string)
         const processedEntries = importedEntries.map(entry => ({
           ...entry,
           timestamp: typeof entry.timestamp === 'string' ? new Date(entry.timestamp).getTime() : entry.timestamp
@@ -120,7 +116,7 @@ export function useHistoryStore() {
         if (mode === 'replace') {
           await db.history.clear();
         }
-        await db.history.bulkAdd(processedEntries as HistoryEntry[]); // Cast as Dexie will add 'id'
+        await db.history.bulkAdd(processedEntries as HistoryEntry[]);
         toast({ title: "Historial Importado", description: `El historial ha sido ${mode === 'replace' ? 'reemplazado' : 'actualizado'}.` });
       } catch (error: any) {
         console.error("Failed to import history:", error);
@@ -148,3 +144,6 @@ export function useHistoryStore() {
     importHistory,
   };
 }
+
+// Helper for HistoryModule display (kept in history-module.tsx as it's UI specific)
+// const moduleIcons: Record<ModuleType, LucideIcon> = { ... };

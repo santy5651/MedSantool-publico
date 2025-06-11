@@ -1,5 +1,5 @@
 
-export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'DiagnosisSupport' | 'MedicalOrders';
+export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders';
 
 export interface HistoryEntry {
   id?: number;
@@ -9,7 +9,7 @@ export interface HistoryEntry {
   inputSummary: string;
   outputSummary: string;
   fullInput?: string | Record<string, any>;
-  fullOutput?: string | Record<string, any> | DiagnosisResult[] | MedicalOrderOutputState;
+  fullOutput?: string | Record<string, any> | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string };
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
 }
@@ -46,7 +46,7 @@ export interface MedicalOrderInputState {
   medicationsInput: string;
   noMedicationReconciliation: boolean;
   medicationReconciliationInput: string;
-  specialtyFollowUp?: string; // Nuevo campo
+  specialtyFollowUp?: string;
   fallRisk: string;
   paduaScale: string;
   nursingSurveillance: NursingSurveillanceState;
@@ -80,6 +80,12 @@ export interface ClinicalDataContextState {
   isTextAnalyzing: boolean;
   textAnalysisError: string |null;
 
+  // Clinical Analysis (New Module)
+  clinicalAnalysisInput: string | null; // Will typically be textAnalysisSummary
+  generatedClinicalAnalysis: string | null;
+  isGeneratingClinicalAnalysis: boolean;
+  clinicalAnalysisError: string | null;
+
   // Diagnosis Support
   diagnosisInputData: string;
   diagnosisResults: DiagnosisResult[] | null;
@@ -110,22 +116,28 @@ export interface ClinicalDataContextActions {
   setIsTextAnalyzing: (loading: boolean) => void;
   setTextAnalysisError: (error: string | null) => void;
 
+  // Clinical Analysis Actions (New Module)
+  setClinicalAnalysisInput: (input: string | null) => void;
+  setGeneratedClinicalAnalysis: (analysis: string | null) => void;
+  setIsGeneratingClinicalAnalysis: (loading: boolean) => void;
+  setClinicalAnalysisError: (error: string | null) => void;
+  clearClinicalAnalysisModule: () => void;
+
   setDiagnosisInputData: (data: string | ((prev: string) => string)) => void;
   setDiagnosisResults: (results: DiagnosisResult[] | null) => void;
   setIsDiagnosing: (loading: boolean) => void;
   setDiagnosisError: (error: string | null) => void;
 
-  // Medical Orders Actions
   setMedicalOrderInputs: (inputs: MedicalOrderInputState | ((prevState: MedicalOrderInputState) => MedicalOrderInputState)) => void;
   setMedicalOrderOutput: (output: MedicalOrderOutputState) => void;
   setIsGeneratingMedicalOrder: (loading: boolean) => void;
   setMedicalOrderError: (error: string | null) => void;
-  clearMedicalOrdersModule: () => void;
-
+  
   clearImageModule: () => void;
   clearPdfModule: () => void;
   clearTextModule: () => void;
   clearDiagnosisModule: () => void;
+  clearMedicalOrdersModule: () => void;
 }
 
 export type ClinicalDataContextType = ClinicalDataContextState & ClinicalDataContextActions;

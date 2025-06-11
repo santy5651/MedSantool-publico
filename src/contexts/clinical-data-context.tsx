@@ -19,7 +19,7 @@ const initialMedicalOrderInputs: MedicalOrderInputState = {
   medicationsInput: "",
   noMedicationReconciliation: false,
   medicationReconciliationInput: "",
-  specialtyFollowUp: "", // Nuevo campo
+  specialtyFollowUp: "",
   fallRisk: "RIESGO DE CAIDAS Y LESIONES POR PRESION SEGUN ESCALAS POR PERSONAL DE ENFERMERIA",
   paduaScale: "",
   nursingSurveillance: initialNursingSurveillanceState,
@@ -48,6 +48,12 @@ const initialState: ClinicalDataContextState = {
   textAnalysisSummary: null,
   isTextAnalyzing: false,
   textAnalysisError: null,
+
+  // Clinical Analysis (New Module)
+  clinicalAnalysisInput: null, 
+  generatedClinicalAnalysis: null,
+  isGeneratingClinicalAnalysis: false,
+  clinicalAnalysisError: null,
 
   diagnosisInputData: '',
   diagnosisResults: null,
@@ -79,9 +85,17 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setClinicalNotesInput = useCallback((notes: string | ((prev: string) => string)) => {
     setState(s => ({ ...s, clinicalNotesInput: typeof notes === 'function' ? notes(s.clinicalNotesInput) : notes }));
   }, []);
-  const setTextAnalysisSummary = useCallback((summary: string | null) => setState(s => ({ ...s, textAnalysisSummary: summary })), []);
+  const setTextAnalysisSummary = useCallback((summary: string | null) => {
+    setState(s => ({ ...s, textAnalysisSummary: summary, clinicalAnalysisInput: summary })); // Also set as input for new module
+  }, []);
   const setIsTextAnalyzing = useCallback((loading: boolean) => setState(s => ({ ...s, isTextAnalyzing: loading })), []);
   const constSetTextAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, textAnalysisError: error })), []);
+
+  // Clinical Analysis (New Module)
+  const setClinicalAnalysisInput = useCallback((input: string | null) => setState(s => ({ ...s, clinicalAnalysisInput: input })), []);
+  const setGeneratedClinicalAnalysis = useCallback((analysis: string | null) => setState(s => ({ ...s, generatedClinicalAnalysis: analysis })), []);
+  const setIsGeneratingClinicalAnalysis = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingClinicalAnalysis: loading })), []);
+  const setClinicalAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, clinicalAnalysisError: error })), []);
 
 
   const setDiagnosisInputData = useCallback((data: string | ((prev: string) => string)) => {
@@ -133,6 +147,18 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       textAnalysisSummary: null,
       isTextAnalyzing: false,
       textAnalysisError: null,
+      clinicalAnalysisInput: null, // Clear input for next module
+    }));
+  }, []);
+
+  const clearClinicalAnalysisModule = useCallback(() => {
+    setState(s => ({
+      ...s,
+      // clinicalAnalysisInput is typically derived, but allow clearing if needed
+      // clinicalAnalysisInput: null, 
+      generatedClinicalAnalysis: null,
+      isGeneratingClinicalAnalysis: false,
+      clinicalAnalysisError: null,
     }));
   }, []);
 
@@ -172,6 +198,12 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setTextAnalysisSummary,
     setIsTextAnalyzing,
     setTextAnalysisError: constSetTextAnalysisError,
+    // Clinical Analysis (New Module)
+    setClinicalAnalysisInput,
+    setGeneratedClinicalAnalysis,
+    setIsGeneratingClinicalAnalysis,
+    setClinicalAnalysisError,
+    clearClinicalAnalysisModule,
     setDiagnosisInputData,
     setDiagnosisResults,
     setIsDiagnosing,

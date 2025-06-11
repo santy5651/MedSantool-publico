@@ -7,3 +7,4 @@ import '@/ai/flows/extract-information-from-pdf.ts';
 import '@/ai/flows/suggest-diagnosis.ts';
 import '@/ai/flows/analyze-medical-image.ts';
 import '@/ai/flows/generate-medical-order.ts';
+import '@/ai/flows/generate-clinical-analysis.ts';
