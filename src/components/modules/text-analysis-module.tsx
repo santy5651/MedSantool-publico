@@ -39,25 +39,22 @@ export function TextAnalysisModule() {
 
     try {
       analysisOutput = await summarizeClinicalNotes({ clinicalNotes: currentNotes });
-      setTextAnalysisSummary(analysisOutput.summary);
+      const newSummaryContent = (analysisOutput?.summary || '').trim();
+      setTextAnalysisSummary(newSummaryContent || null);
       toast({ title: "Análisis de Texto Completado", description: "Las notas han sido resumidas." });
 
-      // Automatically transfer summary to Diagnosis Module
-      const newSummaryContent = (analysisOutput?.summary || '').trim();
-
-      if (newSummaryContent) { // Only proceed if there's actual content after trimming
+      // Automatic transfer of summary to Diagnosis Module
+      if (newSummaryContent) {
         const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${newSummaryContent}`;
 
         setDiagnosisInputData(prevDiagnosisInput => {
-          const currentInput = String(prevDiagnosisInput || '');
-
-          if (currentInput.includes(summaryBlockToAdd)) {
+          const currentDiagnosisText = String(prevDiagnosisInput || '');
+          if (currentDiagnosisText.includes(summaryBlockToAdd)) {
             // Formatted summary block already exists, do nothing for auto-transfer
-            return currentInput;
+            return currentDiagnosisText;
           }
 
-          const newText = `${currentInput ? currentInput + '\n\n' : ''}${summaryBlockToAdd}`;
-
+          const newText = `${currentDiagnosisText ? currentDiagnosisText + '\n\n' : ''}${summaryBlockToAdd}`;
           toast({
             title: "Resumen Enviado a Diagnóstico",
             description: "El resumen de notas se ha añadido automáticamente para soporte diagnóstico.",
@@ -79,9 +76,9 @@ export function TextAnalysisModule() {
           module: 'TextAnalysis',
           inputType: 'text/plain',
           inputSummary: getTextSummary(currentNotes),
-          outputSummary: getTextSummary(analysisOutput.summary, 100),
+          outputSummary: getTextSummary(newSummaryContent || '', 100),
           fullInput: currentNotes,
-          fullOutput: analysisOutput, // Save the original output from AI
+          fullOutput: analysisOutput,
           status: 'completed',
         });
       }
@@ -120,18 +117,14 @@ export function TextAnalysisModule() {
     }
   };
 
-  const handleSendToDiagnosis = () => { // Manual button logic
-    if (!textAnalysisSummary) {
+  const handleSendToDiagnosis = () => { 
+    const currentSummary = String(textAnalysisSummary || '').trim();
+    if (!currentSummary) {
       toast({ title: "Sin Resumen", description: "Primero analice las notas para obtener un resumen.", variant: "default"});
       return;
     }
 
-    const currentSummaryContent = (textAnalysisSummary || '').trim();
-    if (!currentSummaryContent) {
-         toast({ title: "Resumen Vacío", description: "El resumen actual está vacío.", variant: "default"});
-        return;
-    }
-    const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${currentSummaryContent}`;
+    const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${currentSummary}`;
 
     setDiagnosisInputData(prev => {
       const currentInput = String(prev || '');
@@ -142,19 +135,19 @@ export function TextAnalysisModule() {
           description: "El resumen formateado ya se encuentra en el campo de diagnóstico.",
           variant: "default",
         });
-        return currentInput; // No change
+        return currentInput; 
       } else {
         const newText = `${currentInput ? currentInput + '\n\n' : ''}${summaryBlockToAdd}`;
         toast({
           title: "Resumen Añadido a Diagnóstico",
           description: "El resumen se ha añadido para soporte diagnóstico.",
         });
-
+        
         setTimeout(() => {
-          const diagnosisModule = document.getElementById('diagnosis-support-module');
-          if (diagnosisModule) {
-            diagnosisModule.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }
+            const diagnosisModule = document.getElementById('diagnosis-support-module');
+            if (diagnosisModule) {
+                diagnosisModule.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }, 0);
         return newText;
       }
@@ -163,26 +156,33 @@ export function TextAnalysisModule() {
 
   const handleSaveManually = async () => {
     const currentNotes = String(clinicalNotesInput || '');
-    if (currentNotes.trim() === '' || (!textAnalysisSummary && !textAnalysisError)) {
-      toast({ title: "Nada que Guardar", description: "Analice algunas notas primero.", variant: "default" });
+    if (currentNotes.trim() === '' && (!textAnalysisSummary && !textAnalysisError)) {
+      toast({ title: "Nada que Guardar", description: "Analice algunas notas primero o ingrese notas.", variant: "default" });
       return;
     }
+    
+    let inputToSave = currentNotes;
+    let outputToSave = textAnalysisError ? { error: textAnalysisError } : { summary: textAnalysisSummary || '' };
+    let outputSummaryForHistory = textAnalysisError ? 'Error en el análisis' : getTextSummary(textAnalysisSummary || '', 100);
+    let status: 'completed' | 'error' = textAnalysisError ? 'error' : 'completed';
 
-    const status = textAnalysisError ? 'error' : 'completed';
-    const output = textAnalysisError ? { error: textAnalysisError } : { summary: textAnalysisSummary };
-    const outputSum = textAnalysisError ? 'Error en el análisis' : getTextSummary(textAnalysisSummary || '', 100);
-
+    if (!inputToSave && !textAnalysisSummary && !textAnalysisError) {
+        toast({ title: "Nada que Guardar", description: "No hay notas ni resumen para guardar.", variant: "default" });
+        return;
+    }
+    
     await addHistoryEntry({
       module: 'TextAnalysis',
       inputType: 'text/plain',
-      inputSummary: getTextSummary(currentNotes),
-      outputSummary: outputSum,
-      fullInput: currentNotes,
-      fullOutput: output,
+      inputSummary: getTextSummary(inputToSave),
+      outputSummary: outputSummaryForHistory,
+      fullInput: inputToSave,
+      fullOutput: outputToSave,
       status: status,
       errorDetails: textAnalysisError || undefined,
     });
   };
+
 
   return (
     <ModuleCardWrapper
@@ -219,7 +219,7 @@ export function TextAnalysisModule() {
           </Button>
         </div>
 
-        {textAnalysisSummary && (
+        {(textAnalysisSummary || textAnalysisSummary === '') && ( 
           <div className="space-y-2">
             <h3 className="text-md font-semibold font-headline">Resumen de Información Clave:</h3>
             <Textarea
@@ -229,11 +229,11 @@ export function TextAnalysisModule() {
               className="bg-muted/30"
             />
             <div className="flex space-x-2">
-              <Button onClick={handleCopyToClipboard} variant="outline" size="sm">
+              <Button onClick={handleCopyToClipboard} variant="outline" size="sm" disabled={!textAnalysisSummary}>
                 <Copy className="mr-2 h-4 w-4" />
                 Copiar Resumen
               </Button>
-              <Button onClick={handleSendToDiagnosis} variant="default" size="sm">
+              <Button onClick={handleSendToDiagnosis} variant="default" size="sm" disabled={!textAnalysisSummary}>
                 <Send className="mr-2 h-4 w-4" />
                 Usar Resumen para Diagnóstico
               </Button>
@@ -243,7 +243,7 @@ export function TextAnalysisModule() {
         {textAnalysisError && (
           <p className="text-sm text-destructive">Error: {textAnalysisError}</p>
         )}
-         {!isAutoSaveEnabled && (textAnalysisSummary || textAnalysisError) && (
+         {!isAutoSaveEnabled && (String(clinicalNotesInput || '').trim() || textAnalysisSummary || textAnalysisError) && (
            <Button onClick={handleSaveManually} variant="secondary" className="w-full mt-2">
             <Save className="mr-2 h-4 w-4" /> Guardar en Historial
           </Button>
