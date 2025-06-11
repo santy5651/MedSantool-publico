@@ -41,7 +41,7 @@ type PromptInput = z.infer<typeof PromptInputSchema>;
 
 
 const GenerateMedicalOrderOutputSchema = z.object({
-  generatedOrderText: z.string().describe('El texto completo de las órdenes médicas generales, formateado profesionalmente en español y con correcciones de redacción aplicadas.'),
+  generatedOrderText: z.string().describe('El texto completo de las órdenes médicas generales, formateado profesionalmente en español, con correcciones de redacción aplicadas y EN MAYÚSCULAS.'),
 });
 export type GenerateMedicalOrderOutput = z.infer<typeof GenerateMedicalOrderOutputSchema>;
 
@@ -96,6 +96,8 @@ Avisar cambios
 CONDICIONES DE TRASLADO: {{{transferConditions}}}
 CONSIDERACIONES ESPECIALES:
 {{#if specialConsiderations}}{{{specialConsiderations}}}{{else}}NO HAY CONSIDERACIONES ESPECIALES{{/if}}
+
+**IMPORTANTE: TODO EL TEXTO DE SALIDA DEBE ESTAR EN LETRAS MAYÚSCULAS.**
 `,
 });
 
@@ -120,3 +122,4 @@ const generateMedicalOrderFlow = ai.defineFlow(
     return output!;
   }
 );
+
