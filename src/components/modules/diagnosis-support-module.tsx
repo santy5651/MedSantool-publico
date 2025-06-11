@@ -223,7 +223,7 @@ export function DiagnosisSupportModule() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[40px] p-1 text-center"></TableHead> {/* For Drag Handle */}
+                    <TableHead className="w-[40px] p-1 text-center"></TableHead>
                     <TableHead className="w-[50px] text-center">Principal</TableHead>
                     <TableHead className="w-[80px] text-center">Validar</TableHead>
                     <TableHead className="w-[120px]">CIE-10</TableHead>
@@ -234,7 +234,7 @@ export function DiagnosisSupportModule() {
                 <TableBody>
                   {localDiagnosisResults.map((diag, index) => (
                     <TableRow
-                      key={diag.code + diag.description + index + (diag.isPrincipal ? '-principal' : '')} // Ensure key is reasonably unique
+                      key={diag.code + diag.description + index + (diag.isPrincipal ? '-principal' : '')}
                       draggable
                       onDragStart={() => handleDragStart(index)}
                       onDragEnter={() => handleDragEnter(index)}
@@ -243,34 +243,11 @@ export function DiagnosisSupportModule() {
                       onDragEnd={handleDragEnd}
                       className={cn(
                         diag.isPrincipal ? 'bg-primary/10' : '',
-                        'border-t-2 border-transparent', // For layout consistency
+                        'border-t-2 border-transparent',
                         draggedIndex === index ? 'opacity-50 cursor-grabbing !border-transparent' : 'cursor-grab',
                         draggedIndex !== null && dragOverIndex === index && draggedIndex !== index ? '!border-t-primary transition-all duration-100 ease-in-out' : ''
                       )}
-                    >
-                      <TableCell className="w-[40px] text-center p-1">
-                        <GripVertical className="h-5 w-5 text-muted-foreground inline-block" />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button variant="ghost" size="icon" onClick={() => setPrincipalDiagnosis(index)} title={diag.isPrincipal ? "Quitar como principal" : "Marcar como principal"}>
-                          {diag.isPrincipal ? <Star className="h-5 w-5 text-accent fill-accent" /> : <Pin className="h-5 w-5" />}
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Checkbox
-                          checked={diag.isValidated}
-                          onCheckedChange={() => toggleValidation(index)}
-                          aria-label={`Validar diagnóstico ${diag.code}`}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{diag.code}</TableCell>
-                      <TableCell>{diag.description}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={getConfidenceBadgeVariant(diag.confidence)}>
-                          {(diag.confidence * 100).toFixed(0)}%
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
+                    ><TableCell className="w-[40px] text-center p-1"><GripVertical className="h-5 w-5 text-muted-foreground inline-block" /></TableCell><TableCell className="text-center"><Button variant="ghost" size="icon" onClick={() => setPrincipalDiagnosis(index)} title={diag.isPrincipal ? "Quitar como principal" : "Marcar como principal"}>{diag.isPrincipal ? <Star className="h-5 w-5 text-accent fill-accent" /> : <Pin className="h-5 w-5" />}</Button></TableCell><TableCell className="text-center"><Checkbox checked={diag.isValidated} onCheckedChange={() => toggleValidation(index)} aria-label={`Validar diagnóstico ${diag.code}`} /></TableCell><TableCell className="font-medium">{diag.code}</TableCell><TableCell>{diag.description}</TableCell><TableCell className="text-center"><Badge variant={getConfidenceBadgeVariant(diag.confidence)}>{(diag.confidence * 100).toFixed(0)}%</Badge></TableCell></TableRow>
                   ))}
                 </TableBody>
               </Table>
