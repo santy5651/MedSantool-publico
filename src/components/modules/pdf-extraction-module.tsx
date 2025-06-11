@@ -22,7 +22,8 @@ export function PdfExtractionModule() {
     pdfStructuredData, setPdfStructuredData,
     isPdfExtracting, setIsPdfExtracting,
     pdfExtractionError, setPdfExtractionError,
-    setClinicalNotesInput, // For "Usar Notas para Comprensión de Texto"
+    clinicalNotesInput, // Get current clinical notes for appending
+    setClinicalNotesInput, 
     clearPdfModule
   } = useClinicalData();
   
@@ -52,9 +53,20 @@ export function PdfExtractionModule() {
       dataUri = await readFileAsDataURL(pdfFile);
       analysisOutput = await extractInformationFromPdf({ pdfDataUri: dataUri });
       setPdfExtractedNotes(analysisOutput.clinicalNotes);
-      setPdfStructuredData(analysisOutput.structuredData as PdfStructuredData[]); // Cast if Zod schema matches
+      setPdfStructuredData(analysisOutput.structuredData as PdfStructuredData[]);
       toast({ title: "Extracción Completada", description: "La información del PDF ha sido extraída." });
       
+      // Automatically transfer extracted notes to Text Analysis Module
+      if (analysisOutput.clinicalNotes) {
+        const notesHeader = `[Notas Extraídas de PDF - ${getFileSummary(pdfFile)}]:\n${analysisOutput.clinicalNotes}`;
+        const updatedClinicalNotes = `${clinicalNotesInput ? clinicalNotesInput + '\n\n' : ''}${notesHeader}`;
+        setClinicalNotesInput(updatedClinicalNotes);
+        toast({
+          title: "Notas de PDF Transferidas",
+          description: "Las notas extraídas del PDF se han añadido automáticamente para el análisis de texto.",
+        });
+      }
+
       if (isAutoSaveEnabled) {
         await addHistoryEntry({
           module: 'PdfExtraction',
@@ -95,9 +107,8 @@ export function PdfExtractionModule() {
 
   const handleSendNotesToText = () => {
     if (pdfExtractedNotes) {
-      setClinicalNotesInput(prev => 
-        `${prev ? prev + '\n\n' : ''}[Notas Extraídas de PDF - ${getFileSummary(pdfFile)}]:\n${pdfExtractedNotes}`
-      );
+      const notesHeader = `[Notas Extraídas de PDF - ${getFileSummary(pdfFile)}]:\n${pdfExtractedNotes}`;
+      setClinicalNotesInput(`${clinicalNotesInput ? clinicalNotesInput + '\n\n' : ''}${notesHeader}`);
       toast({ title: "Notas Enviadas", description: "Las notas del PDF se han añadido a las notas clínicas." });
       const textModule = document.getElementById('text-analysis-module');
       textModule?.scrollIntoView({ behavior: 'smooth' });
