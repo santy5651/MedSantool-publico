@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ImageAnalysisModule } from '@/components/modules/image-analysis-module';
 import { PdfExtractionModule } from '@/components/modules/pdf-extraction-module';
 import { TextAnalysisModule } from '@/components/modules/text-analysis-module';
@@ -10,25 +10,92 @@ import { DiagnosisSupportModule } from '@/components/modules/diagnosis-support-m
 import { TreatmentPlanModule } from '@/components/modules/treatment-plan-module';
 import { MedicalOrdersModule } from '@/components/modules/medical-orders-module';
 import { HistoryModule } from '@/components/modules/history-module';
+import { Button } from '@/components/ui/button';
+import { Eraser } from 'lucide-react';
+import { useClinicalData } from '@/contexts/clinical-data-context';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function MedInsightPage() {
+  const {
+    clearImageModule,
+    clearPdfModule,
+    clearTextModule,
+    clearClinicalAnalysisModule,
+    clearDiagnosisModule,
+    clearTreatmentPlanModule,
+    clearMedicalOrdersModule,
+  } = useClinicalData();
+  const { toast } = useToast();
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
+
+  const handleClearAllModules = () => {
+    clearImageModule();
+    clearPdfModule();
+    clearTextModule();
+    clearClinicalAnalysisModule();
+    clearDiagnosisModule();
+    clearTreatmentPlanModule();
+    clearMedicalOrdersModule();
+    toast({
+      title: "Todos los Módulos Limpiados",
+      description: "Se ha restablecido el estado de todos los módulos de datos.",
+    });
+    setShowClearAllConfirm(false);
+  };
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-      {/* Left Column: Analysis Modules */}
-      <div className="lg:col-span-2 space-y-6">
-        <ImageAnalysisModule />
-        <PdfExtractionModule />
-        <TextAnalysisModule />
-        <ClinicalAnalysisModule />
-        <DiagnosisSupportModule />
-        <TreatmentPlanModule />
-        <MedicalOrdersModule />
+    <>
+      <div className="mb-6 flex justify-end">
+        <AlertDialog open={showClearAllConfirm} onOpenChange={setShowClearAllConfirm}>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="sm">
+              <Eraser className="mr-2 h-4 w-4" />
+              Limpiar Todos los Módulos
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer. Se restablecerán todos los datos ingresados y generados en los módulos. El historial de trabajo no se verá afectado.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleClearAllModules}>Confirmar Limpieza</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
-      {/* Right Column: History Module */}
-      <div className="lg:col-span-1 sticky top-6"> {/* Sticky for desktop view */}
-        <HistoryModule />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Left Column: Analysis Modules */}
+        <div className="lg:col-span-2 space-y-6">
+          <ImageAnalysisModule />
+          <PdfExtractionModule />
+          <TextAnalysisModule />
+          <ClinicalAnalysisModule />
+          <DiagnosisSupportModule />
+          <TreatmentPlanModule />
+          <MedicalOrdersModule />
+        </div>
+
+        {/* Right Column: History Module */}
+        <div className="lg:col-span-1 sticky top-6"> {/* Sticky for desktop view */}
+          <HistoryModule />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
