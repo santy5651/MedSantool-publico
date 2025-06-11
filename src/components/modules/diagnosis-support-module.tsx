@@ -14,8 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Stethoscope, Eraser, Pin, Star, Save, Lightbulb, ArrowUp, ArrowDown } from 'lucide-react';
-import { getTextSummary } from '@/lib/utils';
+import { Stethoscope, Eraser, Pin, Star, Save, Lightbulb, GripVertical } from 'lucide-react';
+import { getTextSummary, cn } from '@/lib/utils';
 
 export function DiagnosisSupportModule() {
   const {
@@ -27,6 +27,8 @@ export function DiagnosisSupportModule() {
   } = useClinicalData();
 
   const [localDiagnosisResults, setLocalDiagnosisResults] = useState<DiagnosisResult[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (diagnosisResults) {
@@ -77,7 +79,7 @@ export function DiagnosisSupportModule() {
 
   const handleClearData = () => {
     clearDiagnosisModule();
-    setLocalDiagnosisResults([]); // También limpiar resultados locales
+    setLocalDiagnosisResults([]); 
     toast({ title: "Datos Limpiados", description: "Se han limpiado los datos para diagnóstico." });
   };
 
@@ -99,19 +101,6 @@ export function DiagnosisSupportModule() {
       updatedResults = [principal, ...updatedResults.filter(diag => !diag.isPrincipal)];
     }
     setLocalDiagnosisResults(updatedResults);
-  };
-
-  const moveDiagnosis = (index: number, direction: 'up' | 'down') => {
-    const newResults = [...localDiagnosisResults];
-    const itemToMove = newResults[index];
-    if (direction === 'up' && index > 0) {
-      newResults.splice(index, 1);
-      newResults.splice(index - 1, 0, itemToMove);
-    } else if (direction === 'down' && index < newResults.length - 1) {
-      newResults.splice(index, 1);
-      newResults.splice(index + 1, 0, itemToMove);
-    }
-    setLocalDiagnosisResults(newResults);
   };
 
   const getConfidenceBadgeVariant = (confidence: number): "default" | "secondary" | "destructive" => {
@@ -154,6 +143,42 @@ export function DiagnosisSupportModule() {
     saveToHistory(localDiagnosisResults, diagnosisError, currentInput);
   };
 
+  // Drag and Drop Handlers
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnter = (enterIndex: number) => {
+    if (draggedIndex !== null && draggedIndex !== enterIndex) {
+      setDragOverIndex(enterIndex);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault(); // Necessary to allow dropping
+  };
+
+  const handleDrop = (dropTargetIndex: number) => {
+    if (draggedIndex === null || draggedIndex === dropTargetIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newResults = [...localDiagnosisResults];
+    const itemToMove = newResults[draggedIndex];
+    newResults.splice(draggedIndex, 1); // Remove item from old position
+    newResults.splice(dropTargetIndex, 0, itemToMove); // Insert item at new position
+    
+    setLocalDiagnosisResults(newResults);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
 
   return (
     <ModuleCardWrapper
@@ -172,7 +197,7 @@ export function DiagnosisSupportModule() {
           <Textarea
             id="diagnosisData"
             placeholder="Pegue o escriba datos clínicos aquí..."
-            value={diagnosisInputData || ''}
+            value={String(diagnosisInputData || '')}
             onChange={(e) => setDiagnosisInputData(e.target.value)}
             rows={6}
             disabled={isDiagnosing}
@@ -193,21 +218,39 @@ export function DiagnosisSupportModule() {
         {localDiagnosisResults.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-md font-semibold font-headline">Diagnósticos Sugeridos:</h3>
+            <p className="text-xs text-muted-foreground">Arrastre las filas para reordenar los diagnósticos.</p>
             <div className="overflow-x-auto rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[40px] p-1 text-center"></TableHead> {/* For Drag Handle */}
                     <TableHead className="w-[50px] text-center">Principal</TableHead>
                     <TableHead className="w-[80px] text-center">Validar</TableHead>
                     <TableHead className="w-[120px]">CIE-10</TableHead>
                     <TableHead>Descripción</TableHead>
                     <TableHead className="w-[120px] text-center">Confianza</TableHead>
-                    <TableHead className="w-[100px] text-center">Reordenar</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {localDiagnosisResults.map((diag, index) => (
-                    <TableRow key={diag.code + index + (diag.isPrincipal ? '-principal' : '')} className={diag.isPrincipal ? 'bg-primary/10' : ''}>
+                    <TableRow
+                      key={diag.code + diag.description + index + (diag.isPrincipal ? '-principal' : '')} // Ensure key is reasonably unique
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      onDragEnter={() => handleDragEnter(index)}
+                      onDragOver={handleDragOver}
+                      onDrop={() => handleDrop(index)}
+                      onDragEnd={handleDragEnd}
+                      className={cn(
+                        diag.isPrincipal ? 'bg-primary/10' : '',
+                        'border-t-2 border-transparent', // For layout consistency
+                        draggedIndex === index ? 'opacity-50 cursor-grabbing !border-transparent' : 'cursor-grab',
+                        draggedIndex !== null && dragOverIndex === index && draggedIndex !== index ? '!border-t-primary transition-all duration-100 ease-in-out' : ''
+                      )}
+                    >
+                      <TableCell className="w-[40px] text-center p-1">
+                        <GripVertical className="h-5 w-5 text-muted-foreground inline-block" />
+                      </TableCell>
                       <TableCell className="text-center">
                         <Button variant="ghost" size="icon" onClick={() => setPrincipalDiagnosis(index)} title={diag.isPrincipal ? "Quitar como principal" : "Marcar como principal"}>
                           {diag.isPrincipal ? <Star className="h-5 w-5 text-accent fill-accent" /> : <Pin className="h-5 w-5" />}
@@ -226,26 +269,6 @@ export function DiagnosisSupportModule() {
                         <Badge variant={getConfidenceBadgeVariant(diag.confidence)}>
                           {(diag.confidence * 100).toFixed(0)}%
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-center space-x-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => moveDiagnosis(index, 'up')} 
-                          disabled={index === 0 || localDiagnosisResults.length <= 1}
-                          title="Mover arriba"
-                        >
-                          <ArrowUp className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => moveDiagnosis(index, 'down')} 
-                          disabled={index === localDiagnosisResults.length - 1 || localDiagnosisResults.length <= 1}
-                          title="Mover abajo"
-                        >
-                          <ArrowDown className="h-4 w-4" />
-                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -266,4 +289,3 @@ export function DiagnosisSupportModule() {
     </ModuleCardWrapper>
   );
 }
-
