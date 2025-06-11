@@ -18,7 +18,7 @@ export function TextAnalysisModule() {
     textAnalysisSummary, setTextAnalysisSummary,
     isTextAnalyzing, setIsTextAnalyzing,
     textAnalysisError, setTextAnalysisError,
-    diagnosisInputData, // Get current diagnosis input for appending
+    diagnosisInputData, 
     setDiagnosisInputData,
     clearTextModule
   } = useClinicalData();
@@ -47,15 +47,16 @@ export function TextAnalysisModule() {
       // Auto-transfer to diagnosis module
       if (newSummaryContent) {
         const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${newSummaryContent}`;
-        const currentDiagnosisText = String(diagnosisInputData || '');
+        const currentDiagnosisText = String(diagnosisInputData || ''); // Leer estado actual
 
         if (!currentDiagnosisText.includes(summaryBlockToAdd)) {
-          setDiagnosisInputData(prev => `${prev ? prev + '\n\n' : ''}${summaryBlockToAdd}`);
+          const newDiagnosisValue = `${currentDiagnosisText ? currentDiagnosisText + '\n\n' : ''}${summaryBlockToAdd}`;
+          setDiagnosisInputData(newDiagnosisValue); // Pasar valor directamente
           toast({
             title: "Resumen Enviado a Diagnóstico",
             description: "El resumen de notas se ha añadido automáticamente para soporte diagnóstico.",
           });
-          // Scroll to diagnosis module
+          
           setTimeout(() => {
             const diagnosisModule = document.getElementById('diagnosis-support-module');
             diagnosisModule?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -102,34 +103,33 @@ export function TextAnalysisModule() {
   };
 
   const handleCopyToClipboard = () => {
-    const summaryToCopy = textAnalysisSummary;
+    const summaryToCopy = String(textAnalysisSummary || '').trim();
 
-    if (summaryToCopy === null || summaryToCopy === undefined) {
-      toast({ title: "Sin Resumen", description: "No hay resumen en el cuadro para copiar.", variant: "default"});
+    if (summaryToCopy === '') {
+      toast({ title: "Sin Resumen", description: "No hay contenido en el cuadro 'Resumen de Información Clave' para copiar.", variant: "default"});
       return;
     }
     
-    const cleanedSummaryContent = String(summaryToCopy).trim();
-
-    navigator.clipboard.writeText(cleanedSummaryContent)
+    navigator.clipboard.writeText(summaryToCopy)
       .then(() => toast({ title: "Resumen Copiado", description: "El contenido del cuadro 'Resumen de Información Clave' ha sido copiado al portapapeles." }))
       .catch(() => toast({ title: "Error al Copiar", description: "No se pudo copiar el contenido del cuadro 'Resumen de Información Clave'.", variant: "destructive" }));
   };
-
+  
   const handleSendSummaryToDiagnosis = () => {
     const summaryToSend = String(textAnalysisSummary || '').trim();
     if (!summaryToSend) {
-      toast({ title: "Sin Resumen", description: "No hay resumen en el cuadro para enviar a diagnóstico.", variant: "default" });
+      toast({ title: "Sin Resumen", description: "No hay contenido en el cuadro 'Resumen de Información Clave' para enviar a diagnóstico.", variant: "default" });
       return;
     }
 
     const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${summaryToSend}`;
-    const currentDiagnosisText = String(diagnosisInputData || '');
+    const currentDiagnosisText = String(diagnosisInputData || ''); // Leer estado actual
 
     if (currentDiagnosisText.includes(summaryBlockToAdd)) {
-      toast({ title: "Resumen ya Incluido", description: "El resumen del cuadro ya está en los datos de diagnóstico.", variant: "default" });
+      toast({ title: "Resumen ya Incluido", description: "El contenido del cuadro 'Resumen de Información Clave' ya está en los datos de diagnóstico.", variant: "default" });
     } else {
-      setDiagnosisInputData(prev => `${prev ? prev + '\n\n' : ''}${summaryBlockToAdd}`);
+      const newDiagnosisValue = `${currentDiagnosisText ? currentDiagnosisText + '\n\n' : ''}${summaryBlockToAdd}`;
+      setDiagnosisInputData(newDiagnosisValue); // Pasar valor directamente
       toast({ title: "Resumen Enviado a Diagnóstico", description: "El contenido del cuadro 'Resumen de Información Clave' ha sido añadido para soporte diagnóstico." });
     }
 
@@ -139,6 +139,7 @@ export function TextAnalysisModule() {
         diagnosisModule?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 0);
   };
+
 
   const handleSaveManually = async () => {
     const currentNotes = String(clinicalNotesInput || '');
@@ -211,7 +212,7 @@ export function TextAnalysisModule() {
               className="bg-muted/30"
             />
             <div className="flex space-x-2">
-              <Button onClick={handleCopyToClipboard} variant="outline" size="sm" disabled={(textAnalysisSummary === null || textAnalysisSummary === undefined)}>
+              <Button onClick={handleCopyToClipboard} variant="outline" size="sm" disabled={(textAnalysisSummary === null || textAnalysisSummary.trim() === '')}>
                 <Copy className="mr-2 h-4 w-4" />
                 Copiar Resumen
               </Button>
@@ -219,7 +220,7 @@ export function TextAnalysisModule() {
                 onClick={handleSendSummaryToDiagnosis} 
                 variant="default" 
                 size="sm" 
-                disabled={(textAnalysisSummary === null || textAnalysisSummary === undefined || textAnalysisSummary.trim() === '')}
+                disabled={(textAnalysisSummary === null || textAnalysisSummary.trim() === '')}
               >
                 <Send className="mr-2 h-4 w-4" />
                 Enviar Resumen a Diagnóstico
@@ -231,7 +232,7 @@ export function TextAnalysisModule() {
           <p className="text-sm text-destructive">Error: {textAnalysisError}</p>
         )}
          {!isAutoSaveEnabled && 
-          (String(clinicalNotesInput || '').trim() || textAnalysisSummary !== null || textAnalysisError) && (
+          (String(clinicalNotesInput || '').trim() !== '' || textAnalysisSummary !== null || textAnalysisError) && (
            <Button onClick={handleSaveManually} variant="secondary" className="w-full mt-2">
             <Save className="mr-2 h-4 w-4" /> Guardar en Historial
           </Button>
