@@ -26,7 +26,7 @@ export function TextAnalysisModule() {
   const moduleRef = useRef<HTMLDivElement>(null);
 
   const handleAnalyzeNotes = async () => {
-    if (!clinicalNotesInput.trim()) {
+    if (!(clinicalNotesInput || '').trim()) {
       toast({ title: "Sin Notas", description: "Por favor, ingrese notas clínicas para analizar.", variant: "destructive" });
       return;
     }
@@ -98,7 +98,7 @@ export function TextAnalysisModule() {
   };
   
   const handleSaveManually = async () => {
-    if (!clinicalNotesInput.trim() || (!textAnalysisSummary && !textAnalysisError)) {
+    if (!(clinicalNotesInput || '').trim() || (!textAnalysisSummary && !textAnalysisError)) {
       toast({ title: "Nada que Guardar", description: "Analice algunas notas primero.", variant: "default" });
       return;
     }
@@ -144,7 +144,7 @@ export function TextAnalysisModule() {
         </div>
 
         <div className="flex space-x-2">
-          <Button onClick={handleAnalyzeNotes} disabled={!clinicalNotesInput.trim() || isTextAnalyzing} className="flex-1">
+          <Button onClick={handleAnalyzeNotes} disabled={!(clinicalNotesInput || '').trim() || isTextAnalyzing} className="flex-1">
             <ClipboardEdit className="mr-2 h-4 w-4" />
             Analizar Notas
           </Button>
