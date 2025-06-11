@@ -1,14 +1,15 @@
-export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'DiagnosisSupport';
+
+export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'DiagnosisSupport' | 'MedicalOrders';
 
 export interface HistoryEntry {
   id?: number;
   timestamp: number;
   module: ModuleType;
-  inputType: string; 
-  inputSummary: string; 
+  inputType: string;
+  inputSummary: string;
   outputSummary: string;
-  fullInput?: string | Record<string, any>; 
-  fullOutput?: string | Record<string, any> | DiagnosisResult[]; 
+  fullInput?: string | Record<string, any>;
+  fullOutput?: string | Record<string, any> | DiagnosisResult[] | MedicalOrderOutputState;
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
 }
@@ -26,6 +27,37 @@ export interface PdfStructuredData {
   value: string;
 }
 
+// --- Medical Orders Module Specific Types ---
+export type MedicalOrderType = "OBSERVACIÓN" | "HOSPITALIZACIÓN" | "EGRESO";
+export type TransferConditionType = "Grupo 1: Camillero o auxiliar" | "Grupo 2: Médico general" | "Grupo 3: Médico general por paciente intubado" | "NO APLICA";
+
+export interface NursingSurveillanceState {
+  thermalCurve: boolean;
+  monitorPain: boolean;
+  monitorWounds: boolean;
+  monitorBleeding: boolean;
+}
+
+export interface MedicalOrderInputState {
+  orderType: MedicalOrderType | '';
+  oxygen: string;
+  isolation: string;
+  diet: string;
+  medicationsInput: string;
+  medicationReconciliationInput: string;
+  fallRisk: string;
+  paduaScale: string;
+  nursingSurveillance: NursingSurveillanceState;
+  transferConditions: TransferConditionType | '';
+  specialConsiderations: string;
+}
+
+export interface MedicalOrderOutputState {
+  generatedOrderText: string | null;
+}
+// --- End Medical Orders Module Specific Types ---
+
+
 export interface ClinicalDataContextState {
   // Image Analysis
   imageFile: File | null;
@@ -41,16 +73,22 @@ export interface ClinicalDataContextState {
   pdfExtractionError: string | null;
 
   // Text Analysis
-  clinicalNotesInput: string; // Default to empty string
+  clinicalNotesInput: string;
   textAnalysisSummary: string | null;
   isTextAnalyzing: boolean;
   textAnalysisError: string |null;
 
   // Diagnosis Support
-  diagnosisInputData: string; // Default to empty string
+  diagnosisInputData: string;
   diagnosisResults: DiagnosisResult[] | null;
   isDiagnosing: boolean;
   diagnosisError: string | null;
+
+  // Medical Orders
+  medicalOrderInputs: MedicalOrderInputState;
+  medicalOrderOutput: MedicalOrderOutputState;
+  isGeneratingMedicalOrder: boolean;
+  medicalOrderError: string | null;
 }
 
 export interface ClinicalDataContextActions {
@@ -58,7 +96,7 @@ export interface ClinicalDataContextActions {
   setImageAnalysisSummary: (summary: string | null) => void;
   setIsImageAnalyzing: (loading: boolean) => void;
   setImageAnalysisError: (error: string | null) => void;
-  
+
   setPdfFile: (file: File | null) => void;
   setPdfExtractedNotes: (notes: string | null) => void;
   setPdfStructuredData: (data: PdfStructuredData[] | null) => void;
@@ -75,6 +113,13 @@ export interface ClinicalDataContextActions {
   setIsDiagnosing: (loading: boolean) => void;
   setDiagnosisError: (error: string | null) => void;
 
+  // Medical Orders Actions
+  setMedicalOrderInputs: (inputs: MedicalOrderInputState | ((prevState: MedicalOrderInputState) => MedicalOrderInputState)) => void;
+  setMedicalOrderOutput: (output: MedicalOrderOutputState) => void;
+  setIsGeneratingMedicalOrder: (loading: boolean) => void;
+  setMedicalOrderError: (error: string | null) => void;
+  clearMedicalOrdersModule: () => void;
+
   clearImageModule: () => void;
   clearPdfModule: () => void;
   clearTextModule: () => void;
@@ -82,9 +127,3 @@ export interface ClinicalDataContextActions {
 }
 
 export type ClinicalDataContextType = ClinicalDataContextState & ClinicalDataContextActions;
-
-// AI Flow specific types (already defined in src/ai/flows, re-export or re-define for clarity if needed, but prefer direct import)
-// For example, from src/ai/flows/suggest-diagnosis.ts:
-// export type { SuggestDiagnosisOutput as AISuggestDiagnosisOutput } from '@/ai/flows/suggest-diagnosis';
-// This can be done if there's a need to alias or slightly adapt them for frontend use.
-// For now, we'll import them directly in components.

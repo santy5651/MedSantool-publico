@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -13,8 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2 } from 'lucide-react';
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData } from '@/types';
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star } from 'lucide-react';
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 
 const moduleIcons: Record<ModuleType, LucideIcon> = {
@@ -22,12 +23,13 @@ const moduleIcons: Record<ModuleType, LucideIcon> = {
   PdfExtraction: FileText,
   TextAnalysis: MessageSquareText,
   DiagnosisSupport: Lightbulb,
+  MedicalOrders: FileEdit,
 };
 
 const statusIcons: Record<HistoryEntry['status'], LucideIcon> = {
   completed: CheckCircle,
   error: AlertCircle,
-  pending: Settings2, // Or Hourglass
+  pending: Settings2, 
 };
 
 const statusColors: Record<HistoryEntry['status'], string> = {
@@ -36,7 +38,7 @@ const statusColors: Record<HistoryEntry['status'], string> = {
   pending: 'text-yellow-600',
 };
 const statusBadgeVariant: Record<HistoryEntry['status'], "default" | "secondary" | "destructive" | "outline"> = {
-  completed: 'default', // Use primary theme for success
+  completed: 'default', 
   error: 'destructive',
   pending: 'secondary',
 };
@@ -68,14 +70,13 @@ export function HistoryModule() {
     const file = event.target.files?.[0];
     if (file) {
       setFileToImport(file);
-      // Trigger AlertDialog for mode selection (replace/add)
     }
   };
   
   const confirmImport = () => {
     if (fileToImport) {
       importHistory(fileToImport, importMode);
-      setFileToImport(null); // Reset after attempting import
+      setFileToImport(null); 
     }
   };
 
@@ -142,11 +143,14 @@ export function HistoryModule() {
             </AccordionItem>
           </Accordion>
         );
+      } else if (entry.module === 'MedicalOrders' && typeof output === 'object' && output !== null && 'generatedOrderText' in output) {
+          const medicalOrder = output as MedicalOrderOutputState;
+          return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{medicalOrder.generatedOrderText}</pre>;
       } else if (typeof output === 'object' && output !== null && 'summary' in output) { // For ImageAnalysis and TextAnalysis
         return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {summary: string}).summary}</pre>;
       }
       return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{JSON.stringify(output, null, 2)}</pre>;
-    } catch (e) { // If JSON.parse fails for string fullOutput or other issues
+    } catch (e) { 
       return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{String(entry.fullOutput)}</pre>;
     }
   };
@@ -154,7 +158,7 @@ export function HistoryModule() {
   const renderFullInput = (entry: HistoryEntry) => {
      if (!entry.fullInput) return <p className="text-xs text-muted-foreground">No hay detalles de entrada.</p>;
      if (typeof entry.fullInput === 'string' && entry.fullInput.startsWith('Data URI for')) {
-        return <p className="text-xs text-muted-foreground">{entry.fullInput}</p>; // Avoid displaying full Data URI
+        return <p className="text-xs text-muted-foreground">{entry.fullInput}</p>; 
      }
      if (typeof entry.fullInput === 'object') {
         return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{JSON.stringify(entry.fullInput, null, 2)}</pre>;
@@ -195,10 +199,10 @@ export function HistoryModule() {
           {historyEntries.length === 0 ? (
             <p className="text-center text-muted-foreground py-10">El historial está vacío.</p>
           ) : (
-            <ScrollArea className="h-full pr-3"> {/* Max height and scroll */}
+            <ScrollArea className="h-full pr-3"> 
               <ul className="space-y-3">
                 {historyEntries.map((entry) => {
-                  const ModuleIcon = moduleIcons[entry.module];
+                  const ModuleIcon = moduleIcons[entry.module] || Info;
                   const StatusIcon = statusIcons[entry.status];
                   return (
                     <li key={entry.id} className="p-3 border rounded-md bg-card hover:shadow-md transition-shadow">

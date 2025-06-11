@@ -1,7 +1,34 @@
+
 'use client';
 
-import type { ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult } from '@/types';
+import type { ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState } from '@/types';
 import React, { createContext, useContext, useState, useCallback } from 'react';
+
+const initialNursingSurveillanceState: NursingSurveillanceState = {
+  thermalCurve: false,
+  monitorPain: false,
+  monitorWounds: false,
+  monitorBleeding: false,
+};
+
+const initialMedicalOrderInputs: MedicalOrderInputState = {
+  orderType: '',
+  oxygen: "NO REQUIERE OXÍGENO",
+  isolation: "NO REQUIERE AISLAMIENTO",
+  diet: "",
+  medicationsInput: "",
+  medicationReconciliationInput: "",
+  fallRisk: "RIESGO DE CAIDAS Y LESIONES POR PRESION SEGUN ESCALAS POR PERSONAL DE ENFERMERIA",
+  paduaScale: "",
+  nursingSurveillance: initialNursingSurveillanceState,
+  transferConditions: '',
+  specialConsiderations: "",
+};
+
+const initialMedicalOrderOutput: MedicalOrderOutputState = {
+  generatedOrderText: null,
+};
+
 
 const initialState: ClinicalDataContextState = {
   imageFile: null,
@@ -24,6 +51,11 @@ const initialState: ClinicalDataContextState = {
   diagnosisResults: null,
   isDiagnosing: false,
   diagnosisError: null,
+
+  medicalOrderInputs: initialMedicalOrderInputs,
+  medicalOrderOutput: initialMedicalOrderOutput,
+  isGeneratingMedicalOrder: false,
+  medicalOrderError: null,
 };
 
 const ClinicalDataContext = createContext<ClinicalDataContextType | undefined>(undefined);
@@ -51,6 +83,19 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setDiagnosisResults = useCallback((results: DiagnosisResult[] | null) => setState(s => ({ ...s, diagnosisResults: results })), []);
   const setIsDiagnosing = useCallback((loading: boolean) => setState(s => ({ ...s, isDiagnosing: loading })), []);
   const setDiagnosisError = useCallback((error: string | null) => setState(s => ({...s, diagnosisError: error})), []);
+
+  // Medical Orders
+  const setMedicalOrderInputs = useCallback((inputsOrUpdater: MedicalOrderInputState | ((prevState: MedicalOrderInputState) => MedicalOrderInputState)) => {
+    setState(s => ({
+      ...s,
+      medicalOrderInputs: typeof inputsOrUpdater === 'function'
+        ? inputsOrUpdater(s.medicalOrderInputs)
+        : inputsOrUpdater,
+    }));
+  }, []);
+  const setMedicalOrderOutput = useCallback((output: MedicalOrderOutputState) => setState(s => ({ ...s, medicalOrderOutput: output })), []);
+  const setIsGeneratingMedicalOrder = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingMedicalOrder: loading })), []);
+  const setMedicalOrderError = useCallback((error: string | null) => setState(s => ({ ...s, medicalOrderError: error })), []);
 
   const clearImageModule = useCallback(() => {
     setState(s => ({
@@ -82,7 +127,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       textAnalysisError: null,
     }));
   }, []);
-  
+
   const clearDiagnosisModule = useCallback(() => {
     setState(s => ({
       ...s,
@@ -90,6 +135,16 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       diagnosisResults: null,
       isDiagnosing: false,
       diagnosisError: null,
+    }));
+  }, []);
+
+  const clearMedicalOrdersModule = useCallback(() => {
+    setState(s => ({
+      ...s,
+      medicalOrderInputs: initialMedicalOrderInputs,
+      medicalOrderOutput: initialMedicalOrderOutput,
+      isGeneratingMedicalOrder: false,
+      medicalOrderError: null,
     }));
   }, []);
 
@@ -113,10 +168,15 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setDiagnosisResults,
     setIsDiagnosing,
     setDiagnosisError,
+    setMedicalOrderInputs,
+    setMedicalOrderOutput,
+    setIsGeneratingMedicalOrder,
+    setMedicalOrderError,
     clearImageModule,
     clearPdfModule,
     clearTextModule,
     clearDiagnosisModule,
+    clearMedicalOrdersModule,
   };
 
   return (
@@ -133,3 +193,4 @@ export const useClinicalData = (): ClinicalDataContextType => {
   }
   return context;
 };
+
