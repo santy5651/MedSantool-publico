@@ -31,6 +31,13 @@ const GenerateMedicalOrderInputSchema = z.object({
 });
 export type GenerateMedicalOrderInput = z.infer<typeof GenerateMedicalOrderInputSchema>;
 
+// Define a new type for the prompt's input, including the derived boolean flag
+const PromptInputSchema = GenerateMedicalOrderInputSchema.extend({
+  isHospitalizacionOrder: z.boolean()
+});
+type PromptInput = z.infer<typeof PromptInputSchema>;
+
+
 const GenerateMedicalOrderOutputSchema = z.object({
   generatedOrderText: z.string().describe('El texto completo de las órdenes médicas generales, formateado profesionalmente en español.'),
 });
@@ -44,7 +51,7 @@ export async function generateMedicalOrder(
 
 const prompt = ai.definePrompt({
   name: 'generateMedicalOrderPrompt',
-  input: {schema: GenerateMedicalOrderInputSchema},
+  input: {schema: PromptInputSchema}, // Use the extended schema for the prompt
   output: {schema: GenerateMedicalOrderOutputSchema},
   prompt: `Genera un conjunto de órdenes médicas generales en español, utilizando un formato profesional y completo, similar al utilizado en entornos hospitalarios. Asegúrate de incluir todas las secciones. Si una sección no tiene información específica o no aplica, usa frases como "NO APLICA" o "NO REQUIERE".
 
@@ -60,7 +67,7 @@ AISLAMIENTO:
 {{{isolation}}}
 
 DIETA:
-{{#if (eq orderType "HOSPITALIZACIÓN")}}{{#if diet}}{{{diet}}}{{else}}Dieta por definir{{/if}}{{else}}NO APLICA{{/if}}
+{{#if isHospitalizacionOrder}}{{#if diet}}{{{diet}}}{{else}}Dieta por definir{{/if}}{{else}}NO APLICA{{/if}}
 
 MEDICAMENTOS:
 {{#if medicationsInput}}
@@ -108,27 +115,18 @@ NO HAY CONSIDERACIONES ESPECIALES
 const generateMedicalOrderFlow = ai.defineFlow(
   {
     name: 'generateMedicalOrderFlow',
-    inputSchema: GenerateMedicalOrderInputSchema,
+    inputSchema: GenerateMedicalOrderInputSchema, // External flow input remains the same
     outputSchema: GenerateMedicalOrderOutputSchema,
   },
   async (input) => {
-    // Helper para determinar si hay alguna vigilancia seleccionada
-    const anySurveillanceSelected = input.surveillanceNursing.thermalCurve ||
-                                   input.surveillanceNursing.monitorPain ||
-                                   input.surveillanceNursing.monitorWounds ||
-                                   input.surveillanceNursing.monitorBleeding;
-
-    let surveillanceText = "";
-    if (input.surveillanceNursing.thermalCurve) surveillanceText += "- Curva térmica\n";
-    if (input.surveillanceNursing.monitorPain) surveillanceText += "- Vigilar dolor\n";
-    if (input.surveillanceNursing.monitorWounds) surveillanceText += "- Vigilar heridas\n";
-    if (input.surveillanceNursing.monitorBleeding) surveillanceText += "- Vigilar sangrado\n";
-    if (!anySurveillanceSelected) surveillanceText = "NO REQUIERE VIGILANCIA ESPECIAL POR ENFERMERÍA\n";
+    // Create the input for the prompt, including the derived boolean flag
+    const promptData: PromptInput = {
+      ...input,
+      isHospitalizacionOrder: input.orderType === "HOSPITALIZACIÓN",
+    };
     
-    // Adapt input for the prompt if necessary, or build parts of the string here
-    // For this complex prompt, Handlebars is doing most of the heavy lifting.
-
-    const {output} = await prompt(input);
+    const {output} = await prompt(promptData);
     return output!;
   }
 );
+
