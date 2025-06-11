@@ -14,7 +14,7 @@ import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
 import { generateMedicalOrder, type GenerateMedicalOrderInput, type GenerateMedicalOrderOutput } from '@/ai/flows/generate-medical-order';
 import { useToast } from '@/hooks/use-toast';
-import { FileEdit, Eraser, Copy, Save, ChevronUp, ClipboardCopy } from 'lucide-react';
+import { FileEdit, Eraser, Copy, Save, ChevronUp, ClipboardCopy, WrapText } from 'lucide-react';
 import type { MedicalOrderType, TransferConditionType, MedicalOrderInputState } from '@/types';
 import { getTextSummary } from '@/lib/utils';
 
@@ -140,6 +140,14 @@ export function MedicalOrdersModule() {
     if (medicalOrderOutput.generatedOrderText) {
       setMedicalOrderOutput({ generatedOrderText: medicalOrderOutput.generatedOrderText.toUpperCase() });
       toast({ title: "Texto Convertido", description: "Las órdenes médicas se han convertido a mayúsculas." });
+    }
+  };
+
+  const handleCompactText = () => {
+    if (medicalOrderOutput.generatedOrderText) {
+      const compactedText = medicalOrderOutput.generatedOrderText.replace(/\n+/g, ' ').trim();
+      setMedicalOrderOutput({ generatedOrderText: compactedText });
+      toast({ title: "Texto Compactado", description: "Se han eliminado los saltos de línea." });
     }
   };
   
@@ -320,7 +328,7 @@ export function MedicalOrdersModule() {
               rows={15}
               className="bg-muted/30"
             />
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               <Button onClick={handleCopyToClipboard} variant="outline" size="sm">
                 <ClipboardCopy className="mr-2 h-4 w-4" />
                 Copiar Selección
@@ -328,6 +336,10 @@ export function MedicalOrdersModule() {
               <Button onClick={handleConvertToUppercase} variant="outline" size="sm">
                 <ChevronUp className="mr-2 h-4 w-4" /> 
                 Convertir a Mayúsculas
+              </Button>
+              <Button onClick={handleCompactText} variant="outline" size="sm">
+                <WrapText className="mr-2 h-4 w-4" /> 
+                Compactar Texto
               </Button>
             </div>
           </div>
@@ -345,3 +357,4 @@ export function MedicalOrdersModule() {
     </ModuleCardWrapper>
   );
 }
+
