@@ -14,7 +14,7 @@ import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
 import { generateMedicalOrder, type GenerateMedicalOrderInput, type GenerateMedicalOrderOutput } from '@/ai/flows/generate-medical-order';
 import { useToast } from '@/hooks/use-toast';
-import { FileEdit, Eraser, Save, ClipboardCopy, WrapText, Baseline } from 'lucide-react';
+import { FileEdit, Eraser, Save, ClipboardCopy, WrapText, Baseline, ALargeSmall } from 'lucide-react';
 import type { MedicalOrderType, TransferConditionType, MedicalOrderInputState } from '@/types';
 import { getTextSummary } from '@/lib/utils';
 
@@ -143,11 +143,18 @@ export function MedicalOrdersModule() {
       const lowercasedText = text.toLowerCase();
       const lines = lowercasedText.split('\n');
       const sentenceCasedLines = lines.map(line => {
-        if (line.trim().length === 0) return line; // Mantener líneas vacías si existen
+        if (line.trim().length === 0) return line; 
         return line.charAt(0).toUpperCase() + line.slice(1);
       });
       setMedicalOrderOutput({ generatedOrderText: sentenceCasedLines.join('\n') });
       toast({ title: "Texto Formateado", description: "Las órdenes médicas se han formateado a tipo frase." });
+    }
+  };
+
+  const handleConvertToUppercase = () => {
+    if (medicalOrderOutput.generatedOrderText) {
+      setMedicalOrderOutput({ generatedOrderText: medicalOrderOutput.generatedOrderText.toUpperCase() });
+      toast({ title: "Texto en Mayúsculas", description: "Las órdenes médicas se han convertido a mayúsculas." });
     }
   };
 
@@ -358,6 +365,10 @@ export function MedicalOrdersModule() {
               <Button onClick={handleCapitalizeSentenceCase} variant="outline" size="sm">
                 <Baseline className="mr-2 h-4 w-4" /> 
                 Formato Frase
+              </Button>
+              <Button onClick={handleConvertToUppercase} variant="outline" size="sm">
+                <ALargeSmall className="mr-2 h-4 w-4" />
+                Todo Mayúsculas
               </Button>
               <Button onClick={handleCompactText} variant="outline" size="sm">
                 <WrapText className="mr-2 h-4 w-4" /> 
