@@ -1,3 +1,4 @@
+
 // src/components/modules/diagnosis-support-module.tsx
 'use client';
 
@@ -40,7 +41,7 @@ export function DiagnosisSupportModule() {
   const moduleRef = useRef<HTMLDivElement>(null);
 
   const handleSuggestDiagnosis = async () => {
-    if (!diagnosisInputData.trim()) {
+    if (!String(diagnosisInputData || '').trim()) {
       toast({ title: "Sin Datos Clínicos", description: "Por favor, ingrese datos clínicos para obtener sugerencias.", variant: "destructive" });
       return;
     }
@@ -49,7 +50,7 @@ export function DiagnosisSupportModule() {
     setDiagnosisError(null);
     
     try {
-      const aiOutput = await suggestDiagnosis({ clinicalData: diagnosisInputData });
+      const aiOutput = await suggestDiagnosis({ clinicalData: String(diagnosisInputData || '') });
       const initialResults: DiagnosisResult[] = aiOutput.map(d => ({ ...d, isValidated: false, isPrincipal: false }));
       setDiagnosisResults(initialResults); // Update context
       setLocalDiagnosisResults(initialResults); // Update local state for UI interaction
@@ -110,6 +111,7 @@ export function DiagnosisSupportModule() {
   const saveToHistory = async (results: DiagnosisResult[] | null, errorMsg: string | null) => {
     const currentResults = results || localDiagnosisResults; // Use passed results if available (e.g., fresh from AI)
     const status = errorMsg ? 'error' : 'completed';
+    const currentInputData = String(diagnosisInputData || '');
     
     const principalDiagnosis = currentResults.find(d => d.isPrincipal);
     const validatedCount = currentResults.filter(d => d.isValidated).length;
@@ -123,9 +125,9 @@ export function DiagnosisSupportModule() {
     await addHistoryEntry({
       module: 'DiagnosisSupport',
       inputType: 'text/plain',
-      inputSummary: getTextSummary(diagnosisInputData),
+      inputSummary: getTextSummary(currentInputData),
       outputSummary: outputSummary,
-      fullInput: diagnosisInputData,
+      fullInput: currentInputData,
       fullOutput: errorMsg ? { error: errorMsg } : currentResults, // Save the potentially reordered list
       status: status,
       errorDetails: errorMsg || undefined,
@@ -133,7 +135,7 @@ export function DiagnosisSupportModule() {
   };
 
   const handleSaveManually = () => {
-    if (!diagnosisInputData.trim() || (localDiagnosisResults.length === 0 && !diagnosisError)) {
+    if (!String(diagnosisInputData || '').trim() || (localDiagnosisResults.length === 0 && !diagnosisError)) {
        toast({ title: "Nada que Guardar", description: "Sugiera diagnósticos primero.", variant: "default" });
       return;
     }
@@ -158,7 +160,7 @@ export function DiagnosisSupportModule() {
           <Textarea
             id="diagnosisData"
             placeholder="Pegue o escriba datos clínicos aquí..."
-            value={diagnosisInputData}
+            value={diagnosisInputData || ''}
             onChange={(e) => setDiagnosisInputData(e.target.value)}
             rows={6}
             disabled={isDiagnosing}
@@ -166,7 +168,7 @@ export function DiagnosisSupportModule() {
         </div>
 
         <div className="flex space-x-2">
-          <Button onClick={handleSuggestDiagnosis} disabled={!diagnosisInputData.trim() || isDiagnosing} className="flex-1">
+          <Button onClick={handleSuggestDiagnosis} disabled={!String(diagnosisInputData || '').trim() || isDiagnosing} className="flex-1">
             <Stethoscope className="mr-2 h-4 w-4" />
             Sugerir Diagnósticos
           </Button>
