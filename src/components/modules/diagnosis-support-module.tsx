@@ -14,16 +14,20 @@ import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Stethoscope, Eraser, Pin, Star, Save, Lightbulb, GripVertical } from 'lucide-react';
+import { Stethoscope, Eraser, Pin, Star, Save, Lightbulb, GripVertical, Send } from 'lucide-react';
 import { getTextSummary, cn } from '@/lib/utils';
 
 export function DiagnosisSupportModule() {
   const {
     diagnosisInputData, setDiagnosisInputData,
-    diagnosisResults, setDiagnosisResults,
+    diagnosisResults, setDiagnosisResults, // Crucial para la reactividad
     isDiagnosing, setIsDiagnosing,
     diagnosisError, setDiagnosisError,
-    clearDiagnosisModule
+    clearDiagnosisModule,
+    // Para el botón "Enviar a Plan Terapéutico"
+    generatedClinicalAnalysis, 
+    textAnalysisSummary,
+    setTreatmentPlanInput,
   } = useClinicalData();
 
   const [localDiagnosisResults, setLocalDiagnosisResults] = useState<DiagnosisResult[]>([]);
@@ -55,8 +59,8 @@ export function DiagnosisSupportModule() {
     try {
       const aiOutput = await suggestDiagnosis({ clinicalData: currentInput });
       const initialResults: DiagnosisResult[] = aiOutput.map(d => ({ ...d, isValidated: false, isPrincipal: false }));
-      setDiagnosisResults(initialResults); 
-      setLocalDiagnosisResults(initialResults); 
+      setDiagnosisResults(initialResults); // Actualiza el estado global
+      // setLocalDiagnosisResults se actualizará a través del useEffect
       toast({ title: "Sugerencias de Diagnóstico Obtenidas", description: `${initialResults.length} diagnósticos sugeridos.` });
 
       if (isAutoSaveEnabled) {
@@ -66,8 +70,8 @@ export function DiagnosisSupportModule() {
       console.error("Error suggesting diagnosis:", error);
       const errorMessage = error.message || "Ocurrió un error desconocido.";
       setDiagnosisError(errorMessage);
-      setDiagnosisResults(null);
-      setLocalDiagnosisResults([]);
+      setDiagnosisResults(null); // Actualiza el estado global
+      // setLocalDiagnosisResults se actualizará a través del useEffect
       toast({ title: "Error en Sugerencia de Diagnóstico", description: errorMessage, variant: "destructive" });
       if (isAutoSaveEnabled) {
         await saveToHistory(null, errorMessage, currentInput);
@@ -79,7 +83,7 @@ export function DiagnosisSupportModule() {
 
   const handleClearData = () => {
     clearDiagnosisModule();
-    setLocalDiagnosisResults([]); 
+    // setLocalDiagnosisResults se actualizará a través del useEffect que escucha a diagnosisResults
     toast({ title: "Datos Limpiados", description: "Se han limpiado los datos para diagnóstico." });
   };
 
@@ -88,6 +92,7 @@ export function DiagnosisSupportModule() {
       i === index ? { ...diag, isValidated: !diag.isValidated } : diag
     );
     setLocalDiagnosisResults(updatedResults);
+    setDiagnosisResults(updatedResults); // Actualiza el estado global
   };
 
   const setPrincipalDiagnosis = (index: number) => {
@@ -101,6 +106,7 @@ export function DiagnosisSupportModule() {
       updatedResults = [principal, ...updatedResults.filter(diag => !diag.isPrincipal)];
     }
     setLocalDiagnosisResults(updatedResults);
+    setDiagnosisResults(updatedResults); // Actualiza el estado global
   };
 
   const getConfidenceBadgeVariant = (confidence: number): "default" | "secondary" | "destructive" => {
@@ -109,8 +115,8 @@ export function DiagnosisSupportModule() {
     return "destructive"; 
   };
 
-  const saveToHistory = async (results: DiagnosisResult[] | null, errorMsg: string | null, inputForHistory: string) => {
-    const currentResultsToSave = results || localDiagnosisResults; 
+  const saveToHistory = async (resultsForHistory: DiagnosisResult[] | null, errorMsg: string | null, inputForHistory: string) => {
+    const currentResultsToSave = resultsForHistory || localDiagnosisResults; 
     const status = errorMsg ? 'error' : 'completed';
         
     const principalDiagnosis = currentResultsToSave.find(d => d.isPrincipal);
@@ -136,12 +142,44 @@ export function DiagnosisSupportModule() {
 
   const handleSaveManually = () => {
     const currentInput = String(diagnosisInputData || '');
-    if (!currentInput.trim() || (localDiagnosisResults.length === 0 && !diagnosisError)) {
+    if (!currentInput.trim() && (localDiagnosisResults.length === 0 && !diagnosisError)) {
        toast({ title: "Nada que Guardar", description: "Sugiera diagnósticos primero.", variant: "default" });
       return;
     }
     saveToHistory(localDiagnosisResults, diagnosisError, currentInput);
   };
+
+  const handleSendToTreatmentPlan = () => {
+    const validatedDiagnoses = localDiagnosisResults
+      .filter(d => d.isValidated)
+      .map(d => ({ code: d.code, description: d.description }));
+
+    if (validatedDiagnoses.length === 0) {
+      toast({
+        title: "Sin Diagnósticos Validados",
+        description: "Por favor, valide al menos un diagnóstico para enviar al plan terapéutico.",
+        variant: "default"
+      });
+      return;
+    }
+
+    setTreatmentPlanInput({
+      clinicalAnalysis: generatedClinicalAnalysis,
+      textSummary: textAnalysisSummary,
+      validatedDiagnoses: validatedDiagnoses.length > 0 ? validatedDiagnoses : null,
+    });
+
+    toast({
+      title: "Diagnósticos Enviados",
+      description: "Los diagnósticos validados se han enviado para la sugerencia del plan terapéutico.",
+    });
+
+    setTimeout(() => {
+      const treatmentModule = document.getElementById('treatment-plan-module');
+      treatmentModule?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 0);
+  };
+
 
   // Drag and Drop Handlers
   const handleDragStart = (index: number) => {
@@ -171,6 +209,7 @@ export function DiagnosisSupportModule() {
     newResults.splice(dropTargetIndex, 0, itemToMove); // Insert item at new position
     
     setLocalDiagnosisResults(newResults);
+    setDiagnosisResults(newResults); // Actualiza el estado global
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
@@ -179,6 +218,8 @@ export function DiagnosisSupportModule() {
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
+  
+  const hasValidatedDiagnoses = localDiagnosisResults.some(d => d.isValidated);
 
   return (
     <ModuleCardWrapper
@@ -234,7 +275,7 @@ export function DiagnosisSupportModule() {
                 <TableBody>
                   {localDiagnosisResults.map((diag, index) => (
                     <TableRow
-                      key={diag.code + diag.description + index + (diag.isPrincipal ? '-principal' : '')}
+                      key={diag.code + diag.description + index + (diag.isPrincipal ? '-principal' : '') + (diag.isValidated ? '-validated' : '')}
                       draggable
                       onDragStart={() => handleDragStart(index)}
                       onDragEnter={() => handleDragEnter(index)}
@@ -252,6 +293,16 @@ export function DiagnosisSupportModule() {
                 </TableBody>
               </Table>
             </div>
+            <Button 
+              onClick={handleSendToTreatmentPlan} 
+              variant="default" 
+              size="sm" 
+              disabled={!hasValidatedDiagnoses || isDiagnosing}
+              className="w-full"
+            >
+              <Send className="mr-2 h-4 w-4" />
+              Usar Dx. Validados en Plan Terapéutico
+            </Button>
           </div>
         )}
         {diagnosisError && (
@@ -266,3 +317,6 @@ export function DiagnosisSupportModule() {
     </ModuleCardWrapper>
   );
 }
+
+
+    
