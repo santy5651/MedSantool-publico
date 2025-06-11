@@ -18,6 +18,7 @@ const GenerateMedicalOrderInputSchema = z.object({
   diet: z.string().optional().describe('Dieta del paciente. Aplicable solo si orderType es HOSPITALIZACIÓN. Ejemplo: "Dieta absoluta", "Dieta líquida".'),
   medicationsInput: z.string().describe("Lista de medicamentos, uno por línea. Formato esperado: Nombre del medicamento, presentación y concentración, dosis, vía, frecuencia, duración opcional. Ejemplo: Acetaminofén, tabletas de 500 mg, administrar 1 gramo, vía oral, cada 8 horas."),
   medicationReconciliationInput: z.string().describe("Detalles de conciliación medicamentosa. Ejemplo: Losartán, tabletas de 50 mg, administrar 50 mg, via oral, cada día. Si no tiene, ingresar 'NO TIENE CONCILIACIÓN MEDICAMENTOSA'."),
+  specialtyFollowUp: z.string().optional().describe('Especialidad médica que realizará el seguimiento durante la hospitalización. Ejemplo: "Cardiología", "Medicina Interna".'),
   fallRisk: z.string().default("RIESGO DE CAIDAS Y LESIONES POR PRESION SEGUN ESCALAS POR PERSONAL DE ENFERMERIA").describe('Indicación sobre riesgo de caídas y lesiones por presión.'),
   paduaScale: z.string().describe("Puntaje en la escala de Padua. Ejemplo: '3 puntos', 'NO APLICA'."),
   surveillanceNursing: z.object({
@@ -78,6 +79,11 @@ NO REQUIERE MEDICAMENTOS
 {{else}}
 NO TIENE CONCILIACIÓN MEDICAMENTOSA
 {{/if}}
+{{#if isHospitalizacionOrder}}
+{{#if specialtyFollowUp}}
+SEGUIMIENTO POR ESPECIALIDAD: {{{specialtyFollowUp}}}
+{{/if}}
+{{/if}}
 {{{fallRisk}}}
 ESCALA DE PADUA: {{{paduaScale}}}
 Vigilar signos vitales
@@ -114,4 +120,3 @@ const generateMedicalOrderFlow = ai.defineFlow(
     return output!;
   }
 );
-

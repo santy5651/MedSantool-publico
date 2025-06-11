@@ -44,8 +44,9 @@ export interface MedicalOrderInputState {
   isolation: string;
   diet: string;
   medicationsInput: string;
-  noMedicationReconciliation: boolean; // Nuevo campo
+  noMedicationReconciliation: boolean;
   medicationReconciliationInput: string;
+  specialtyFollowUp?: string; // Nuevo campo
   fallRisk: string;
   paduaScale: string;
   nursingSurveillance: NursingSurveillanceState;

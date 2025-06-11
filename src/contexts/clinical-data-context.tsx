@@ -17,8 +17,9 @@ const initialMedicalOrderInputs: MedicalOrderInputState = {
   isolation: "NO REQUIERE AISLAMIENTO",
   diet: "",
   medicationsInput: "",
-  noMedicationReconciliation: false, // Inicializado
+  noMedicationReconciliation: false,
   medicationReconciliationInput: "",
+  specialtyFollowUp: "", // Nuevo campo
   fallRisk: "RIESGO DE CAIDAS Y LESIONES POR PRESION SEGUN ESCALAS POR PERSONAL DE ENFERMERIA",
   paduaScale: "",
   nursingSurveillance: initialNursingSurveillanceState,
@@ -170,11 +171,11 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setClinicalNotesInput,
     setTextAnalysisSummary,
     setIsTextAnalyzing,
-    setTextAnalysisError: constSetTextAnalysisError, // Corregido para usar la constante declarada
+    setTextAnalysisError: constSetTextAnalysisError,
     setDiagnosisInputData,
     setDiagnosisResults,
     setIsDiagnosing,
-    setDiagnosisError: constSetDiagnosisError, // Corregido para usar la constante declarada
+    setDiagnosisError: constSetDiagnosisError,
     setMedicalOrderInputs,
     setMedicalOrderOutput,
     setIsGeneratingMedicalOrder,

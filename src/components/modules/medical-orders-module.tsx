@@ -14,7 +14,7 @@ import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
 import { generateMedicalOrder, type GenerateMedicalOrderInput, type GenerateMedicalOrderOutput } from '@/ai/flows/generate-medical-order';
 import { useToast } from '@/hooks/use-toast';
-import { FileEdit, Eraser, Copy, Save, ChevronUp, ClipboardCopy, WrapText } from 'lucide-react';
+import { FileEdit, Eraser, Copy, Save, ChevronUp, ClipboardCopy, WrapText, Stethoscope } from 'lucide-react';
 import type { MedicalOrderType, TransferConditionType, MedicalOrderInputState } from '@/types';
 import { getTextSummary } from '@/lib/utils';
 
@@ -75,6 +75,7 @@ export function MedicalOrdersModule() {
         diet: medicalOrderInputs.orderType === "HOSPITALIZACIÓN" ? (medicalOrderInputs.diet || "Dieta por definir") : undefined,
         medicationsInput: medicalOrderInputs.medicationsInput || "NO REQUIERE MEDICAMENTOS",
         medicationReconciliationInput: medicalOrderInputs.noMedicationReconciliation ? "NO TIENE CONCILIACIÓN MEDICAMENTOSA" : (medicalOrderInputs.medicationReconciliationInput || "NO TIENE CONCILIACIÓN MEDICAMENTOSA"),
+        specialtyFollowUp: medicalOrderInputs.orderType === "HOSPITALIZACIÓN" ? medicalOrderInputs.specialtyFollowUp : undefined,
         fallRisk: medicalOrderInputs.fallRisk || "RIESGO DE CAIDAS Y LESIONES POR PRESION SEGUN ESCALAS POR PERSONAL DE ENFERMERIA",
         paduaScale: medicalOrderInputs.paduaScale || "NO APLICA",
         surveillanceNursing: medicalOrderInputs.nursingSurveillance,
@@ -145,7 +146,6 @@ export function MedicalOrdersModule() {
 
   const handleCompactText = () => {
     if (medicalOrderOutput.generatedOrderText) {
-      // Reemplaza dos o más saltos de línea consecutivos con un solo salto de línea.
       const compactedText = medicalOrderOutput.generatedOrderText.replace(/\n{2,}/g, '\n').trim();
       setMedicalOrderOutput({ generatedOrderText: compactedText });
       toast({ title: "Texto Compactado", description: "Se han normalizado los saltos de línea múltiples." });
@@ -169,6 +169,7 @@ export function MedicalOrdersModule() {
         diet: medicalOrderInputs.orderType === "HOSPITALIZACIÓN" ? (medicalOrderInputs.diet || "Dieta por definir") : undefined,
         medicationsInput: medicalOrderInputs.medicationsInput || "NO REQUIERE MEDICAMENTOS",
         medicationReconciliationInput: medicalOrderInputs.noMedicationReconciliation ? "NO TIENE CONCILIACIÓN MEDICAMENTOSA" : (medicalOrderInputs.medicationReconciliationInput || "NO TIENE CONCILIACIÓN MEDICAMENTOSA"),
+        specialtyFollowUp: medicalOrderInputs.orderType === "HOSPITALIZACIÓN" ? medicalOrderInputs.specialtyFollowUp : undefined,
         fallRisk: medicalOrderInputs.fallRisk || "RIESGO DE CAIDAS Y LESIONES POR PRESION SEGUN ESCALAS POR PERSONAL DE ENFERMERIA",
         paduaScale: medicalOrderInputs.paduaScale || "NO APLICA",
         surveillanceNursing: medicalOrderInputs.nursingSurveillance,
@@ -256,6 +257,19 @@ export function MedicalOrdersModule() {
             className={medicalOrderInputs.noMedicationReconciliation ? "bg-muted/50" : ""}
           />
         </div>
+
+        {medicalOrderInputs.orderType === 'HOSPITALIZACIÓN' && (
+            <div>
+              <Label htmlFor="specialtyFollowUp">Seguimiento por Especialidad</Label>
+              <Input 
+                id="specialtyFollowUp" 
+                value={medicalOrderInputs.specialtyFollowUp || ''} 
+                onChange={(e) => handleInputChange('specialtyFollowUp', e.target.value)} 
+                placeholder="Ej: Cardiología, Medicina Interna" 
+                disabled={isGeneratingMedicalOrder}
+              />
+            </div>
+          )}
 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
