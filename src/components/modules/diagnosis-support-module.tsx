@@ -14,13 +14,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Stethoscope, Eraser, Pin, Star, Save, Lightbulb } from 'lucide-react';
+import { Stethoscope, Eraser, Pin, Star, Save, Lightbulb, ArrowUp, ArrowDown } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 
 export function DiagnosisSupportModule() {
   const {
     diagnosisInputData, setDiagnosisInputData,
-    diagnosisResults, setDiagnosisResults, // This will hold DiagnosisResult[]
+    diagnosisResults, setDiagnosisResults,
     isDiagnosing, setIsDiagnosing,
     diagnosisError, setDiagnosisError,
     clearDiagnosisModule
@@ -53,8 +53,8 @@ export function DiagnosisSupportModule() {
     try {
       const aiOutput = await suggestDiagnosis({ clinicalData: currentInput });
       const initialResults: DiagnosisResult[] = aiOutput.map(d => ({ ...d, isValidated: false, isPrincipal: false }));
-      setDiagnosisResults(initialResults); // Update context
-      setLocalDiagnosisResults(initialResults); // Update local state for UI interaction
+      setDiagnosisResults(initialResults); 
+      setLocalDiagnosisResults(initialResults); 
       toast({ title: "Sugerencias de Diagnóstico Obtenidas", description: `${initialResults.length} diagnósticos sugeridos.` });
 
       if (isAutoSaveEnabled) {
@@ -77,7 +77,7 @@ export function DiagnosisSupportModule() {
 
   const handleClearData = () => {
     clearDiagnosisModule();
-    setLocalDiagnosisResults([]);
+    setLocalDiagnosisResults([]); // También limpiar resultados locales
     toast({ title: "Datos Limpiados", description: "Se han limpiado los datos para diagnóstico." });
   };
 
@@ -86,16 +86,14 @@ export function DiagnosisSupportModule() {
       i === index ? { ...diag, isValidated: !diag.isValidated } : diag
     );
     setLocalDiagnosisResults(updatedResults);
-    // Note: We might want to trigger a history save or update if auto-save is on and results change
   };
 
   const setPrincipalDiagnosis = (index: number) => {
     let updatedResults = localDiagnosisResults.map((diag, i) => ({
       ...diag,
-      isPrincipal: i === index ? !diag.isPrincipal : false, // Toggle selected, deselect others
+      isPrincipal: i === index ? !diag.isPrincipal : false, 
     }));
     
-    // Move principal to top
     const principal = updatedResults.find(diag => diag.isPrincipal);
     if (principal) {
       updatedResults = [principal, ...updatedResults.filter(diag => !diag.isPrincipal)];
@@ -103,21 +101,34 @@ export function DiagnosisSupportModule() {
     setLocalDiagnosisResults(updatedResults);
   };
 
+  const moveDiagnosis = (index: number, direction: 'up' | 'down') => {
+    const newResults = [...localDiagnosisResults];
+    const itemToMove = newResults[index];
+    if (direction === 'up' && index > 0) {
+      newResults.splice(index, 1);
+      newResults.splice(index - 1, 0, itemToMove);
+    } else if (direction === 'down' && index < newResults.length - 1) {
+      newResults.splice(index, 1);
+      newResults.splice(index + 1, 0, itemToMove);
+    }
+    setLocalDiagnosisResults(newResults);
+  };
+
   const getConfidenceBadgeVariant = (confidence: number): "default" | "secondary" | "destructive" => {
-    if (confidence > 0.75) return "default"; // Corresponds to primary usually
+    if (confidence > 0.75) return "default"; 
     if (confidence > 0.5) return "secondary";
-    return "destructive"; // Low confidence
+    return "destructive"; 
   };
 
   const saveToHistory = async (results: DiagnosisResult[] | null, errorMsg: string | null, inputForHistory: string) => {
-    const currentResults = results || localDiagnosisResults; 
+    const currentResultsToSave = results || localDiagnosisResults; 
     const status = errorMsg ? 'error' : 'completed';
         
-    const principalDiagnosis = currentResults.find(d => d.isPrincipal);
-    const validatedCount = currentResults.filter(d => d.isValidated).length;
+    const principalDiagnosis = currentResultsToSave.find(d => d.isPrincipal);
+    const validatedCount = currentResultsToSave.filter(d => d.isValidated).length;
     let outputSummary = 'Error en diagnóstico';
     if (!errorMsg) {
-      outputSummary = `${currentResults.length} diagnósticos.`;
+      outputSummary = `${currentResultsToSave.length} diagnósticos.`;
       if (principalDiagnosis) outputSummary += ` Principal: ${principalDiagnosis.code}.`;
       outputSummary += ` Validados: ${validatedCount}.`;
     }
@@ -128,7 +139,7 @@ export function DiagnosisSupportModule() {
       inputSummary: getTextSummary(inputForHistory),
       outputSummary: outputSummary,
       fullInput: inputForHistory,
-      fullOutput: errorMsg ? { error: errorMsg } : currentResults, 
+      fullOutput: errorMsg ? { error: errorMsg } : currentResultsToSave, 
       status: status,
       errorDetails: errorMsg || undefined,
     });
@@ -148,7 +159,7 @@ export function DiagnosisSupportModule() {
     <ModuleCardWrapper
       ref={moduleRef}
       title="Diagnóstico Inteligente Asistido por IA"
-      description="Ingrese datos clínicos consolidados. La IA sugerirá diagnósticos (CIE-10) con niveles de confianza."
+      description="Ingrese datos clínicos consolidados. La IA sugerirá diagnósticos (CIE-10) con niveles de confianza. Puede reordenarlos manualmente."
       icon={Lightbulb}
       isLoading={isDiagnosing}
       id="diagnosis-support-module"
@@ -186,22 +197,23 @@ export function DiagnosisSupportModule() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[50px]"></TableHead>
-                    <TableHead className="w-[80px]">Validar</TableHead>
+                    <TableHead className="w-[50px] text-center">Principal</TableHead>
+                    <TableHead className="w-[80px] text-center">Validar</TableHead>
                     <TableHead className="w-[120px]">CIE-10</TableHead>
                     <TableHead>Descripción</TableHead>
-                    <TableHead className="w-[150px]">Confianza</TableHead>
+                    <TableHead className="w-[120px] text-center">Confianza</TableHead>
+                    <TableHead className="w-[100px] text-center">Reordenar</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {localDiagnosisResults.map((diag, index) => (
-                    <TableRow key={diag.code + index} className={diag.isPrincipal ? 'bg-primary/10' : ''}>
+                    <TableRow key={diag.code + index + (diag.isPrincipal ? '-principal' : '')} className={diag.isPrincipal ? 'bg-primary/10' : ''}>
                       <TableCell className="text-center">
                         <Button variant="ghost" size="icon" onClick={() => setPrincipalDiagnosis(index)} title={diag.isPrincipal ? "Quitar como principal" : "Marcar como principal"}>
                           {diag.isPrincipal ? <Star className="h-5 w-5 text-accent fill-accent" /> : <Pin className="h-5 w-5" />}
                         </Button>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-center">
                         <Checkbox
                           checked={diag.isValidated}
                           onCheckedChange={() => toggleValidation(index)}
@@ -210,10 +222,30 @@ export function DiagnosisSupportModule() {
                       </TableCell>
                       <TableCell className="font-medium">{diag.code}</TableCell>
                       <TableCell>{diag.description}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-center">
                         <Badge variant={getConfidenceBadgeVariant(diag.confidence)}>
                           {(diag.confidence * 100).toFixed(0)}%
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-center space-x-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => moveDiagnosis(index, 'up')} 
+                          disabled={index === 0 || localDiagnosisResults.length <= 1}
+                          title="Mover arriba"
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => moveDiagnosis(index, 'down')} 
+                          disabled={index === localDiagnosisResults.length - 1 || localDiagnosisResults.length <= 1}
+                          title="Mover abajo"
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -234,3 +266,4 @@ export function DiagnosisSupportModule() {
     </ModuleCardWrapper>
   );
 }
+
