@@ -31,9 +31,10 @@ const GenerateMedicalOrderInputSchema = z.object({
 });
 export type GenerateMedicalOrderInput = z.infer<typeof GenerateMedicalOrderInputSchema>;
 
-// Define a new type for the prompt's input, including the derived boolean flag
+// Define a new type for the prompt's input, including the derived boolean flags
 const PromptInputSchema = GenerateMedicalOrderInputSchema.extend({
-  isHospitalizacionOrder: z.boolean()
+  isHospitalizacionOrder: z.boolean(),
+  requiresSpecialNursingSurveillance: z.boolean()
 });
 type PromptInput = z.infer<typeof PromptInputSchema>;
 
@@ -98,7 +99,7 @@ VIGILANCIA POR ENFERMERÍA Y PERSONAL DE SALUD:
 {{#if surveillanceNursing.monitorPain}}- Vigilar dolor{{/if}}
 {{#if surveillanceNursing.monitorWounds}}- Vigilar heridas{{/if}}
 {{#if surveillanceNursing.monitorBleeding}}- Vigilar sangrado{{/if}}
-{{#unless (or surveillanceNursing.thermalCurve surveillanceNursing.monitorPain surveillanceNursing.monitorWounds surveillanceNursing.monitorBleeding)}}NO REQUIERE VIGILANCIA ESPECIAL POR ENFERMERÍA{{/unless}}
+{{#unless requiresSpecialNursingSurveillance}}NO REQUIERE VIGILANCIA ESPECIAL POR ENFERMERÍA{{/unless}}
 
 CONDICIONES DE TRASLADO:
 {{{transferConditions}}}
@@ -119,10 +120,14 @@ const generateMedicalOrderFlow = ai.defineFlow(
     outputSchema: GenerateMedicalOrderOutputSchema,
   },
   async (input) => {
-    // Create the input for the prompt, including the derived boolean flag
+    // Create the input for the prompt, including the derived boolean flags
     const promptData: PromptInput = {
       ...input,
       isHospitalizacionOrder: input.orderType === "HOSPITALIZACIÓN",
+      requiresSpecialNursingSurveillance: input.surveillanceNursing.thermalCurve || 
+                                          input.surveillanceNursing.monitorPain || 
+                                          input.surveillanceNursing.monitorWounds || 
+                                          input.surveillanceNursing.monitorBleeding,
     };
     
     const {output} = await prompt(promptData);
