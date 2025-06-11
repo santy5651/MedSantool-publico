@@ -7,6 +7,7 @@ import { PdfExtractionModule } from '@/components/modules/pdf-extraction-module'
 import { TextAnalysisModule } from '@/components/modules/text-analysis-module';
 import { ClinicalAnalysisModule } from '@/components/modules/clinical-analysis-module';
 import { DiagnosisSupportModule } from '@/components/modules/diagnosis-support-module';
+import { TreatmentPlanModule } from '@/components/modules/treatment-plan-module';
 import { MedicalOrdersModule } from '@/components/modules/medical-orders-module';
 import { HistoryModule } from '@/components/modules/history-module';
 
@@ -20,6 +21,7 @@ export default function MedInsightPage() {
         <TextAnalysisModule />
         <ClinicalAnalysisModule />
         <DiagnosisSupportModule />
+        <TreatmentPlanModule />
         <MedicalOrdersModule />
       </div>
 

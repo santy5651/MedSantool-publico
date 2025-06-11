@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain } from 'lucide-react';
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks } from 'lucide-react';
 import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 
@@ -22,9 +22,10 @@ const moduleIcons: Record<ModuleType, LucideIcon> = {
   ImageAnalysis: ImageIcon,
   PdfExtraction: FileText,
   TextAnalysis: MessageSquareText,
-  ClinicalAnalysis: Brain, // New Icon
+  ClinicalAnalysis: Brain, 
   DiagnosisSupport: Lightbulb,
   MedicalOrders: FileEdit,
+  TreatmentPlanSuggestion: ListChecks,
 };
 
 const statusIcons: Record<HistoryEntry['status'], LucideIcon> = {
@@ -89,9 +90,8 @@ export function HistoryModule() {
     if (!entry.fullOutput) return <p className="text-xs text-muted-foreground">No hay detalles completos.</p>;
 
     try {
-      // Type assertion for fullOutput based on module
       const output = typeof entry.fullOutput === 'string' 
-        ? (entry.module === 'TextAnalysis' || entry.module === 'ImageAnalysis' || entry.module === 'ClinicalAnalysis' ? { summary: entry.fullOutput } : JSON.parse(entry.fullOutput) )
+        ? JSON.parse(entry.fullOutput) // Assume stringified JSON for older entries or simple text outputs
         : entry.fullOutput;
       
       if (entry.module === 'DiagnosisSupport' && Array.isArray(output)) {
@@ -152,8 +152,10 @@ export function HistoryModule() {
           return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{medicalOrder.generatedOrderText}</pre>;
       } else if (entry.module === 'ClinicalAnalysis' && typeof output === 'object' && output !== null && 'clinicalAnalysis' in output) {
         return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {clinicalAnalysis: string}).clinicalAnalysis}</pre>;
-      } else if (typeof output === 'object' && output !== null && ('summary' in output)) { // For ImageAnalysis and TextAnalysis
+      } else if ((entry.module === 'ImageAnalysis' || entry.module === 'TextAnalysis') && typeof output === 'object' && output !== null && ('summary' in output)) {
         return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {summary: string}).summary}</pre>;
+      } else if (entry.module === 'TreatmentPlanSuggestion' && typeof output === 'object' && output !== null && 'suggestedPlanText' in output) {
+        return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {suggestedPlanText: string}).suggestedPlanText}</pre>;
       }
       // Fallback for other structures or stringified JSON
       return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{typeof output === 'string' ? output : JSON.stringify(output, null, 2)}</pre>;

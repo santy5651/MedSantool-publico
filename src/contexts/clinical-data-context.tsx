@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState } from '@/types';
+import type { ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState } from '@/types';
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const initialNursingSurveillanceState: NursingSurveillanceState = {
@@ -31,6 +31,16 @@ const initialMedicalOrderOutput: MedicalOrderOutputState = {
   generatedOrderText: null,
 };
 
+const initialTreatmentPlanInput: TreatmentPlanInputData = {
+  clinicalAnalysis: null,
+  textSummary: null,
+  principalDiagnosis: null,
+};
+
+const initialGeneratedTreatmentPlan: TreatmentPlanOutputState = {
+  suggestedPlanText: null,
+};
+
 
 const initialState: ClinicalDataContextState = {
   imageFile: null,
@@ -49,7 +59,6 @@ const initialState: ClinicalDataContextState = {
   isTextAnalyzing: false,
   textAnalysisError: null,
 
-  // Clinical Analysis (New Module)
   clinicalAnalysisInput: null, 
   generatedClinicalAnalysis: null,
   isGeneratingClinicalAnalysis: false,
@@ -64,6 +73,11 @@ const initialState: ClinicalDataContextState = {
   medicalOrderOutput: initialMedicalOrderOutput,
   isGeneratingMedicalOrder: false,
   medicalOrderError: null,
+
+  treatmentPlanInput: initialTreatmentPlanInput,
+  generatedTreatmentPlan: initialGeneratedTreatmentPlan,
+  isGeneratingTreatmentPlan: false,
+  treatmentPlanError: null,
 };
 
 const ClinicalDataContext = createContext<ClinicalDataContextType | undefined>(undefined);
@@ -86,17 +100,15 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setState(s => ({ ...s, clinicalNotesInput: typeof notes === 'function' ? notes(s.clinicalNotesInput) : notes }));
   }, []);
   const setTextAnalysisSummary = useCallback((summary: string | null) => {
-    setState(s => ({ ...s, textAnalysisSummary: summary, clinicalAnalysisInput: summary })); // Also set as input for new module
+    setState(s => ({ ...s, textAnalysisSummary: summary, clinicalAnalysisInput: summary })); 
   }, []);
   const setIsTextAnalyzing = useCallback((loading: boolean) => setState(s => ({ ...s, isTextAnalyzing: loading })), []);
   const constSetTextAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, textAnalysisError: error })), []);
 
-  // Clinical Analysis (New Module)
   const setClinicalAnalysisInput = useCallback((input: string | null) => setState(s => ({ ...s, clinicalAnalysisInput: input })), []);
   const setGeneratedClinicalAnalysis = useCallback((analysis: string | null) => setState(s => ({ ...s, generatedClinicalAnalysis: analysis })), []);
   const setIsGeneratingClinicalAnalysis = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingClinicalAnalysis: loading })), []);
   const setClinicalAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, clinicalAnalysisError: error })), []);
-
 
   const setDiagnosisInputData = useCallback((data: string | ((prev: string) => string)) => {
     setState(s => ({ ...s, diagnosisInputData: typeof data === 'function' ? data(s.diagnosisInputData) : data }));
@@ -105,8 +117,6 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setIsDiagnosing = useCallback((loading: boolean) => setState(s => ({ ...s, isDiagnosing: loading })), []);
   const constSetDiagnosisError = useCallback((error: string | null) => setState(s => ({...s, diagnosisError: error})), []);
 
-
-  // Medical Orders
   const setMedicalOrderInputs = useCallback((inputsOrUpdater: MedicalOrderInputState | ((prevState: MedicalOrderInputState) => MedicalOrderInputState)) => {
     setState(s => ({
       ...s,
@@ -118,6 +128,13 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setMedicalOrderOutput = useCallback((output: MedicalOrderOutputState) => setState(s => ({ ...s, medicalOrderOutput: output })), []);
   const setIsGeneratingMedicalOrder = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingMedicalOrder: loading })), []);
   const setMedicalOrderError = useCallback((error: string | null) => setState(s => ({ ...s, medicalOrderError: error })), []);
+
+  // Treatment Plan Suggestion
+  const setTreatmentPlanInput = useCallback((input: TreatmentPlanInputData) => setState(s => ({ ...s, treatmentPlanInput: input })), []);
+  const setGeneratedTreatmentPlan = useCallback((plan: TreatmentPlanOutputState) => setState(s => ({ ...s, generatedTreatmentPlan: plan })), []);
+  const setIsGeneratingTreatmentPlan = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingTreatmentPlan: loading })), []);
+  const setTreatmentPlanError = useCallback((error: string | null) => setState(s => ({ ...s, treatmentPlanError: error})), []);
+
 
   const clearImageModule = useCallback(() => {
     setState(s => ({
@@ -147,15 +164,13 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       textAnalysisSummary: null,
       isTextAnalyzing: false,
       textAnalysisError: null,
-      clinicalAnalysisInput: null, // Clear input for next module
+      clinicalAnalysisInput: null, 
     }));
   }, []);
 
   const clearClinicalAnalysisModule = useCallback(() => {
     setState(s => ({
       ...s,
-      // clinicalAnalysisInput is typically derived, but allow clearing if needed
-      // clinicalAnalysisInput: null, 
       generatedClinicalAnalysis: null,
       isGeneratingClinicalAnalysis: false,
       clinicalAnalysisError: null,
@@ -181,6 +196,16 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       medicalOrderError: null,
     }));
   }, []);
+  
+  const clearTreatmentPlanModule = useCallback(() => {
+    setState(s => ({
+      ...s,
+      treatmentPlanInput: initialTreatmentPlanInput,
+      generatedTreatmentPlan: initialGeneratedTreatmentPlan,
+      isGeneratingTreatmentPlan: false,
+      treatmentPlanError: null,
+    }));
+  }, []);
 
 
   const contextValue: ClinicalDataContextType = {
@@ -198,12 +223,10 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setTextAnalysisSummary,
     setIsTextAnalyzing,
     setTextAnalysisError: constSetTextAnalysisError,
-    // Clinical Analysis (New Module)
     setClinicalAnalysisInput,
     setGeneratedClinicalAnalysis,
     setIsGeneratingClinicalAnalysis,
     setClinicalAnalysisError,
-    clearClinicalAnalysisModule,
     setDiagnosisInputData,
     setDiagnosisResults,
     setIsDiagnosing,
@@ -212,11 +235,17 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setMedicalOrderOutput,
     setIsGeneratingMedicalOrder,
     setMedicalOrderError,
+    setTreatmentPlanInput,
+    setGeneratedTreatmentPlan,
+    setIsGeneratingTreatmentPlan,
+    setTreatmentPlanError,
     clearImageModule,
     clearPdfModule,
     clearTextModule,
+    clearClinicalAnalysisModule,
     clearDiagnosisModule,
     clearMedicalOrdersModule,
+    clearTreatmentPlanModule,
   };
 
   return (

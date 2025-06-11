@@ -1,5 +1,5 @@
 
-export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders';
+export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion';
 
 export interface HistoryEntry {
   id?: number;
@@ -9,7 +9,7 @@ export interface HistoryEntry {
   inputSummary: string;
   outputSummary: string;
   fullInput?: string | Record<string, any>;
-  fullOutput?: string | Record<string, any> | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string };
+  fullOutput?: string | Record<string, any> | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | { suggestedPlanText: string };
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
 }
@@ -59,6 +59,18 @@ export interface MedicalOrderOutputState {
 }
 // --- End Medical Orders Module Specific Types ---
 
+// --- Treatment Plan Suggestion Module Specific Types ---
+export interface TreatmentPlanInputData {
+  clinicalAnalysis: string | null;
+  textSummary: string | null;
+  principalDiagnosis?: { code: string; description: string } | null;
+}
+
+export interface TreatmentPlanOutputState {
+ suggestedPlanText: string | null;
+}
+// --- End Treatment Plan Suggestion Module Specific Types ---
+
 
 export interface ClinicalDataContextState {
   // Image Analysis
@@ -80,8 +92,8 @@ export interface ClinicalDataContextState {
   isTextAnalyzing: boolean;
   textAnalysisError: string |null;
 
-  // Clinical Analysis (New Module)
-  clinicalAnalysisInput: string | null; // Will typically be textAnalysisSummary
+  // Clinical Analysis
+  clinicalAnalysisInput: string | null; 
   generatedClinicalAnalysis: string | null;
   isGeneratingClinicalAnalysis: boolean;
   clinicalAnalysisError: string | null;
@@ -97,6 +109,12 @@ export interface ClinicalDataContextState {
   medicalOrderOutput: MedicalOrderOutputState;
   isGeneratingMedicalOrder: boolean;
   medicalOrderError: string | null;
+
+  // Treatment Plan Suggestion
+  treatmentPlanInput: TreatmentPlanInputData;
+  generatedTreatmentPlan: TreatmentPlanOutputState;
+  isGeneratingTreatmentPlan: boolean;
+  treatmentPlanError: string | null;
 }
 
 export interface ClinicalDataContextActions {
@@ -116,12 +134,10 @@ export interface ClinicalDataContextActions {
   setIsTextAnalyzing: (loading: boolean) => void;
   setTextAnalysisError: (error: string | null) => void;
 
-  // Clinical Analysis Actions (New Module)
   setClinicalAnalysisInput: (input: string | null) => void;
   setGeneratedClinicalAnalysis: (analysis: string | null) => void;
   setIsGeneratingClinicalAnalysis: (loading: boolean) => void;
   setClinicalAnalysisError: (error: string | null) => void;
-  clearClinicalAnalysisModule: () => void;
 
   setDiagnosisInputData: (data: string | ((prev: string) => string)) => void;
   setDiagnosisResults: (results: DiagnosisResult[] | null) => void;
@@ -133,9 +149,17 @@ export interface ClinicalDataContextActions {
   setIsGeneratingMedicalOrder: (loading: boolean) => void;
   setMedicalOrderError: (error: string | null) => void;
   
+  // Treatment Plan Suggestion Actions
+  setTreatmentPlanInput: (input: TreatmentPlanInputData) => void;
+  setGeneratedTreatmentPlan: (plan: TreatmentPlanOutputState) => void;
+  setIsGeneratingTreatmentPlan: (loading: boolean) => void;
+  setTreatmentPlanError: (error: string | null) => void;
+  clearTreatmentPlanModule: () => void;
+
   clearImageModule: () => void;
   clearPdfModule: () => void;
   clearTextModule: () => void;
+  clearClinicalAnalysisModule: () => void;
   clearDiagnosisModule: () => void;
   clearMedicalOrdersModule: () => void;
 }
