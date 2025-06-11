@@ -18,7 +18,8 @@ export function TextAnalysisModule() {
     textAnalysisSummary, setTextAnalysisSummary,
     isTextAnalyzing, setIsTextAnalyzing,
     textAnalysisError, setTextAnalysisError,
-    setDiagnosisInputData, // For "Usar Resumen para Diagnóstico"
+    diagnosisInputData, // Get current diagnosis input data for appending
+    setDiagnosisInputData, 
     clearTextModule
   } = useClinicalData();
 
@@ -42,6 +43,17 @@ export function TextAnalysisModule() {
       setTextAnalysisSummary(analysisOutput.summary);
       toast({ title: "Análisis de Texto Completado", description: "Las notas han sido resumidas." });
       
+      // Automatically transfer summary to Diagnosis Module
+      if (analysisOutput.summary) {
+        const summaryHeader = `[Resumen de Notas Clínicas]:\n${analysisOutput.summary}`;
+        const updatedDiagnosisInput = `${String(diagnosisInputData || '') ? String(diagnosisInputData || '') + '\n\n' : ''}${summaryHeader}`;
+        setDiagnosisInputData(updatedDiagnosisInput);
+        toast({
+          title: "Resumen Enviado a Diagnóstico",
+          description: "El resumen de notas se ha añadido automáticamente para soporte diagnóstico.",
+        });
+      }
+
       if (isAutoSaveEnabled) {
         await addHistoryEntry({
           module: 'TextAnalysis',
@@ -90,8 +102,9 @@ export function TextAnalysisModule() {
 
   const handleSendToDiagnosis = () => {
     if (textAnalysisSummary) {
+      const summaryHeader = `[Resumen de Notas Clínicas]:\n${textAnalysisSummary}`;
       setDiagnosisInputData(prev => 
-        `${prev ? prev + '\n\n' : ''}[Resumen de Notas Clínicas]:\n${textAnalysisSummary}`
+        `${String(prev || '') ? String(prev || '') + '\n\n' : ''}${summaryHeader}`
       );
       toast({ title: "Resumen Enviado a Diagnóstico", description: "El resumen se ha enviado para soporte diagnóstico." });
       const diagnosisModule = document.getElementById('diagnosis-support-module');
