@@ -1,6 +1,7 @@
+
 'use server';
 /**
- * @fileOverview Sugiere un plan terapéutico (medicamentos y conductas) basado en análisis clínico, resumen y diagnóstico.
+ * @fileOverview Sugiere un plan terapéutico (medicamentos y conductas) basado en análisis clínico, resumen y diagnósticos validados.
  *
  * - suggestTreatmentPlan - Función que maneja la sugerencia del plan terapéutico.
  * - SuggestTreatmentPlanInput - Tipo de entrada para suggestTreatmentPlan.
@@ -13,10 +14,12 @@ import {z} from 'genkit';
 const SuggestTreatmentPlanInputSchema = z.object({
   clinicalAnalysis: z.string().describe('El análisis clínico del caso generado por IA (del Módulo 4).'),
   textSummary: z.string().describe('El resumen de información clave (del Módulo 3).'),
-  principalDiagnosis: z.object({
-    code: z.string().describe('Código CIE-10 del diagnóstico principal.'),
-    description: z.string().describe('Descripción del diagnóstico principal.'),
-  }).optional().describe('El diagnóstico principal seleccionado (del Módulo 5), si existe.'),
+  validatedDiagnoses: z.array(
+    z.object({
+      code: z.string().describe('Código CIE-10 del diagnóstico.'),
+      description: z.string().describe('Descripción del diagnóstico.'),
+    })
+  ).optional().describe('Lista de diagnósticos validados por el usuario (del Módulo 5), si existen.'),
 });
 export type SuggestTreatmentPlanInput = z.infer<typeof SuggestTreatmentPlanInputSchema>;
 
@@ -44,12 +47,13 @@ Basado en la siguiente información clínica, genera sugerencias de medicamentos
 **Resumen de Información Clave:**
 {{{textSummary}}}
 
-{{#if principalDiagnosis}}
-**Diagnóstico Principal Seleccionado:**
-Código: {{{principalDiagnosis.code}}}
-Descripción: {{{principalDiagnosis.description}}}
+{{#if validatedDiagnoses}}
+**Diagnósticos Validados:**
+{{#each validatedDiagnoses}}
+- Código: {{{this.code}}}, Descripción: {{{this.description}}}
+{{/each}}
 {{else}}
-**Diagnóstico Principal Seleccionado:** Ninguno especificado.
+**Diagnósticos Validados:** Ninguno especificado.
 {{/if}}
 
 **Instrucciones para la Salida:**

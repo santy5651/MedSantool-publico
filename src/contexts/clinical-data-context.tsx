@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState } from '@/types';
+import type { ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis } from '@/types';
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const initialNursingSurveillanceState: NursingSurveillanceState = {
@@ -34,7 +34,7 @@ const initialMedicalOrderOutput: MedicalOrderOutputState = {
 const initialTreatmentPlanInput: TreatmentPlanInputData = {
   clinicalAnalysis: null,
   textSummary: null,
-  principalDiagnosis: null,
+  validatedDiagnoses: null,
 };
 
 const initialGeneratedTreatmentPlan: TreatmentPlanOutputState = {

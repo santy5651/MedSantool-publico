@@ -8,7 +8,7 @@ import { ModuleCardWrapper } from '@/components/common/module-card-wrapper';
 import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
 import { suggestTreatmentPlan, type SuggestTreatmentPlanOutput } from '@/ai/flows/suggest-treatment-plan';
-import type { TreatmentPlanInputData } from '@/types';
+import type { TreatmentPlanInputData, ValidatedDiagnosis } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardPlus, Eraser, Save, Copy, ListChecks } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
@@ -25,8 +25,6 @@ export function TreatmentPlanModule() {
     isGeneratingTreatmentPlan, setIsGeneratingTreatmentPlan,
     treatmentPlanError, setTreatmentPlanError,
     clearTreatmentPlanModule,
-    // For potential integration with Medical Orders
-    setMedicalOrderInputs,
   } = useClinicalData();
 
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
@@ -35,18 +33,21 @@ export function TreatmentPlanModule() {
 
   // Effect to assemble input for this module when dependencies change
   useEffect(() => {
-    const principalDiagnosis = diagnosisResults?.find(d => d.isPrincipal) || null;
+    const validatedDiagnoses: ValidatedDiagnosis[] = diagnosisResults
+      ?.filter(d => d.isValidated)
+      .map(d => ({ code: d.code, description: d.description })) || [];
+
     const newTreatmentInput: TreatmentPlanInputData = {
       clinicalAnalysis: generatedClinicalAnalysis || null,
       textSummary: textAnalysisSummary || null,
-      principalDiagnosis: principalDiagnosis ? { code: principalDiagnosis.code, description: principalDiagnosis.description } : null,
+      validatedDiagnoses: validatedDiagnoses.length > 0 ? validatedDiagnoses : null,
     };
     setTreatmentPlanInput(newTreatmentInput);
   }, [generatedClinicalAnalysis, textAnalysisSummary, diagnosisResults, setTreatmentPlanInput]);
 
   const handleSuggestPlan = async () => {
-    if (!treatmentPlanInput.clinicalAnalysis && !treatmentPlanInput.textSummary && !treatmentPlanInput.principalDiagnosis) {
-      toast({ title: "Datos Insuficientes", description: "Se requiere al menos un análisis clínico, resumen de texto o diagnóstico principal.", variant: "destructive" });
+    if (!treatmentPlanInput.clinicalAnalysis && !treatmentPlanInput.textSummary && (!treatmentPlanInput.validatedDiagnoses || treatmentPlanInput.validatedDiagnoses.length === 0)) {
+      toast({ title: "Datos Insuficientes", description: "Se requiere al menos un análisis clínico, resumen de texto o diagnósticos validados.", variant: "destructive" });
       return;
     }
 
@@ -57,7 +58,7 @@ export function TreatmentPlanModule() {
     const inputForAI = {
       clinicalAnalysis: treatmentPlanInput.clinicalAnalysis || "No disponible.",
       textSummary: treatmentPlanInput.textSummary || "No disponible.",
-      principalDiagnosis: treatmentPlanInput.principalDiagnosis || undefined,
+      validatedDiagnoses: treatmentPlanInput.validatedDiagnoses || undefined,
     };
 
     try {
@@ -69,7 +70,7 @@ export function TreatmentPlanModule() {
         await addHistoryEntry({
           module: 'TreatmentPlanSuggestion',
           inputType: 'application/json',
-          inputSummary: `Dx: ${treatmentPlanInput.principalDiagnosis?.code || 'N/A'}, Análisis: ${treatmentPlanInput.clinicalAnalysis ? 'Sí' : 'No'}, Resumen: ${treatmentPlanInput.textSummary ? 'Sí' : 'No'}`,
+          inputSummary: `Dx Validados: ${treatmentPlanInput.validatedDiagnoses?.length || 0}, Análisis: ${treatmentPlanInput.clinicalAnalysis ? 'Sí' : 'No'}, Resumen: ${treatmentPlanInput.textSummary ? 'Sí' : 'No'}`,
           outputSummary: getTextSummary(aiOutput.suggestedPlanText, 100),
           fullInput: inputForAI,
           fullOutput: aiOutput,
@@ -86,7 +87,7 @@ export function TreatmentPlanModule() {
         await addHistoryEntry({
           module: 'TreatmentPlanSuggestion',
           inputType: 'application/json',
-          inputSummary: `Dx: ${treatmentPlanInput.principalDiagnosis?.code || 'N/A'}`,
+          inputSummary: `Dx Validados: ${treatmentPlanInput.validatedDiagnoses?.length || 0}`,
           outputSummary: 'Error en la sugerencia',
           fullInput: inputForAI,
           fullOutput: { error: errorMessage },
@@ -131,13 +132,13 @@ export function TreatmentPlanModule() {
     const inputForHistory = {
       clinicalAnalysis: treatmentPlanInput.clinicalAnalysis || "No disponible.",
       textSummary: treatmentPlanInput.textSummary || "No disponible.",
-      principalDiagnosis: treatmentPlanInput.principalDiagnosis || undefined,
+      validatedDiagnoses: treatmentPlanInput.validatedDiagnoses || undefined,
     };
     
     await addHistoryEntry({
       module: 'TreatmentPlanSuggestion',
       inputType: 'application/json',
-      inputSummary: `Dx: ${treatmentPlanInput.principalDiagnosis?.code || 'N/A'}`,
+      inputSummary: `Dx Validados: ${treatmentPlanInput.validatedDiagnoses?.length || 0}, Análisis: ${!!treatmentPlanInput.clinicalAnalysis}, Resumen: ${!!treatmentPlanInput.textSummary}`,
       outputSummary: outputSum,
       fullInput: inputForHistory,
       fullOutput: output,
@@ -146,13 +147,13 @@ export function TreatmentPlanModule() {
     });
   };
 
-  const canGenerate = treatmentPlanInput.clinicalAnalysis || treatmentPlanInput.textSummary || treatmentPlanInput.principalDiagnosis;
+  const canGenerate = treatmentPlanInput.clinicalAnalysis || treatmentPlanInput.textSummary || (treatmentPlanInput.validatedDiagnoses && treatmentPlanInput.validatedDiagnoses.length > 0);
 
   return (
     <ModuleCardWrapper
       ref={moduleRef}
       title="Sugerencia de Plan Terapéutico Asistido por IA"
-      description="Genera sugerencias de medicamentos y conductas basadas en el análisis clínico, resumen de texto y diagnóstico principal."
+      description="Genera sugerencias de medicamentos y conductas basadas en el análisis clínico, resumen de texto y diagnósticos validados."
       icon={ListChecks}
       isLoading={isGeneratingTreatmentPlan}
       id="treatment-plan-module"
@@ -162,7 +163,18 @@ export function TreatmentPlanModule() {
             <h4 className="font-semibold">Datos de Entrada para Sugerencia:</h4>
             <p><strong>Análisis Clínico (M4):</strong> {getTextSummary(treatmentPlanInput.clinicalAnalysis, 70) || "No disponible"}</p>
             <p><strong>Resumen de Texto (M3):</strong> {getTextSummary(treatmentPlanInput.textSummary, 70) || "No disponible"}</p>
-            <p><strong>Dx. Principal (M5):</strong> {treatmentPlanInput.principalDiagnosis ? `${treatmentPlanInput.principalDiagnosis.code} - ${getTextSummary(treatmentPlanInput.principalDiagnosis.description, 50)}` : "No seleccionado"}</p>
+            <div>
+              <strong>Dx. Validados (M5):</strong>
+              {treatmentPlanInput.validatedDiagnoses && treatmentPlanInput.validatedDiagnoses.length > 0 ? (
+                <ul className="list-disc pl-5">
+                  {treatmentPlanInput.validatedDiagnoses.map(dx => (
+                    <li key={dx.code}>{dx.code} - {getTextSummary(dx.description, 50)}</li>
+                  ))}
+                </ul>
+              ) : (
+                " Ninguno seleccionado"
+              )}
+            </div>
         </div>
 
         <div className="flex space-x-2">
@@ -191,12 +203,6 @@ export function TreatmentPlanModule() {
                 <Copy className="mr-2 h-4 w-4" />
                 Copiar Sugerencias
               </Button>
-              {/* Future button:
-              <Button onClick={handleUseInMedicalOrders} variant="default" size="sm">
-                <Send className="mr-2 h-4 w-4" />
-                Usar en Órdenes Médicas
-              </Button>
-              */}
             </div>
           </div>
         )}

@@ -60,10 +60,15 @@ export interface MedicalOrderOutputState {
 // --- End Medical Orders Module Specific Types ---
 
 // --- Treatment Plan Suggestion Module Specific Types ---
+export interface ValidatedDiagnosis {
+  code: string;
+  description: string;
+}
+
 export interface TreatmentPlanInputData {
   clinicalAnalysis: string | null;
   textSummary: string | null;
-  principalDiagnosis?: { code: string; description: string } | null;
+  validatedDiagnoses: ValidatedDiagnosis[] | null;
 }
 
 export interface TreatmentPlanOutputState {
