@@ -11,19 +11,29 @@ const AUTOSAVE_STORAGE_KEY = 'medinsight-autosave-preference';
 
 export function useHistoryStore() {
   const { toast } = useToast();
-  const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const savedPreference = localStorage.getItem(AUTOSAVE_STORAGE_KEY);
-      return savedPreference === 'true';
-    }
-    return true; // Default to true if localStorage is not available (e.g. SSR)
-  });
+  // Initialize with a server-safe default. Client will update after mount.
+  const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState<boolean>(false); 
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(AUTOSAVE_STORAGE_KEY, String(isAutoSaveEnabled));
+    // This effect runs only on the client, after hydration.
+    const savedPreference = localStorage.getItem(AUTOSAVE_STORAGE_KEY);
+    if (savedPreference !== null) {
+      setIsAutoSaveEnabled(savedPreference === 'true');
+    } else {
+      // If no preference is saved in localStorage, default to true (as per original logic) and save it.
+      setIsAutoSaveEnabled(true);
+      localStorage.setItem(AUTOSAVE_STORAGE_KEY, 'true');
+    }
+  }, []); // Empty dependency array ensures this runs once on mount (client-side)
+
+  useEffect(() => {
+    // This effect synchronizes subsequent changes to isAutoSaveEnabled back to localStorage.
+    // It runs after the initial state is set by the above useEffect and whenever isAutoSaveEnabled changes.
+    if (typeof window !== 'undefined') { // Ensure localStorage is available
+        localStorage.setItem(AUTOSAVE_STORAGE_KEY, String(isAutoSaveEnabled));
     }
   }, [isAutoSaveEnabled]);
+
 
   const historyEntries = useLiveQuery(
     () => db.history.orderBy('timestamp').reverse().limit(50).toArray(),
