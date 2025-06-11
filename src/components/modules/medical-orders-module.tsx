@@ -53,6 +53,10 @@ export function MedicalOrdersModule() {
       medicationReconciliationInput: checked ? "NO TIENE CONCILIACIÓN MEDICAMENTOSA" : ""
     }));
   };
+
+  const handleOutputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMedicalOrderOutput({ generatedOrderText: event.target.value });
+  };
   
   const handleGenerateOrder = async () => {
     if (!medicalOrderInputs.orderType) {
@@ -347,30 +351,31 @@ export function MedicalOrdersModule() {
         </div>
 
         {/* Output Display */}
-        {medicalOrderOutput.generatedOrderText && (
+        {medicalOrderOutput.generatedOrderText !== null && (
           <div className="space-y-2">
             <h3 className="text-md font-semibold font-headline">Órdenes Médicas Generadas:</h3>
             <Textarea
               ref={outputTextareaRef}
               value={medicalOrderOutput.generatedOrderText}
-              readOnly
+              onChange={handleOutputChange}
               rows={15}
               className="bg-muted/30"
+              disabled={isGeneratingMedicalOrder}
             />
             <div className="flex flex-wrap gap-2">
-              <Button onClick={handleCopyToClipboard} variant="outline" size="sm">
+              <Button onClick={handleCopyToClipboard} variant="outline" size="sm" disabled={isGeneratingMedicalOrder}>
                 <ClipboardCopy className="mr-2 h-4 w-4" />
                 Copiar Selección
               </Button>
-              <Button onClick={handleCapitalizeSentenceCase} variant="outline" size="sm">
+              <Button onClick={handleCapitalizeSentenceCase} variant="outline" size="sm" disabled={isGeneratingMedicalOrder}>
                 <Baseline className="mr-2 h-4 w-4" /> 
                 Formato Frase
               </Button>
-              <Button onClick={handleConvertToUppercase} variant="outline" size="sm">
+              <Button onClick={handleConvertToUppercase} variant="outline" size="sm" disabled={isGeneratingMedicalOrder}>
                 <ALargeSmall className="mr-2 h-4 w-4" />
                 Todo Mayúsculas
               </Button>
-              <Button onClick={handleCompactText} variant="outline" size="sm">
+              <Button onClick={handleCompactText} variant="outline" size="sm" disabled={isGeneratingMedicalOrder}>
                 <WrapText className="mr-2 h-4 w-4" /> 
                 Compactar Texto
               </Button>
@@ -381,8 +386,8 @@ export function MedicalOrdersModule() {
           <p className="text-sm text-destructive">Error: {medicalOrderError}</p>
         )}
         
-        {!isAutoSaveEnabled && (medicalOrderOutput.generatedOrderText || medicalOrderError) && (
-           <Button onClick={handleSaveManually} variant="secondary" className="w-full mt-2">
+        {!isAutoSaveEnabled && (medicalOrderOutput.generatedOrderText !== null || medicalOrderError) && (
+           <Button onClick={handleSaveManually} variant="secondary" className="w-full mt-2" disabled={isGeneratingMedicalOrder}>
             <Save className="mr-2 h-4 w-4" /> Guardar en Historial
           </Button>
         )}
@@ -390,4 +395,4 @@ export function MedicalOrdersModule() {
     </ModuleCardWrapper>
   );
 }
-
+    
