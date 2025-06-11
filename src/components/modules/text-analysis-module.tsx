@@ -9,7 +9,7 @@ import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
 import { summarizeClinicalNotes, type SummarizeClinicalNotesOutput } from '@/ai/flows/summarize-clinical-notes';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardEdit, Eraser, Copy, Send, Save, MessageSquareText } from 'lucide-react';
+import { ClipboardEdit, Eraser, Copy, Save, MessageSquareText } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 
 export function TextAnalysisModule() {
@@ -40,18 +40,15 @@ export function TextAnalysisModule() {
     try {
       analysisOutput = await summarizeClinicalNotes({ clinicalNotes: currentNotes });
       const newSummaryContent = (analysisOutput?.summary || '').trim();
-      setTextAnalysisSummary(newSummaryContent || null); // Store even empty string if AI returns it
+      setTextAnalysisSummary(newSummaryContent || null); 
       toast({ title: "Análisis de Texto Completado", description: "Las notas han sido resumidas." });
 
-      // Automatic transfer of summary to Diagnosis Module
-      if (newSummaryContent) { // Only transfer if there's actual content
+      if (newSummaryContent) {
         const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${newSummaryContent}`;
 
         setDiagnosisInputData(prevDiagnosisInput => {
           const currentDiagnosisText = String(prevDiagnosisInput || '');
-          // Check if the exact formatted block already exists
           if (currentDiagnosisText.includes(summaryBlockToAdd)) {
-            // If already included, no toast, no change.
             return currentDiagnosisText;
           }
 
@@ -61,7 +58,6 @@ export function TextAnalysisModule() {
             description: "El resumen de notas se ha añadido automáticamente para soporte diagnóstico.",
           });
 
-          // Ensure DOM is updated before scrolling
           setTimeout(() => {
             const diagnosisModule = document.getElementById('diagnosis-support-module');
             if (diagnosisModule) {
@@ -80,7 +76,7 @@ export function TextAnalysisModule() {
           inputSummary: getTextSummary(currentNotes),
           outputSummary: getTextSummary(newSummaryContent || '', 100),
           fullInput: currentNotes,
-          fullOutput: analysisOutput, // Save the raw AI output which might be { summary: "..." } or { summary: "" }
+          fullOutput: analysisOutput, 
           status: 'completed',
         });
       }
@@ -112,7 +108,6 @@ export function TextAnalysisModule() {
   };
 
   const handleCopyToClipboard = () => {
-    // textAnalysisSummary is the content of the "Resumen de Información Clave" box
     const summaryToCopy = textAnalysisSummary;
 
     if (summaryToCopy === null || summaryToCopy === undefined) {
@@ -123,71 +118,12 @@ export function TextAnalysisModule() {
     const cleanedSummaryContent = String(summaryToCopy).trim();
 
     navigator.clipboard.writeText(cleanedSummaryContent)
-      .then(() => toast({ title: "Resumen Copiado", description: "El resumen del cuadro 'Resumen de Información Clave' ha sido copiado." }))
-      .catch(() => toast({ title: "Error al Copiar", description: "No se pudo copiar el resumen del cuadro.", variant: "destructive" }));
-  };
-
-  const handleSendToDiagnosis = () => {
-    // textAnalysisSummary IS the content of the "Resumen de Información Clave" box
-    const summaryToOperateOn = textAnalysisSummary; 
-
-    if (summaryToOperateOn === null || summaryToOperateOn === undefined) {
-      toast({ title: "Sin Resumen", description: "No hay resumen en el cuadro 'Resumen de Información Clave' para usar.", variant: "default"});
-      return;
-    }
-
-    const cleanedSummaryContent = String(summaryToOperateOn).trim();
-
-    // 1. Copiar al portapapeles
-    navigator.clipboard.writeText(cleanedSummaryContent)
-      .then(() => {
-        toast({ 
-          title: "Resumen Copiado", 
-          description: "El resumen del cuadro 'Resumen de Información Clave' ha sido copiado al portapapeles." 
-        });
-      })
-      .catch(() => {
-        toast({ 
-          title: "Error al Copiar", 
-          description: "No se pudo copiar el resumen del cuadro 'Resumen de Información Clave'.", 
-          variant: "destructive" 
-        });
-      });
-
-    // 2. Trasladar a Diagnóstico
-    const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${cleanedSummaryContent}`;
-
-    setDiagnosisInputData(prevDiagnosisInput => {
-      const currentDiagnosisText = String(prevDiagnosisInput || '');
-      // Check if the exact formatted block already exists
-      if (currentDiagnosisText.includes(summaryBlockToAdd)) {
-        toast({
-          title: "Resumen ya en Diagnóstico",
-          description: "El resumen del cuadro 'Resumen de Información Clave' ya se encuentra (con formato) en el campo de diagnóstico.",
-          variant: "default", 
-        });
-        return currentDiagnosisText;
-      } else {
-        const newText = `${currentDiagnosisText ? currentDiagnosisText + '\n\n' : ''}${summaryBlockToAdd}`;
-        toast({
-          title: "Resumen Añadido a Diagnóstico",
-          description: "El resumen del cuadro 'Resumen de Información Clave' también se ha añadido para soporte diagnóstico.",
-        });
-        
-        setTimeout(() => {
-            const diagnosisModule = document.getElementById('diagnosis-support-module');
-            if (diagnosisModule) {
-                diagnosisModule.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-        }, 0);
-        return newText;
-      }
-    });
+      .then(() => toast({ title: "Resumen Copiado", description: "El contenido del cuadro 'Resumen de Información Clave' ha sido copiado al portapapeles." }))
+      .catch(() => toast({ title: "Error al Copiar", description: "No se pudo copiar el contenido del cuadro 'Resumen de Información Clave'.", variant: "destructive" }));
   };
 
   const handleSaveManually = async () => {
     const currentNotes = String(clinicalNotesInput || '');
-    // Use textAnalysisSummary directly as it represents the content of the results box
     const currentSummaryInBox = textAnalysisSummary; 
     
     if (currentNotes.trim() === '' && (currentSummaryInBox === null || currentSummaryInBox === undefined) && !textAnalysisError) {
@@ -247,12 +183,11 @@ export function TextAnalysisModule() {
           </Button>
         </div>
 
-        {/* Show summary box if summary is not null (it can be an empty string) */}
         {(textAnalysisSummary !== null) && ( 
           <div className="space-y-2">
             <h3 className="text-md font-semibold font-headline">Resumen de Información Clave:</h3>
             <Textarea
-              value={textAnalysisSummary || ''} // Handles if it somehow becomes null again, though setTextAnalysisSummary should prevent this
+              value={textAnalysisSummary || ''}
               readOnly
               rows={6}
               className="bg-muted/30"
@@ -262,17 +197,12 @@ export function TextAnalysisModule() {
                 <Copy className="mr-2 h-4 w-4" />
                 Copiar Resumen
               </Button>
-              <Button onClick={handleSendToDiagnosis} variant="default" size="sm" disabled={textAnalysisSummary === null || textAnalysisSummary === undefined}>
-                <Send className="mr-2 h-4 w-4" />
-                Usar Resumen para Diagnóstico
-              </Button>
             </div>
           </div>
         )}
         {textAnalysisError && (
           <p className="text-sm text-destructive">Error: {textAnalysisError}</p>
         )}
-         {/* Enable manual save if there's input text, or a summary/error exists */}
          {!isAutoSaveEnabled && 
           (String(clinicalNotesInput || '').trim() || textAnalysisSummary !== null || textAnalysisError) && (
            <Button onClick={handleSaveManually} variant="secondary" className="w-full mt-2">
@@ -283,4 +213,3 @@ export function TextAnalysisModule() {
     </ModuleCardWrapper>
   );
 }
-
