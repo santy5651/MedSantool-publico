@@ -15,8 +15,12 @@ import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks } from 'lucide-react';
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState } from '@/types';
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, TreatmentPlanInputData, MedicalOrderInputState, NursingSurveillanceState } from '@/types';
+import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { useClinicalData } from '@/contexts/clinical-data-context'; // Importar useClinicalData
+import { useToast } from '@/hooks/use-toast'; // Importar useToast si no está ya
+
 
 const moduleIcons: Record<ModuleType, LucideIcon> = {
   ImageAnalysis: ImageIcon,
@@ -45,6 +49,13 @@ const statusBadgeVariant: Record<HistoryEntry['status'], "default" | "secondary"
   pending: 'secondary',
 };
 
+const initialNursingSurveillanceState: NursingSurveillanceState = {
+  thermalCurve: false,
+  monitorPain: false,
+  monitorWounds: false,
+  monitorBleeding: false,
+};
+
 
 export function HistoryModule() {
   const { 
@@ -56,6 +67,9 @@ export function HistoryModule() {
     exportHistory, 
     importHistory 
   } = useHistoryStore();
+
+  const clinicalData = useClinicalData(); // Obtener el contexto clínico
+  const { toast } = useToast(); // Para notificaciones
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<number | null>(null);
@@ -79,6 +93,110 @@ export function HistoryModule() {
     if (fileToImport) {
       importHistory(fileToImport, importMode);
       setFileToImport(null); 
+    }
+  };
+
+  const handleLoadEntryToModule = (entry: HistoryEntry) => {
+    if (!entry) return;
+
+    const outputData = entry.fullOutput as any; // Necesario para acceder a 'error' o campos específicos
+
+    try {
+      switch (entry.module) {
+        case 'ImageAnalysis':
+          clinicalData.setImageFile(null); // No podemos restaurar el archivo
+          if (outputData && outputData.summary) {
+            clinicalData.setImageAnalysisSummary(outputData.summary);
+          }
+          clinicalData.setImageAnalysisError(outputData?.error || null);
+          toast({ title: "Datos Cargados", description: "Resumen de imagen cargado. Seleccione un nuevo archivo para re-analizar." });
+          break;
+        case 'PdfExtraction':
+          clinicalData.setPdfFile(null); // No podemos restaurar el archivo
+          if (outputData && outputData.clinicalNotes) {
+            clinicalData.setPdfExtractedNotes(outputData.clinicalNotes);
+          }
+          if (outputData && outputData.structuredData) {
+            clinicalData.setPdfStructuredData(outputData.structuredData as PdfStructuredData[]);
+          }
+          clinicalData.setPdfExtractionError(outputData?.error || null);
+          toast({ title: "Datos Cargados", description: "Datos de PDF cargados. Seleccione un nuevo archivo para re-analizar." });
+          break;
+        case 'TextAnalysis':
+          clinicalData.setClinicalNotesInput(entry.fullInput as string || '');
+          if (outputData && outputData.summary) {
+            clinicalData.setTextAnalysisSummary(outputData.summary);
+          }
+          clinicalData.setTextAnalysisError(outputData?.error || null);
+          break;
+        case 'ClinicalAnalysis':
+          clinicalData.setClinicalAnalysisInput(entry.fullInput as string || null);
+           if (outputData && outputData.clinicalAnalysis) {
+            clinicalData.setGeneratedClinicalAnalysis(outputData.clinicalAnalysis);
+          }
+          clinicalData.setClinicalAnalysisError(outputData?.error || null);
+          break;
+        case 'DiagnosisSupport':
+          clinicalData.setDiagnosisInputData(entry.fullInput as string || '');
+          if (outputData && !outputData.error) {
+            clinicalData.setDiagnosisResults(outputData as DiagnosisResult[]);
+          } else {
+            clinicalData.setDiagnosisResults(null);
+          }
+          clinicalData.setDiagnosisError(outputData?.error || null);
+          break;
+        case 'MedicalOrders':
+          if (entry.fullInput && typeof entry.fullInput === 'object') {
+            const fi = entry.fullInput as GenerateMedicalOrderInput; // Es el tipo guardado
+            clinicalData.setMedicalOrderInputs({
+                orderType: fi.orderType || '',
+                oxygen: fi.oxygen || "NO REQUIERE OXÍGENO",
+                isolation: fi.isolation || "NO REQUIERE AISLAMIENTO",
+                diet: fi.diet || "",
+                medicationsInput: fi.medicationsInput || "",
+                // Derivar noMedicationReconciliation basado en medicationReconciliationInput
+                noMedicationReconciliation: fi.medicationReconciliationInput === "NO TIENE CONCILIACIÓN MEDICAMENTOSA" || !fi.medicationReconciliationInput,
+                medicationReconciliationInput: fi.medicationReconciliationInput || "",
+                specialtyFollowUp: fi.specialtyFollowUp || "",
+                fallRisk: fi.fallRisk || "RIESGO DE CAIDAS Y LESIONES POR PRESION SEGUN ESCALAS POR PERSONAL DE ENFERMERIA",
+                paduaScale: fi.paduaScale || "",
+                nursingSurveillance: fi.surveillanceNursing || initialNursingSurveillanceState,
+                transferConditions: fi.transferConditions || '',
+                specialConsiderations: fi.specialConsiderations || "",
+            });
+          }
+          if (outputData && outputData.generatedOrderText) {
+            clinicalData.setMedicalOrderOutput(outputData as MedicalOrderOutputState);
+          } else {
+             clinicalData.setMedicalOrderOutput({ generatedOrderText: null });
+          }
+          clinicalData.setMedicalOrderError(outputData?.error || null);
+          break;
+        case 'TreatmentPlanSuggestion':
+          if (entry.fullInput && typeof entry.fullInput === 'object') {
+             clinicalData.setTreatmentPlanInput(entry.fullInput as TreatmentPlanInputData);
+          }
+          if (outputData && outputData.suggestedPlanText) {
+            clinicalData.setGeneratedTreatmentPlan(outputData as TreatmentPlanOutputState);
+          } else {
+            clinicalData.setGeneratedTreatmentPlan({ suggestedPlanText: null });
+          }
+          clinicalData.setTreatmentPlanError(outputData?.error || null);
+          break;
+        default:
+          toast({ variant: "destructive", title: "Módulo Desconocido", description: "No se puede cargar esta entrada." });
+          return;
+      }
+      toast({ title: "Datos Cargados", description: `Se cargaron los datos de "${entry.module.replace(/([A-Z])/g, ' $1').trim()}" al módulo.` });
+      
+      // Scroll to module
+      const moduleId = `${entry.module.charAt(0).toLowerCase() + entry.module.slice(1).replace(/([A-Z])/g, '-$1').toLowerCase()}-module`;
+      const moduleElement = document.getElementById(moduleId);
+      moduleElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch (error) {
+        console.error("Error loading entry to module:", error);
+        toast({ variant: "destructive", title: "Error al Cargar", description: "No se pudieron cargar los datos al módulo." });
     }
   };
 
@@ -167,8 +285,8 @@ export function HistoryModule() {
   
   const renderFullInput = (entry: HistoryEntry) => {
      if (!entry.fullInput) return <p className="text-xs text-muted-foreground">No hay detalles de entrada.</p>;
-     if (typeof entry.fullInput === 'string' && entry.fullInput.startsWith('Data URI for')) {
-        return <p className="text-xs text-muted-foreground">{entry.fullInput}</p>; 
+     if (typeof entry.fullInput === 'string' && (entry.fullInput.startsWith('Data URI for') || entry.fullInput === '')) {
+        return <p className="text-xs text-muted-foreground">{entry.fullInput || "Entrada vacía"}</p>; 
      }
      if (typeof entry.fullInput === 'object') {
         return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{JSON.stringify(entry.fullInput, null, 2)}</pre>;
@@ -272,6 +390,16 @@ export function HistoryModule() {
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
+                        <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="outline" size="xs" className="text-xs px-2 py-1 h-auto" onClick={() => handleLoadEntryToModule(entry)}>
+                                  <Upload className="mr-1 h-3 w-3" /> Cargar
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="right"><p>Cargar al Módulo</p></TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                       </div>
                     </li>
                   );
@@ -346,3 +474,4 @@ declare module "@/components/ui/button" {
     size?: "default" | "sm" | "lg" | "icon" | "xs";
   }
 }
+
