@@ -7,7 +7,7 @@ import { ModuleCardWrapper } from '@/components/common/module-card-wrapper';
 import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
 import { summarizeClinicalNotes, type SummarizeClinicalNotesOutput } from '@/ai/flows/summarize-clinical-notes';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { ClipboardEdit, Eraser, Copy, Send, Save, MessageSquareText } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 

@@ -11,7 +11,7 @@ import { useHistoryStore } from '@/hooks/use-history-store';
 import { readFileAsDataURL, getFileSummary, getTextSummary } from '@/lib/utils';
 import { extractInformationFromPdf, type ExtractInformationFromPdfOutput } from '@/ai/flows/extract-information-from-pdf';
 import type { PdfStructuredData } from '@/types';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { FileText, Eraser, Send, Save, ListTree } from 'lucide-react';
 
 export function PdfExtractionModule() {
