@@ -27,8 +27,8 @@ export function TextAnalysisModule() {
   const moduleRef = useRef<HTMLDivElement>(null);
 
   const handleAnalyzeNotes = async () => {
-    const currentNotes = String(clinicalNotesInput || '');
-    if (currentNotes.trim() === '') {
+    const currentNotes = String(clinicalNotesInput || '').trim();
+    if (currentNotes === '') {
       toast({ title: "Sin Notas", description: "Por favor, ingrese notas clínicas para analizar.", variant: "destructive" });
       return;
     }
@@ -43,8 +43,9 @@ export function TextAnalysisModule() {
       toast({ title: "Análisis de Texto Completado", description: "Las notas han sido resumidas." });
 
       // Automatically transfer summary to Diagnosis Module
-      if (analysisOutput.summary) {
-        const newSummaryContent = analysisOutput.summary;
+      const newSummaryContent = (analysisOutput?.summary || '').trim();
+
+      if (newSummaryContent) { // Only proceed if there's actual content after trimming
         const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${newSummaryContent}`;
 
         setDiagnosisInputData(prevDiagnosisInput => {
@@ -80,7 +81,7 @@ export function TextAnalysisModule() {
           inputSummary: getTextSummary(currentNotes),
           outputSummary: getTextSummary(analysisOutput.summary, 100),
           fullInput: currentNotes,
-          fullOutput: analysisOutput,
+          fullOutput: analysisOutput, // Save the original output from AI
           status: 'completed',
         });
       }
@@ -119,13 +120,18 @@ export function TextAnalysisModule() {
     }
   };
 
-  const handleSendToDiagnosis = () => {
+  const handleSendToDiagnosis = () => { // Manual button logic
     if (!textAnalysisSummary) {
       toast({ title: "Sin Resumen", description: "Primero analice las notas para obtener un resumen.", variant: "default"});
       return;
     }
 
-    const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${textAnalysisSummary}`;
+    const currentSummaryContent = (textAnalysisSummary || '').trim();
+    if (!currentSummaryContent) {
+         toast({ title: "Resumen Vacío", description: "El resumen actual está vacío.", variant: "default"});
+        return;
+    }
+    const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${currentSummaryContent}`;
 
     setDiagnosisInputData(prev => {
       const currentInput = String(prev || '');
