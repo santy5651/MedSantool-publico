@@ -177,7 +177,7 @@ export function PdfExtractionModule() {
           <div className="space-y-2">
             <h3 className="text-md font-semibold font-headline">Notas Clínicas Extraídas:</h3>
             <Textarea
-              value={pdfExtractedNotes}
+              value={pdfExtractedNotes || ''}
               readOnly
               rows={6}
               className="bg-muted/30"

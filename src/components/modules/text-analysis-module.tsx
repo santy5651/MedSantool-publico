@@ -27,7 +27,8 @@ export function TextAnalysisModule() {
   const moduleRef = useRef<HTMLDivElement>(null);
 
   const handleAnalyzeNotes = async () => {
-    if (String(clinicalNotesInput || '').trim() === '') {
+    const notes = String(clinicalNotesInput || '');
+    if (notes.trim() === '') {
       toast({ title: "Sin Notas", description: "Por favor, ingrese notas clínicas para analizar.", variant: "destructive" });
       return;
     }
@@ -37,7 +38,7 @@ export function TextAnalysisModule() {
     let analysisOutput: SummarizeClinicalNotesOutput | null = null;
 
     try {
-      analysisOutput = await summarizeClinicalNotes({ clinicalNotes: String(clinicalNotesInput || '') });
+      analysisOutput = await summarizeClinicalNotes({ clinicalNotes: notes });
       setTextAnalysisSummary(analysisOutput.summary);
       toast({ title: "Análisis de Texto Completado", description: "Las notas han sido resumidas." });
       
@@ -45,9 +46,9 @@ export function TextAnalysisModule() {
         await addHistoryEntry({
           module: 'TextAnalysis',
           inputType: 'text/plain',
-          inputSummary: getTextSummary(String(clinicalNotesInput || '')),
+          inputSummary: getTextSummary(notes),
           outputSummary: getTextSummary(analysisOutput.summary, 100),
-          fullInput: String(clinicalNotesInput || ''),
+          fullInput: notes,
           fullOutput: analysisOutput,
           status: 'completed',
         });
@@ -61,9 +62,9 @@ export function TextAnalysisModule() {
          await addHistoryEntry({
           module: 'TextAnalysis',
           inputType: 'text/plain',
-          inputSummary: getTextSummary(String(clinicalNotesInput || '')),
+          inputSummary: getTextSummary(notes),
           outputSummary: 'Error en el análisis',
-          fullInput: String(clinicalNotesInput || ''),
+          fullInput: notes,
           fullOutput: { error: errorMessage },
           status: 'error',
           errorDetails: errorMessage,
@@ -99,7 +100,8 @@ export function TextAnalysisModule() {
   };
   
   const handleSaveManually = async () => {
-    if (String(clinicalNotesInput || '').trim() === '' || (!textAnalysisSummary && !textAnalysisError)) {
+    const notes = String(clinicalNotesInput || '');
+    if (notes.trim() === '' || (!textAnalysisSummary && !textAnalysisError)) {
       toast({ title: "Nada que Guardar", description: "Analice algunas notas primero.", variant: "default" });
       return;
     }
@@ -111,9 +113,9 @@ export function TextAnalysisModule() {
     await addHistoryEntry({
       module: 'TextAnalysis',
       inputType: 'text/plain',
-      inputSummary: getTextSummary(String(clinicalNotesInput || '')),
+      inputSummary: getTextSummary(notes),
       outputSummary: outputSum,
-      fullInput: String(clinicalNotesInput || ''),
+      fullInput: notes,
       fullOutput: output,
       status: status,
       errorDetails: textAnalysisError || undefined,
@@ -137,7 +139,7 @@ export function TextAnalysisModule() {
           <Textarea
             id="clinicalNotes"
             placeholder="Pegue o escriba notas clínicas aquí..."
-            value={clinicalNotesInput}
+            value={clinicalNotesInput || ''}
             onChange={(e) => setClinicalNotesInput(e.target.value)}
             rows={8}
             disabled={isTextAnalyzing}
@@ -145,7 +147,7 @@ export function TextAnalysisModule() {
         </div>
 
         <div className="flex space-x-2">
-          <Button onClick={handleAnalyzeNotes} disabled={String(clinicalNotesInput || '').trim() === '' || isTextAnalyzing} className="flex-1">
+          <Button onClick={handleAnalyzeNotes} disabled={!String(clinicalNotesInput || '').trim() || isTextAnalyzing} className="flex-1">
             <ClipboardEdit className="mr-2 h-4 w-4" />
             Analizar Notas
           </Button>
@@ -159,7 +161,7 @@ export function TextAnalysisModule() {
           <div className="space-y-2">
             <h3 className="text-md font-semibold font-headline">Resumen de Información Clave:</h3>
             <Textarea
-              value={textAnalysisSummary}
+              value={textAnalysisSummary || ''}
               readOnly
               rows={6}
               className="bg-muted/30"

@@ -181,7 +181,7 @@ export function ImageAnalysisModule() {
             <h3 className="text-md font-semibold font-headline">Resumen de Hallazgos:</h3>
             <Textarea
               ref={resultsTextareaRef}
-              value={imageAnalysisSummary}
+              value={imageAnalysisSummary || ''}
               readOnly
               rows={6}
               className="bg-muted/30"
