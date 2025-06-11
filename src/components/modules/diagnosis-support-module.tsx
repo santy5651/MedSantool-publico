@@ -41,7 +41,8 @@ export function DiagnosisSupportModule() {
   const moduleRef = useRef<HTMLDivElement>(null);
 
   const handleSuggestDiagnosis = async () => {
-    if (!String(diagnosisInputData || '').trim()) {
+    const currentInput = String(diagnosisInputData || '');
+    if (!currentInput.trim()) {
       toast({ title: "Sin Datos Clínicos", description: "Por favor, ingrese datos clínicos para obtener sugerencias.", variant: "destructive" });
       return;
     }
@@ -50,14 +51,14 @@ export function DiagnosisSupportModule() {
     setDiagnosisError(null);
     
     try {
-      const aiOutput = await suggestDiagnosis({ clinicalData: String(diagnosisInputData || '') });
+      const aiOutput = await suggestDiagnosis({ clinicalData: currentInput });
       const initialResults: DiagnosisResult[] = aiOutput.map(d => ({ ...d, isValidated: false, isPrincipal: false }));
       setDiagnosisResults(initialResults); // Update context
       setLocalDiagnosisResults(initialResults); // Update local state for UI interaction
       toast({ title: "Sugerencias de Diagnóstico Obtenidas", description: `${initialResults.length} diagnósticos sugeridos.` });
 
       if (isAutoSaveEnabled) {
-        await saveToHistory(initialResults, null);
+        await saveToHistory(initialResults, null, currentInput);
       }
     } catch (error: any) {
       console.error("Error suggesting diagnosis:", error);
@@ -67,7 +68,7 @@ export function DiagnosisSupportModule() {
       setLocalDiagnosisResults([]);
       toast({ title: "Error en Sugerencia de Diagnóstico", description: errorMessage, variant: "destructive" });
       if (isAutoSaveEnabled) {
-        await saveToHistory(null, errorMessage);
+        await saveToHistory(null, errorMessage, currentInput);
       }
     } finally {
       setIsDiagnosing(false);
@@ -108,11 +109,10 @@ export function DiagnosisSupportModule() {
     return "destructive"; // Low confidence
   };
 
-  const saveToHistory = async (results: DiagnosisResult[] | null, errorMsg: string | null) => {
-    const currentResults = results || localDiagnosisResults; // Use passed results if available (e.g., fresh from AI)
+  const saveToHistory = async (results: DiagnosisResult[] | null, errorMsg: string | null, inputForHistory: string) => {
+    const currentResults = results || localDiagnosisResults; 
     const status = errorMsg ? 'error' : 'completed';
-    const currentInputData = String(diagnosisInputData || '');
-    
+        
     const principalDiagnosis = currentResults.find(d => d.isPrincipal);
     const validatedCount = currentResults.filter(d => d.isValidated).length;
     let outputSummary = 'Error en diagnóstico';
@@ -125,21 +125,22 @@ export function DiagnosisSupportModule() {
     await addHistoryEntry({
       module: 'DiagnosisSupport',
       inputType: 'text/plain',
-      inputSummary: getTextSummary(currentInputData),
+      inputSummary: getTextSummary(inputForHistory),
       outputSummary: outputSummary,
-      fullInput: currentInputData,
-      fullOutput: errorMsg ? { error: errorMsg } : currentResults, // Save the potentially reordered list
+      fullInput: inputForHistory,
+      fullOutput: errorMsg ? { error: errorMsg } : currentResults, 
       status: status,
       errorDetails: errorMsg || undefined,
     });
   };
 
   const handleSaveManually = () => {
-    if (!String(diagnosisInputData || '').trim() || (localDiagnosisResults.length === 0 && !diagnosisError)) {
+    const currentInput = String(diagnosisInputData || '');
+    if (!currentInput.trim() || (localDiagnosisResults.length === 0 && !diagnosisError)) {
        toast({ title: "Nada que Guardar", description: "Sugiera diagnósticos primero.", variant: "default" });
       return;
     }
-    saveToHistory(localDiagnosisResults, diagnosisError);
+    saveToHistory(localDiagnosisResults, diagnosisError, currentInput);
   };
 
 
