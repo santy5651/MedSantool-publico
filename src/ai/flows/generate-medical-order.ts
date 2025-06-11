@@ -55,50 +55,33 @@ const prompt = ai.definePrompt({
   input: {schema: PromptInputSchema}, // Use the extended schema for the prompt
   output: {schema: GenerateMedicalOrderOutputSchema},
   prompt: `**ÓRDENES MÉDICAS GENERALES**
-
 {{{orderType}}}
-
 {{{oxygen}}}
-
 {{{isolation}}}
-
 {{#if isHospitalizacionOrder}}{{#if diet}}{{{diet}}}{{else}}Dieta por definir{{/if}}{{else}}NO APLICA{{/if}}
-
 {{#if medicationsInput}}
 {{{medicationsInput}}}
 {{else}}
 NO REQUIERE MEDICAMENTOS
 {{/if}}
-
 **CONCILIACIÓN MEDICAMENTOSA**
 {{#if medicationReconciliationInput}}
 {{{medicationReconciliationInput}}}
 {{else}}
 NO TIENE CONCILIACIÓN MEDICAMENTOSA
 {{/if}}
-
 {{{fallRisk}}}
-
-{{{paduaScale}}}
-
+ESCALA DE PADUA: {{{paduaScale}}}
 Vigilar signos vitales
 Avisar cambios
-
 {{#if surveillanceNursing.thermalCurve}}- Curva térmica{{/if}}
 {{#if surveillanceNursing.monitorPain}}- Vigilar dolor{{/if}}
 {{#if surveillanceNursing.monitorWounds}}- Vigilar heridas{{/if}}
 {{#if surveillanceNursing.monitorBleeding}}- Vigilar sangrado{{/if}}
 {{#unless requiresSpecialNursingSurveillance}}NO REQUIERE VIGILANCIA ESPECIAL POR ENFERMERÍA{{/unless}}
-
-CONDICIONES DE TRASLADO:
-{{{transferConditions}}}
-
+CONDICIONES DE TRASLADO: {{{transferConditions}}}
 CONSIDERACIONES ESPECIALES:
-{{#if specialConsiderations}}
-{{{specialConsiderations}}}
-{{else}}
-NO HAY CONSIDERACIONES ESPECIALES
-{{/if}}
+{{#if specialConsiderations}}{{{specialConsiderations}}}{{else}}NO HAY CONSIDERACIONES ESPECIALES{{/if}}
 `,
 });
 
