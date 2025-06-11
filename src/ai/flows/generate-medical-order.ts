@@ -41,7 +41,7 @@ type PromptInput = z.infer<typeof PromptInputSchema>;
 
 
 const GenerateMedicalOrderOutputSchema = z.object({
-  generatedOrderText: z.string().describe('El texto completo de las órdenes médicas generales, formateado profesionalmente en español, con correcciones de redacción aplicadas y EN MAYÚSCULAS.'),
+  generatedOrderText: z.string().describe('El texto completo de las órdenes médicas generales, formateado profesionalmente en español, con correcciones de redacción aplicadas y EN MAYÚSCULAS, incluyendo los asteriscos en los títulos principales.'),
 });
 export type GenerateMedicalOrderOutput = z.infer<typeof GenerateMedicalOrderOutputSchema>;
 
@@ -59,7 +59,7 @@ const prompt = ai.definePrompt({
 Tu tarea es generar un texto de orden médica profesional, claro y completo basado en la información proporcionada.
 **Importante: Revisa y corrige cualquier error de redacción o tipográfico evidente en los campos de texto libre, especialmente en la lista de medicamentos (nombres, presentaciones, dosis, vías, frecuencias) y en la conciliación medicamentosa. Asegúrate de mantener la intención original y no alterar significativamente la información médica. Por ejemplo, si se escribe "acetaifofen", corrígelo a "acetaminofén".**
 
-Utiliza la siguiente estructura y datos para generar la orden:
+Genera la orden médica utilizando la siguiente estructura exacta, incluyendo los asteriscos literales en los títulos principales (**ÓRDENES MÉDICAS GENERALES** y **CONCILIACIÓN MEDICAMENTOSA**):
 
 **ÓRDENES MÉDICAS GENERALES**
 {{{orderType}}}
