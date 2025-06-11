@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import type { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ModuleCardWrapperProps {
   title: string;
