@@ -10,7 +10,7 @@ import { useHistoryStore } from '@/hooks/use-history-store';
 import { generatePatientAdvice, type GeneratePatientAdviceOutput, type GeneratePatientAdviceInput } from '@/ai/flows/generate-patient-advice';
 import type { PatientAdviceInputData, ValidatedDiagnosis, PatientAdviceOutputState } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { UserCheck, Eraser, Save, Copy, AlertTriangle, ALargeSmall } from 'lucide-react';
+import { UserCheck, Eraser, Save, Copy, AlertTriangle } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 
 export function PatientAdviceModule() {
@@ -125,19 +125,6 @@ export function PatientAdviceModule() {
       toast({ title: `Nada que Copiar`, description: `No hay ${type.toLowerCase()} generados para copiar.` });
     }
   };
-
-  const handleRecommendationsToUppercase = () => {
-    setGeneratedPatientAdvice(prev => {
-      if (typeof prev.generalRecommendations === 'string' && prev.generalRecommendations.trim() !== '') {
-        toast({ title: "Recomendaciones en Mayúsculas" });
-        return {
-          ...prev, // Preserva alarmSigns y otras propiedades si las hubiera
-          generalRecommendations: prev.generalRecommendations.toUpperCase(),
-        };
-      }
-      return prev; // Devuelve el estado anterior si no hay nada que convertir
-    });
-  };
   
   const handleSaveManually = async () => {
     if (!generatedPatientAdvice.generalRecommendations && !generatedPatientAdvice.alarmSigns && !patientAdviceError) {
@@ -175,7 +162,7 @@ export function PatientAdviceModule() {
     <ModuleCardWrapper
       ref={moduleRef}
       title="Recomendaciones y Signos de Alarma para Paciente"
-      description="Genera consejos y signos de alarma basados en el análisis, resumen y diagnósticos validados. Los títulos se incluyen automáticamente."
+      description="Genera consejos y signos de alarma (en mayúsculas por defecto) basados en el análisis, resumen y diagnósticos validados. Los títulos se incluyen automáticamente."
       icon={UserCheck}
       isLoading={isGeneratingPatientAdvice}
       id="patient-advice-module"
@@ -232,15 +219,6 @@ export function PatientAdviceModule() {
                     >
                       <Copy className="mr-2 h-4 w-4" />
                       Copiar
-                    </Button>
-                    <Button 
-                        onClick={handleRecommendationsToUppercase} 
-                        variant="outline" 
-                        size="sm" 
-                        disabled={isGeneratingPatientAdvice || !generatedPatientAdvice.generalRecommendations}
-                    >
-                      <ALargeSmall className="mr-2 h-4 w-4" />
-                      Mayúsculas
                     </Button>
                 </div>
               </div>
