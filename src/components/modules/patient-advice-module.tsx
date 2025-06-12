@@ -127,19 +127,26 @@ export function PatientAdviceModule() {
   };
 
   const handleConvertToUppercase = (section: 'recommendations' | 'alarms') => {
-    if (section === 'recommendations' && generatedPatientAdvice.generalRecommendations) {
-      setGeneratedPatientAdvice(prev => ({
-        ...prev,
-        generalRecommendations: prev.generalRecommendations!.toUpperCase()
-      }));
-      toast({ title: "Recomendaciones en Mayúsculas" });
-    } else if (section === 'alarms' && generatedPatientAdvice.alarmSigns) {
-      setGeneratedPatientAdvice(prev => ({
-        ...prev,
-        alarmSigns: prev.alarmSigns!.toUpperCase()
-      }));
-      toast({ title: "Signos de Alarma en Mayúsculas" });
-    }
+    setGeneratedPatientAdvice(prev => {
+      const currentRecs = prev.generalRecommendations;
+      const currentAlarms = prev.alarmSigns;
+
+      if (section === 'recommendations' && typeof currentRecs === 'string') {
+        toast({ title: "Recomendaciones en Mayúsculas" });
+        return {
+          generalRecommendations: currentRecs.toUpperCase(),
+          alarmSigns: currentAlarms, // Mantener el valor original de alarmSigns
+        };
+      } else if (section === 'alarms' && typeof currentAlarms === 'string') {
+        toast({ title: "Signos de Alarma en Mayúsculas" });
+        return {
+          generalRecommendations: currentRecs, // Mantener el valor original de generalRecommendations
+          alarmSigns: currentAlarms.toUpperCase(),
+        };
+      }
+      // Si no se cumple ninguna condición o los valores son null, devolver el estado anterior sin cambios
+      return prev;
+    });
   };
   
   const handleSaveManually = async () => {
