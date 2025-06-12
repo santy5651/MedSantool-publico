@@ -1,5 +1,5 @@
 
-export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion';
+export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice';
 
 export interface HistoryEntry {
   id?: number;
@@ -9,7 +9,7 @@ export interface HistoryEntry {
   inputSummary: string;
   outputSummary: string;
   fullInput?: string | Record<string, any>;
-  fullOutput?: string | Record<string, any> | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | { suggestedPlanText: string };
+  fullOutput?: string | Record<string, any> | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | TreatmentPlanOutputState | PatientAdviceOutputState;
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
 }
@@ -76,6 +76,19 @@ export interface TreatmentPlanOutputState {
 }
 // --- End Treatment Plan Suggestion Module Specific Types ---
 
+// --- Patient Advice Module Specific Types ---
+export interface PatientAdviceInputData {
+  clinicalAnalysis: string | null;
+  textSummary: string | null;
+  validatedDiagnoses: ValidatedDiagnosis[] | null;
+}
+
+export interface PatientAdviceOutputState {
+  generalRecommendations: string | null;
+  alarmSigns: string | null;
+}
+// --- End Patient Advice Module Specific Types ---
+
 
 export interface ClinicalDataContextState {
   // Image Analysis
@@ -120,6 +133,12 @@ export interface ClinicalDataContextState {
   generatedTreatmentPlan: TreatmentPlanOutputState;
   isGeneratingTreatmentPlan: boolean;
   treatmentPlanError: string | null;
+
+  // Patient Advice
+  patientAdviceInput: PatientAdviceInputData;
+  generatedPatientAdvice: PatientAdviceOutputState;
+  isGeneratingPatientAdvice: boolean;
+  patientAdviceError: string | null;
 }
 
 export interface ClinicalDataContextActions {
@@ -159,14 +178,21 @@ export interface ClinicalDataContextActions {
   setGeneratedTreatmentPlan: (plan: TreatmentPlanOutputState) => void;
   setIsGeneratingTreatmentPlan: (loading: boolean) => void;
   setTreatmentPlanError: (error: string | null) => void;
-  clearTreatmentPlanModule: () => void;
 
+  // Patient Advice Actions
+  setPatientAdviceInput: (input: PatientAdviceInputData) => void;
+  setGeneratedPatientAdvice: (advice: PatientAdviceOutputState) => void;
+  setIsGeneratingPatientAdvice: (loading: boolean) => void;
+  setPatientAdviceError: (error: string | null) => void;
+  
   clearImageModule: () => void;
   clearPdfModule: () => void;
   clearTextModule: () => void;
   clearClinicalAnalysisModule: () => void;
   clearDiagnosisModule: () => void;
   clearMedicalOrdersModule: () => void;
+  clearTreatmentPlanModule: () => void;
+  clearPatientAdviceModule: () => void;
 }
 
 export type ClinicalDataContextType = ClinicalDataContextState & ClinicalDataContextActions;

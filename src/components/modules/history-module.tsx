@@ -14,8 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks } from 'lucide-react';
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, TreatmentPlanInputData, MedicalOrderInputState, NursingSurveillanceState } from '@/types';
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck } from 'lucide-react';
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, TreatmentPlanInputData, MedicalOrderInputState, NursingSurveillanceState, PatientAdviceOutputState, PatientAdviceInputData } from '@/types';
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { useClinicalData } from '@/contexts/clinical-data-context'; // Importar useClinicalData
@@ -30,6 +30,7 @@ const moduleIcons: Record<ModuleType, LucideIcon> = {
   DiagnosisSupport: Lightbulb,
   MedicalOrders: FileEdit,
   TreatmentPlanSuggestion: ListChecks,
+  PatientAdvice: UserCheck,
 };
 
 const statusIcons: Record<HistoryEntry['status'], LucideIcon> = {
@@ -54,6 +55,17 @@ const initialNursingSurveillanceState: NursingSurveillanceState = {
   monitorPain: false,
   monitorWounds: false,
   monitorBleeding: false,
+};
+
+const initialPatientAdviceInput: PatientAdviceInputData = {
+  clinicalAnalysis: null,
+  textSummary: null,
+  validatedDiagnoses: null,
+};
+
+const initialGeneratedPatientAdvice: PatientAdviceOutputState = {
+  generalRecommendations: null,
+  alarmSigns: null,
 };
 
 
@@ -99,12 +111,12 @@ export function HistoryModule() {
   const handleLoadEntryToModule = (entry: HistoryEntry) => {
     if (!entry) return;
 
-    const outputData = entry.fullOutput as any; // Necesario para acceder a 'error' o campos específicos
+    const outputData = entry.fullOutput as any; 
 
     try {
       switch (entry.module) {
         case 'ImageAnalysis':
-          clinicalData.setImageFile(null); // No podemos restaurar el archivo
+          clinicalData.setImageFile(null); 
           if (outputData && outputData.summary) {
             clinicalData.setImageAnalysisSummary(outputData.summary);
           }
@@ -112,7 +124,7 @@ export function HistoryModule() {
           toast({ title: "Datos Cargados", description: "Resumen de imagen cargado. Seleccione un nuevo archivo para re-analizar." });
           break;
         case 'PdfExtraction':
-          clinicalData.setPdfFile(null); // No podemos restaurar el archivo
+          clinicalData.setPdfFile(null); 
           if (outputData && outputData.clinicalNotes) {
             clinicalData.setPdfExtractedNotes(outputData.clinicalNotes);
           }
@@ -147,14 +159,13 @@ export function HistoryModule() {
           break;
         case 'MedicalOrders':
           if (entry.fullInput && typeof entry.fullInput === 'object') {
-            const fi = entry.fullInput as GenerateMedicalOrderInput; // Es el tipo guardado
+            const fi = entry.fullInput as GenerateMedicalOrderInput; 
             clinicalData.setMedicalOrderInputs({
                 orderType: fi.orderType || '',
                 oxygen: fi.oxygen || "NO REQUIERE OXÍGENO",
                 isolation: fi.isolation || "NO REQUIERE AISLAMIENTO",
                 diet: fi.diet || "",
                 medicationsInput: fi.medicationsInput || "",
-                // Derivar noMedicationReconciliation basado en medicationReconciliationInput
                 noMedicationReconciliation: fi.medicationReconciliationInput === "NO TIENE CONCILIACIÓN MEDICAMENTOSA" || !fi.medicationReconciliationInput,
                 medicationReconciliationInput: fi.medicationReconciliationInput || "",
                 specialtyFollowUp: fi.specialtyFollowUp || "",
@@ -183,13 +194,23 @@ export function HistoryModule() {
           }
           clinicalData.setTreatmentPlanError(outputData?.error || null);
           break;
+        case 'PatientAdvice':
+          if (entry.fullInput && typeof entry.fullInput === 'object') {
+            clinicalData.setPatientAdviceInput(entry.fullInput as PatientAdviceInputData);
+          }
+          if (outputData && (outputData.generalRecommendations || outputData.alarmSigns)) {
+            clinicalData.setGeneratedPatientAdvice(outputData as PatientAdviceOutputState);
+          } else {
+            clinicalData.setGeneratedPatientAdvice(initialGeneratedPatientAdvice);
+          }
+          clinicalData.setPatientAdviceError(outputData?.error || null);
+          break;
         default:
           toast({ variant: "destructive", title: "Módulo Desconocido", description: "No se puede cargar esta entrada." });
           return;
       }
       toast({ title: "Datos Cargados", description: `Se cargaron los datos de "${entry.module.replace(/([A-Z])/g, ' $1').trim()}" al módulo.` });
       
-      // Scroll to module
       const moduleId = `${entry.module.charAt(0).toLowerCase() + entry.module.slice(1).replace(/([A-Z])/g, '-$1').toLowerCase()}-module`;
       const moduleElement = document.getElementById(moduleId);
       moduleElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -209,7 +230,7 @@ export function HistoryModule() {
 
     try {
       const output = typeof entry.fullOutput === 'string' 
-        ? JSON.parse(entry.fullOutput) // Assume stringified JSON for older entries or simple text outputs
+        ? JSON.parse(entry.fullOutput) 
         : entry.fullOutput;
       
       if (entry.module === 'DiagnosisSupport' && Array.isArray(output)) {
@@ -274,11 +295,27 @@ export function HistoryModule() {
         return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {summary: string}).summary}</pre>;
       } else if (entry.module === 'TreatmentPlanSuggestion' && typeof output === 'object' && output !== null && 'suggestedPlanText' in output) {
         return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {suggestedPlanText: string}).suggestedPlanText}</pre>;
+      } else if (entry.module === 'PatientAdvice' && typeof output === 'object' && output !== null && ('generalRecommendations' in output || 'alarmSigns' in output)) {
+        const adviceOutput = output as PatientAdviceOutputState;
+        return (
+            <div className="space-y-2 text-xs">
+                {adviceOutput.generalRecommendations && (
+                    <div>
+                        <strong>Recomendaciones Generales:</strong>
+                        <pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{adviceOutput.generalRecommendations}</pre>
+                    </div>
+                )}
+                {adviceOutput.alarmSigns && (
+                     <div>
+                        <strong>Signos de Alarma:</strong>
+                        <pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{adviceOutput.alarmSigns}</pre>
+                    </div>
+                )}
+            </div>
+        );
       }
-      // Fallback for other structures or stringified JSON
       return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{typeof output === 'string' ? output : JSON.stringify(output, null, 2)}</pre>;
     } catch (e) { 
-      // If JSON.parse fails for a string or any other error
       return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{String(entry.fullOutput)}</pre>;
     }
   };
@@ -474,4 +511,3 @@ declare module "@/components/ui/button" {
     size?: "default" | "sm" | "lg" | "icon" | "xs";
   }
 }
-

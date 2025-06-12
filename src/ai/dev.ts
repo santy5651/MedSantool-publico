@@ -9,4 +9,5 @@ import '@/ai/flows/analyze-medical-image.ts';
 import '@/ai/flows/generate-medical-order.ts';
 import '@/ai/flows/generate-clinical-analysis.ts';
 import '@/ai/flows/suggest-treatment-plan.ts';
+import '@/ai/flows/generate-patient-advice.ts';
 

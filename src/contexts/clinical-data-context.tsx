@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis } from '@/types';
+import type { ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState } from '@/types';
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const initialNursingSurveillanceState: NursingSurveillanceState = {
@@ -41,6 +41,17 @@ const initialGeneratedTreatmentPlan: TreatmentPlanOutputState = {
   suggestedPlanText: null,
 };
 
+const initialPatientAdviceInput: PatientAdviceInputData = {
+  clinicalAnalysis: null,
+  textSummary: null,
+  validatedDiagnoses: null,
+};
+
+const initialGeneratedPatientAdvice: PatientAdviceOutputState = {
+  generalRecommendations: null,
+  alarmSigns: null,
+};
+
 
 const initialState: ClinicalDataContextState = {
   imageFile: null,
@@ -78,6 +89,11 @@ const initialState: ClinicalDataContextState = {
   generatedTreatmentPlan: initialGeneratedTreatmentPlan,
   isGeneratingTreatmentPlan: false,
   treatmentPlanError: null,
+
+  patientAdviceInput: initialPatientAdviceInput,
+  generatedPatientAdvice: initialGeneratedPatientAdvice,
+  isGeneratingPatientAdvice: false,
+  patientAdviceError: null,
 };
 
 const ClinicalDataContext = createContext<ClinicalDataContextType | undefined>(undefined);
@@ -135,6 +151,12 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setIsGeneratingTreatmentPlan = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingTreatmentPlan: loading })), []);
   const setTreatmentPlanError = useCallback((error: string | null) => setState(s => ({ ...s, treatmentPlanError: error})), []);
 
+  // Patient Advice
+  const setPatientAdviceInput = useCallback((input: PatientAdviceInputData) => setState(s => ({ ...s, patientAdviceInput: input })), []);
+  const setGeneratedPatientAdvice = useCallback((advice: PatientAdviceOutputState) => setState(s => ({ ...s, generatedPatientAdvice: advice })), []);
+  const setIsGeneratingPatientAdvice = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingPatientAdvice: loading })), []);
+  const setPatientAdviceError = useCallback((error: string | null) => setState(s => ({ ...s, patientAdviceError: error})), []);
+
 
   const clearImageModule = useCallback(() => {
     setState(s => ({
@@ -171,6 +193,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const clearClinicalAnalysisModule = useCallback(() => {
     setState(s => ({
       ...s,
+      // clinicalAnalysisInput: null, // This is linked to textAnalysisSummary, so clearing textAnalysisSummary above handles it.
       generatedClinicalAnalysis: null,
       isGeneratingClinicalAnalysis: false,
       clinicalAnalysisError: null,
@@ -207,6 +230,16 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }));
   }, []);
 
+  const clearPatientAdviceModule = useCallback(() => {
+    setState(s => ({
+      ...s,
+      patientAdviceInput: initialPatientAdviceInput,
+      generatedPatientAdvice: initialGeneratedPatientAdvice,
+      isGeneratingPatientAdvice: false,
+      patientAdviceError: null,
+    }));
+  }, []);
+
 
   const contextValue: ClinicalDataContextType = {
     ...state,
@@ -239,6 +272,10 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setGeneratedTreatmentPlan,
     setIsGeneratingTreatmentPlan,
     setTreatmentPlanError,
+    setPatientAdviceInput,
+    setGeneratedPatientAdvice,
+    setIsGeneratingPatientAdvice,
+    setPatientAdviceError,
     clearImageModule,
     clearPdfModule,
     clearTextModule,
@@ -246,6 +283,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     clearDiagnosisModule,
     clearMedicalOrdersModule,
     clearTreatmentPlanModule,
+    clearPatientAdviceModule,
   };
 
   return (

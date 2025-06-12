@@ -9,6 +9,7 @@ import { ClinicalAnalysisModule } from '@/components/modules/clinical-analysis-m
 import { DiagnosisSupportModule } from '@/components/modules/diagnosis-support-module';
 import { TreatmentPlanModule } from '@/components/modules/treatment-plan-module';
 import { MedicalOrdersModule } from '@/components/modules/medical-orders-module';
+import { PatientAdviceModule } from '@/components/modules/patient-advice-module';
 import { HistoryModule } from '@/components/modules/history-module';
 import { Button } from '@/components/ui/button';
 import { Eraser } from 'lucide-react';
@@ -35,6 +36,7 @@ export default function MedInsightPage() {
     clearDiagnosisModule,
     clearTreatmentPlanModule,
     clearMedicalOrdersModule,
+    clearPatientAdviceModule,
   } = useClinicalData();
   const { toast } = useToast();
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
@@ -47,6 +49,7 @@ export default function MedInsightPage() {
     clearDiagnosisModule();
     clearTreatmentPlanModule();
     clearMedicalOrdersModule();
+    clearPatientAdviceModule();
     toast({
       title: "Todos los Módulos Limpiados",
       description: "Se ha restablecido el estado de todos los módulos de datos.",
@@ -89,6 +92,7 @@ export default function MedInsightPage() {
           <DiagnosisSupportModule />
           <TreatmentPlanModule />
           <MedicalOrdersModule />
+          <PatientAdviceModule />
         </div>
 
         {/* Right Column: History Module */}
