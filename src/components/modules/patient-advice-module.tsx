@@ -10,7 +10,7 @@ import { useHistoryStore } from '@/hooks/use-history-store';
 import { generatePatientAdvice, type GeneratePatientAdviceOutput, type GeneratePatientAdviceInput } from '@/ai/flows/generate-patient-advice';
 import type { PatientAdviceInputData, ValidatedDiagnosis, PatientAdviceOutputState } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { UserCheck, Eraser, Save, Copy, AlertTriangle } from 'lucide-react';
+import { UserCheck, Eraser, Save, Copy, AlertTriangle, ALargeSmall } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 
 export function PatientAdviceModule() {
@@ -125,6 +125,22 @@ export function PatientAdviceModule() {
       toast({ title: `Nada que Copiar`, description: `No hay ${type.toLowerCase()} generados para copiar.` });
     }
   };
+
+  const handleConvertToUppercase = (section: 'recommendations' | 'alarms') => {
+    if (section === 'recommendations' && generatedPatientAdvice.generalRecommendations) {
+      setGeneratedPatientAdvice(prev => ({
+        ...prev,
+        generalRecommendations: prev.generalRecommendations!.toUpperCase()
+      }));
+      toast({ title: "Recomendaciones en Mayúsculas" });
+    } else if (section === 'alarms' && generatedPatientAdvice.alarmSigns) {
+      setGeneratedPatientAdvice(prev => ({
+        ...prev,
+        alarmSigns: prev.alarmSigns!.toUpperCase()
+      }));
+      toast({ title: "Signos de Alarma en Mayúsculas" });
+    }
+  };
   
   const handleSaveManually = async () => {
     if (!generatedPatientAdvice.generalRecommendations && !generatedPatientAdvice.alarmSigns && !patientAdviceError) {
@@ -161,8 +177,8 @@ export function PatientAdviceModule() {
   return (
     <ModuleCardWrapper
       ref={moduleRef}
-      title="Recomendaciones y Signos de Alarma"
-      description="Genera consejos generales y signos de alarma para el paciente basados en análisis clínico, resumen y diagnósticos validados."
+      title="Recomendaciones y Signos de Alarma para Paciente"
+      description="Genera consejos y signos de alarma basados en el análisis, resumen y diagnósticos validados. Los títulos se incluyen automáticamente."
       icon={UserCheck}
       isLoading={isGeneratingPatientAdvice}
       id="patient-advice-module"
@@ -210,15 +226,26 @@ export function PatientAdviceModule() {
                   disabled={isGeneratingPatientAdvice}
                   placeholder="Recomendaciones generadas aparecerán aquí..."
                 />
-                <Button 
-                    onClick={() => handleCopyToClipboard(generatedPatientAdvice.generalRecommendations, "Recomendaciones")} 
-                    variant="outline" 
-                    size="sm" 
-                    disabled={isGeneratingPatientAdvice || !generatedPatientAdvice.generalRecommendations}
-                >
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copiar Recomendaciones
-                </Button>
+                <div className="flex space-x-2">
+                    <Button 
+                        onClick={() => handleCopyToClipboard(generatedPatientAdvice.generalRecommendations, "Recomendaciones")} 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={isGeneratingPatientAdvice || !generatedPatientAdvice.generalRecommendations}
+                    >
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copiar
+                    </Button>
+                    <Button 
+                        onClick={() => handleConvertToUppercase('recommendations')} 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={isGeneratingPatientAdvice || !generatedPatientAdvice.generalRecommendations}
+                    >
+                      <ALargeSmall className="mr-2 h-4 w-4" />
+                      Mayúsculas
+                    </Button>
+                </div>
               </div>
             )}
 
@@ -236,15 +263,26 @@ export function PatientAdviceModule() {
                   disabled={isGeneratingPatientAdvice}
                   placeholder="Signos de alarma generados aparecerán aquí..."
                 />
-                <Button 
-                    onClick={() => handleCopyToClipboard(generatedPatientAdvice.alarmSigns, "Signos de Alarma")} 
-                    variant="outline" 
-                    size="sm" 
-                    disabled={isGeneratingPatientAdvice || !generatedPatientAdvice.alarmSigns}
-                >
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copiar Signos de Alarma
-                </Button>
+                 <div className="flex space-x-2">
+                    <Button 
+                        onClick={() => handleCopyToClipboard(generatedPatientAdvice.alarmSigns, "Signos de Alarma")} 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={isGeneratingPatientAdvice || !generatedPatientAdvice.alarmSigns}
+                    >
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copiar
+                    </Button>
+                     <Button 
+                        onClick={() => handleConvertToUppercase('alarms')} 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={isGeneratingPatientAdvice || !generatedPatientAdvice.alarmSigns}
+                    >
+                      <ALargeSmall className="mr-2 h-4 w-4" />
+                      Mayúsculas
+                    </Button>
+                </div>
               </div>
             )}
           </div>
@@ -262,3 +300,4 @@ export function PatientAdviceModule() {
     </ModuleCardWrapper>
   );
 }
+
