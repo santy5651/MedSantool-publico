@@ -145,7 +145,9 @@ export function PatientAdviceModule() {
           };
         }
       }
-      return prev;
+      // Si no se hizo ninguna conversión (ej. el campo estaba vacío o no era string), 
+      // devuelve el estado previo sin cambios para evitar pérdidas.
+      return prev; 
     });
   };
   
