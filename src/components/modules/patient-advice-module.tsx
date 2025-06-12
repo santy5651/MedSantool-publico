@@ -126,28 +126,16 @@ export function PatientAdviceModule() {
     }
   };
 
-  const handleConvertToUppercase = (section: 'recommendations' | 'alarms') => {
+  const handleRecommendationsToUppercase = () => {
     setGeneratedPatientAdvice(prev => {
-      if (section === 'recommendations') {
-        if (typeof prev.generalRecommendations === 'string' && prev.generalRecommendations.trim() !== '') {
-          toast({ title: "Recomendaciones en Mayúsculas" });
-          return {
-            ...prev, 
-            generalRecommendations: prev.generalRecommendations.toUpperCase(),
-          };
-        }
-      } else if (section === 'alarms') {
-        if (typeof prev.alarmSigns === 'string' && prev.alarmSigns.trim() !== '') {
-          toast({ title: "Signos de Alarma en Mayúsculas" });
-          return {
-            ...prev,
-            alarmSigns: prev.alarmSigns.toUpperCase(),
-          };
-        }
+      if (typeof prev.generalRecommendations === 'string' && prev.generalRecommendations.trim() !== '') {
+        toast({ title: "Recomendaciones en Mayúsculas" });
+        return {
+          ...prev, // Preserva alarmSigns y otras propiedades si las hubiera
+          generalRecommendations: prev.generalRecommendations.toUpperCase(),
+        };
       }
-      // Si no se hizo ninguna conversión (ej. el campo estaba vacío o no era string), 
-      // devuelve el estado previo sin cambios para evitar pérdidas.
-      return prev; 
+      return prev; // Devuelve el estado anterior si no hay nada que convertir
     });
   };
   
@@ -246,7 +234,7 @@ export function PatientAdviceModule() {
                       Copiar
                     </Button>
                     <Button 
-                        onClick={() => handleConvertToUppercase('recommendations')} 
+                        onClick={handleRecommendationsToUppercase} 
                         variant="outline" 
                         size="sm" 
                         disabled={isGeneratingPatientAdvice || !generatedPatientAdvice.generalRecommendations}
@@ -281,15 +269,6 @@ export function PatientAdviceModule() {
                     >
                       <Copy className="mr-2 h-4 w-4" />
                       Copiar
-                    </Button>
-                     <Button 
-                        onClick={() => handleConvertToUppercase('alarms')} 
-                        variant="outline" 
-                        size="sm" 
-                        disabled={isGeneratingPatientAdvice || !generatedPatientAdvice.alarmSigns}
-                    >
-                      <ALargeSmall className="mr-2 h-4 w-4" />
-                      Mayúsculas
                     </Button>
                 </div>
               </div>
