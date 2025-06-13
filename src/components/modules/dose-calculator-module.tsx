@@ -12,12 +12,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Calculator, Eraser, Save, AlertTriangle, Info, ChevronsUpDown, Check } from 'lucide-react';
+import { Calculator, Eraser, Save, AlertTriangle, Info, ChevronsUpDown, Check, Filter } from 'lucide-react';
 import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
 import { useToast } from '@/hooks/use-toast';
 import type { MedicationInfo, MedicationUsage, DoseUnit, DoseCalculatorInputState } from '@/types';
-import { initialMedicationsList, commonDoseUnits, infusionDrugAmountUnits } from '@/lib/medication-data';
+import { initialMedicationsList, commonDoseUnits, infusionDrugAmountUnits, getAllMedicationCategories } from '@/lib/medication-data';
 import { cn, getTextSummary } from '@/lib/utils';
 
 interface DoseCalculatorModuleProps {
@@ -32,7 +32,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
     setDoseCalculatorOutput,
     isCalculatingDose,
     setIsCalculatingDose,
-    doseCalculationError, // Using this for UI display of errors from calculation logic
+    doseCalculationError, 
     setDoseCalculationError,
     clearDoseCalculatorModule,
   } = useClinicalData();
@@ -42,19 +42,34 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
 
   const [medicationSearch, setMedicationSearch] = useState('');
   const [medicationComboboxOpen, setMedicationComboboxOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const medicationCategories = useMemo(() => getAllMedicationCategories(), []);
+
 
   const filteredMedications = useMemo(() => {
-    if (!medicationSearch) return initialMedicationsList;
-    return initialMedicationsList.filter(med => 
+    let medications = initialMedicationsList;
+
+    if (categoryFilter) {
+      // La categoría en el filtro puede tener espacios y mayúsculas,
+      // mientras que en los datos puede tener guiones bajos y minúsculas.
+      // Necesitamos normalizar para la comparación.
+      const normalizedFilter = categoryFilter.toLowerCase().replace(/ /g, '_');
+      medications = medications.filter(med => 
+        med.categories.some(cat => cat.toLowerCase().replace(/_protocol$/, '').includes(normalizedFilter))
+      );
+    }
+
+    if (!medicationSearch) return medications;
+    
+    return medications.filter(med => 
       med.name.toLowerCase().includes(medicationSearch.toLowerCase()) ||
       med.keywords?.some(kw => kw.toLowerCase().includes(medicationSearch.toLowerCase()))
     );
-  }, [medicationSearch]);
+  }, [medicationSearch, categoryFilter]);
 
 
   const handleInputChange = (field: keyof DoseCalculatorInputState, value: any) => {
     setDoseCalculatorInputs(prev => ({ ...prev, [field]: value }));
-    // Reset outputs if key inputs change
     if (['patientWeight', 'medicationName', 'selectedMedication', 'selectedUsage', 'doseToUse', 'doseUnit', 'infusionDrugAmount', 'infusionDrugAmountUnit', 'infusionTotalVolume'].includes(field)) {
         setDoseCalculatorOutput({
             calculatedBolusDose: null,
@@ -72,7 +87,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
       ...prev,
       selectedMedication: med,
       medicationName: med ? med.name : '',
-      selectedUsage: med && med.usages.length > 0 ? med.usages[0] : null, // Auto-select first usage
+      selectedUsage: med && med.usages.length > 0 ? med.usages[0] : null,
       doseToUse: '',
       doseUnit: med && med.usages.length > 0 ? med.usages[0].unit as DoseUnit : '',
       isInfusion: med && med.usages.length > 0 ? med.usages[0].type === 'infusion' : false,
@@ -81,7 +96,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
       infusionDrugAmountUnit: med?.defaultConcentration?.totalDrugAmountUnit || '',
       infusionTotalVolume: med?.defaultConcentration?.totalVolume?.toString() || '',
     }));
-    setMedicationSearch('');
+    setMedicationSearch(''); // Clear search after selection
     setMedicationComboboxOpen(false);
   };
 
@@ -91,7 +106,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
       setDoseCalculatorInputs(prev => ({
         ...prev,
         selectedUsage: usage,
-        doseToUse: '', // Reset dose when usage changes
+        doseToUse: '', 
         doseUnit: usage.unit as DoseUnit,
         isInfusion: usage.type === 'infusion',
         useSuggestedDose: false,
@@ -105,9 +120,6 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
       const suggestedDose = doseCalculatorInputs.selectedUsage.doseNumerical.value ?? doseCalculatorInputs.selectedUsage.doseNumerical.min ?? '';
       handleInputChange('doseToUse', String(suggestedDose));
       handleInputChange('doseUnit', doseCalculatorInputs.selectedUsage.unit as DoseUnit);
-    } else if (!checked) {
-      // Optionally clear or leave as is, user might want to adjust manually
-      // handleInputChange('doseToUse', ''); 
     }
   };
 
@@ -128,11 +140,11 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
       return;
     }
     if (!med || !usage) {
-      setDoseCalculationError("Seleccione un medicamento y un uso/protocolo.");
+      setDoseCalculationError("Seleccione un medicamento y un uso/protocolo, o ingrese manualmente si no está en la lista.");
       setIsCalculatingDose(false);
       return;
     }
-     if (isNaN(dose) || dose < 0) { // Dose can be 0 for some protocols (e.g. stop infusion)
+     if (isNaN(dose) || dose < 0) { 
       setDoseCalculationError("La dosis a usar debe ser un número válido.");
       setIsCalculatingDose(false);
       return;
@@ -150,10 +162,10 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
 
     try {
       if (usage.type === 'bolus') {
-        if (unit.includes('/kg')) { // Dose is weight-based
+        if (unit.includes('/kg')) { 
           const totalDose = dose * weight;
           calculatedBolus = `${totalDose.toFixed(2)} ${unit.replace('/kg', '')}`;
-        } else { // Dose is fixed
+        } else { 
           calculatedBolus = `${dose.toFixed(2)} ${unit}`;
         }
       } else if (usage.type === 'infusion') {
@@ -184,8 +196,6 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
         else if (unit === 'mcg/kg/hora') doseMcgKgHora = dose;
         else if (unit === 'mg/kg/hora') doseMcgKgHora = dose * 1000;
         else if (unit === 'ml/hora') {
-             // This case means the user *input* ml/hr, we might calculate total drug delivered or something else.
-             // For now, if unit is ml/hr, we assume it's the target rate and don't calculate it.
              warningMsg = "La unidad 'ml/hora' se interpreta como una tasa de infusión objetivo, no se calcula una nueva tasa.";
              calculatedRate = `${dose.toFixed(2)} ml/hora`;
         } else {
@@ -194,7 +204,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
           return;
         }
         
-        if (calculatedRate === null) { // Only calculate if not already set by ml/hr input
+        if (calculatedRate === null) { 
             let totalDoseMcgPerHr: number;
             if (doseMcgKgMin !== null) totalDoseMcgPerHr = doseMcgKgMin * weight * 60;
             else if (doseMcgMin !== null) totalDoseMcgPerHr = doseMcgMin * 60;
@@ -244,7 +254,8 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
     clearDoseCalculatorModule();
     setMedicationSearch('');
     setMedicationComboboxOpen(false);
-    setDoseCalculationError(null); // Clear specific UI error too
+    setDoseCalculationError(null); 
+    setCategoryFilter('');
     toast({ title: "Campos Limpiados", description: "Se han restablecido los campos de la calculadora." });
   };
 
@@ -281,7 +292,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
         doseCalculatorOutput.calculatedInfusionRate,
         doseCalculatorOutput.calculatedConcentration,
         doseCalculatorOutput.calculationWarning,
-        doseCalculatorOutput.calculationError || doseCalculationError // Prioritize specific UI error if present
+        doseCalculatorOutput.calculationError || doseCalculationError 
     );
   };
   
@@ -295,7 +306,6 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
       isLoading={isCalculatingDose}
     >
       <div className="space-y-4">
-        {/* Patient Weight */}
         <div>
           <Label htmlFor="patientWeight">Peso del Paciente (Kg)</Label>
           <Input
@@ -308,7 +318,29 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
           />
         </div>
 
-        {/* Medication Selection */}
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-2 items-end">
+            <div>
+                <Label htmlFor="medicationCategoryFilter">Filtrar por Categoría</Label>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger id="medicationCategoryFilter" className="w-full">
+                        <SelectValue placeholder="Todas las categorías..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="">Todas las categorías</SelectItem>
+                        {medicationCategories.map(cat => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+            {categoryFilter && (
+                 <Button variant="ghost" size="sm" onClick={() => setCategoryFilter('')} className="self-end mb-1">
+                    <Filter className="mr-1 h-4 w-4" /> Quitar Filtro
+                </Button>
+            )}
+        </div>
+
+
         <div>
           <Label htmlFor="medicationName">Medicamento</Label>
           <Popover open={medicationComboboxOpen} onOpenChange={setMedicationComboboxOpen}>
@@ -325,7 +357,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-0 max-h-[300px] overflow-y-auto">
               <Command>
                 <CommandInput 
                     placeholder="Buscar medicamento..."
@@ -333,7 +365,9 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
                     onValueChange={setMedicationSearch}
                 />
                 <CommandList>
-                  <CommandEmpty>No se encontró el medicamento.</CommandEmpty>
+                  <CommandEmpty>
+                    {filteredMedications.length === 0 && medicationSearch ? "No se encontró el medicamento con los filtros actuales." : "No se encontró el medicamento."}
+                  </CommandEmpty>
                   <CommandGroup>
                     {filteredMedications.map((med) => (
                       <CommandItem
@@ -355,27 +389,25 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
               </Command>
             </PopoverContent>
           </Popover>
-          {/* Allow manual input if medication not in list, or for quick entry */}
            {!doseCalculatorInputs.selectedMedication && (
              <Input
                 id="manualMedicationName"
                 type="text"
                 value={doseCalculatorInputs.medicationName}
                 onChange={(e) => handleInputChange('medicationName', e.target.value)}
-                placeholder="O escribir nombre manualmente"
-                className="mt-1 text-sm"
+                placeholder="O escribir nombre manualmente si no está en la lista"
+                className="mt-1 text-sm text-muted-foreground"
              />
            )}
         </div>
 
-        {/* Suggested Dose / Usage Selection */}
         {doseCalculatorInputs.selectedMedication && (
           <Card className="bg-muted/30">
             <CardHeader className="pb-2 pt-4">
               <CardTitle className="text-base">Usos y Dosis Sugeridas para {doseCalculatorInputs.selectedMedication.name}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {doseCalculatorInputs.selectedMedication.usages.length > 1 && (
+              {doseCalculatorInputs.selectedMedication.usages.length > 1 ? (
                 <div>
                   <Label htmlFor="medicationUsage">Seleccionar Uso/Protocolo:</Label>
                   <Select
@@ -392,11 +424,15 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
                     </SelectContent>
                   </Select>
                 </div>
+              ) : doseCalculatorInputs.selectedMedication.usages.length === 1 && (
+                 <div className="text-sm p-2 border rounded-md bg-background">
+                    <p><strong>Protocolo Único:</strong> {doseCalculatorInputs.selectedMedication.usages[0].protocol} ({doseCalculatorInputs.selectedMedication.usages[0].type})</p>
+                 </div>
               )}
+
               {doseCalculatorInputs.selectedUsage && (
                 <div className="p-3 border rounded-md bg-background text-sm space-y-1">
-                  <p><strong>Protocolo:</strong> {doseCalculatorInputs.selectedUsage.protocol}</p>
-                  <p><strong>Dosis Sugerida:</strong> {doseCalculatorInputs.selectedUsage.doseRange} ({doseCalculatorInputs.selectedUsage.unit})</p>
+                  <p><strong>Dosis Sugerida para "{doseCalculatorInputs.selectedUsage.protocol}":</strong> {doseCalculatorInputs.selectedUsage.doseRange} ({doseCalculatorInputs.selectedUsage.unit})</p>
                   {doseCalculatorInputs.selectedUsage.notes && <p className="text-xs text-muted-foreground"><em>Nota: {doseCalculatorInputs.selectedUsage.notes}</em></p>}
                   {doseCalculatorInputs.selectedUsage.doseNumerical && (
                     <div className="flex items-center space-x-2 pt-2">
@@ -406,7 +442,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
                         onCheckedChange={(checked) => handleUseSuggestedDoseChange(!!checked)}
                       />
                       <Label htmlFor="useSuggestedDose" className="text-sm font-normal">
-                        Usar dosis sugerida ({doseCalculatorInputs.selectedUsage.doseNumerical.value ?? doseCalculatorInputs.selectedUsage.doseNumerical.min} {doseCalculatorInputs.selectedUsage.unit}) en el siguiente campo
+                        Usar dosis sugerida ({doseCalculatorInputs.selectedUsage.doseNumerical.value ?? doseCalculatorInputs.selectedUsage.doseNumerical.min} {doseCalculatorInputs.selectedUsage.unit})
                       </Label>
                     </div>
                   )}
@@ -416,7 +452,6 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
           </Card>
         )}
 
-        {/* Dose to Use & Unit */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="doseToUse">Dosis a Usar</Label>
@@ -443,7 +478,6 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
           </div>
         </div>
         
-        {/* Infusion Details (Conditional) */}
         {doseCalculatorInputs.isInfusion && (
           <Card className="bg-muted/40">
             <CardHeader className="pb-2 pt-4">
@@ -491,9 +525,8 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
           </Card>
         )}
 
-        {/* Action Buttons */}
         <div className="flex space-x-2">
-          <Button onClick={performCalculations} disabled={isCalculatingDose} className="flex-1">
+          <Button onClick={performCalculations} disabled={isCalculatingDose || !doseCalculatorInputs.patientWeight || (!doseCalculatorInputs.selectedMedication && !doseCalculatorInputs.medicationName.trim()) || !doseCalculatorInputs.doseToUse || !doseCalculatorInputs.doseUnit } className="flex-1">
             <Calculator className="mr-2 h-4 w-4" />
             Calcular Dosis/Infusión
           </Button>
@@ -503,7 +536,6 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
           </Button>
         </div>
 
-        {/* Results Display */}
         {(doseCalculatorOutput.calculatedBolusDose || doseCalculatorOutput.calculatedInfusionRate || doseCalculatorOutput.calculatedConcentration || doseCalculatorOutput.calculationWarning || doseCalculationError) && (
           <Card>
             <CardHeader>
@@ -528,7 +560,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
                   </AlertDescription>
                 </Alert>
               )}
-              {doseCalculationError && ( // Display specific UI error
+              {doseCalculationError && ( 
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>Error en Cálculo</AlertTitle>
