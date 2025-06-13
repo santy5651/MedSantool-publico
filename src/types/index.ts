@@ -190,17 +190,17 @@ export interface ClinicalDataContextActions {
   setIsGeneratingMedicalOrder: (loading: boolean) => void;
   setMedicalOrderError: (error: string | null) => void;
   
-  setTreatmentPlanInput: (input: TreatmentPlanInputData) => void;
+  setTreatmentPlanInput: (updater: TreatmentPlanInputData | ((prevState: TreatmentPlanInputData) => TreatmentPlanInputData)) => void;
   setGeneratedTreatmentPlan: (plan: TreatmentPlanOutputState) => void;
   setIsGeneratingTreatmentPlan: (loading: boolean) => void;
   setTreatmentPlanError: (error: string | null) => void;
 
-  setPatientAdviceInput: (input: PatientAdviceInputData) => void;
+  setPatientAdviceInput: (updater: PatientAdviceInputData | ((prevState: PatientAdviceInputData) => PatientAdviceInputData)) => void;
   setGeneratedPatientAdvice: (advice: PatientAdviceOutputState) => void;
   setIsGeneratingPatientAdvice: (loading: boolean) => void;
   setPatientAdviceError: (error: string | null) => void;
 
-  setJustificationInput: (input: MedicalJustificationInputState) => void;
+  setJustificationInput: (updater: MedicalJustificationInputState | ((prevState: MedicalJustificationInputState) => MedicalJustificationInputState)) => void;
   setGeneratedJustification: (justification: MedicalJustificationOutputState) => void;
   setIsGeneratingJustification: (loading: boolean) => void;
   setJustificationError: (error: string | null) => void;

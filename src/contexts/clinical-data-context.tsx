@@ -159,17 +159,47 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setIsGeneratingMedicalOrder = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingMedicalOrder: loading })), []);
   const setMedicalOrderError = useCallback((error: string | null) => setState(s => ({ ...s, medicalOrderError: error })), []);
 
-  const setTreatmentPlanInput = useCallback((input: TreatmentPlanInputData) => setState(s => ({ ...s, treatmentPlanInput: input })), []);
+  const setTreatmentPlanInput = useCallback(
+    (updater: TreatmentPlanInputData | ((prevState: TreatmentPlanInputData) => TreatmentPlanInputData)) => {
+      setState(s => ({
+        ...s,
+        treatmentPlanInput: typeof updater === 'function'
+          ? updater(s.treatmentPlanInput)
+          : updater,
+      }));
+    },
+    []
+  );
   const setGeneratedTreatmentPlan = useCallback((plan: TreatmentPlanOutputState) => setState(s => ({ ...s, generatedTreatmentPlan: plan })), []);
   const setIsGeneratingTreatmentPlan = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingTreatmentPlan: loading })), []);
   const setTreatmentPlanError = useCallback((error: string | null) => setState(s => ({ ...s, treatmentPlanError: error})), []);
 
-  const setPatientAdviceInput = useCallback((input: PatientAdviceInputData) => setState(s => ({ ...s, patientAdviceInput: input })), []);
+  const setPatientAdviceInput = useCallback(
+    (updater: PatientAdviceInputData | ((prevState: PatientAdviceInputData) => PatientAdviceInputData)) => {
+      setState(s => ({
+        ...s,
+        patientAdviceInput: typeof updater === 'function'
+          ? updater(s.patientAdviceInput)
+          : updater,
+      }));
+    },
+    []
+  );
   const setGeneratedPatientAdvice = useCallback((advice: PatientAdviceOutputState) => setState(s => ({ ...s, generatedPatientAdvice: advice })), []);
   const setIsGeneratingPatientAdvice = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingPatientAdvice: loading })), []);
   const setPatientAdviceError = useCallback((error: string | null) => setState(s => ({ ...s, patientAdviceError: error})), []);
 
-  const setJustificationInput = useCallback((input: MedicalJustificationInputState) => setState(s => ({ ...s, justificationInput: input })), []);
+  const setJustificationInput = useCallback(
+    (updater: MedicalJustificationInputState | ((prevState: MedicalJustificationInputState) => MedicalJustificationInputState)) => {
+      setState(s => ({
+        ...s,
+        justificationInput: typeof updater === 'function'
+          ? updater(s.justificationInput)
+          : updater,
+      }));
+    },
+    []
+  );
   const setGeneratedJustification = useCallback((justification: MedicalJustificationOutputState) => setState(s => ({ ...s, generatedJustification: justification })), []);
   const setIsGeneratingJustification = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingJustification: loading })), []);
   const setJustificationError = useCallback((error: string | null) => setState(s => ({ ...s, justificationError: error})), []);
