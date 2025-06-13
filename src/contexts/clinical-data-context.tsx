@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState } from '@/types';
+import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState } from '@/types';
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const initialNursingSurveillanceState: NursingSurveillanceState = {
@@ -79,7 +79,7 @@ const initialState: ClinicalDataContextState = {
   isTextAnalyzing: false,
   textAnalysisError: null,
 
-  clinicalAnalysisInput: null, 
+  clinicalAnalysisInput: null,
   generatedClinicalAnalysis: null,
   isGeneratingClinicalAnalysis: false,
   clinicalAnalysisError: null,
@@ -108,6 +108,11 @@ const initialState: ClinicalDataContextState = {
   generatedJustification: initialGeneratedJustification,
   isGeneratingJustification: false,
   justificationError: null,
+
+  // Medical Assistant Chat
+  chatMessages: [],
+  isChatResponding: false,
+  chatError: null,
 };
 
 const ClinicalDataContext = createContext<ClinicalDataContextType | undefined>(undefined);
@@ -130,7 +135,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setState(s => ({ ...s, clinicalNotesInput: typeof notes === 'function' ? notes(s.clinicalNotesInput) : notes }));
   }, []);
   const setTextAnalysisSummary = useCallback((summary: string | null) => {
-    setState(s => ({ ...s, textAnalysisSummary: summary, clinicalAnalysisInput: summary })); 
+    setState(s => ({ ...s, textAnalysisSummary: summary, clinicalAnalysisInput: summary }));
   }, []);
   const setIsTextAnalyzing = useCallback((loading: boolean) => setState(s => ({ ...s, isTextAnalyzing: loading })), []);
   const constSetTextAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, textAnalysisError: error })), []);
@@ -204,6 +209,12 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setIsGeneratingJustification = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingJustification: loading })), []);
   const setJustificationError = useCallback((error: string | null) => setState(s => ({ ...s, justificationError: error})), []);
 
+  // Chat Module setters and clear function
+  const addChatMessage = useCallback((message: ChatMessage) => setState(s => ({ ...s, chatMessages: [...s.chatMessages, message] })), []);
+  const setChatMessages = useCallback((messages: ChatMessage[]) => setState(s => ({ ...s, chatMessages: messages })), []);
+  const setIsChatResponding = useCallback((loading: boolean) => setState(s => ({ ...s, isChatResponding: loading })), []);
+  const setChatError = useCallback((error: string | null) => setState(s => ({ ...s, chatError: error })), []);
+
 
   const clearImageModule = useCallback(() => {
     setState(s => ({
@@ -233,7 +244,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       textAnalysisSummary: null,
       isTextAnalyzing: false,
       textAnalysisError: null,
-      clinicalAnalysisInput: null, 
+      clinicalAnalysisInput: null,
     }));
   }, []);
 
@@ -265,7 +276,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       medicalOrderError: null,
     }));
   }, []);
-  
+
   const clearTreatmentPlanModule = useCallback(() => {
     setState(s => ({
       ...s,
@@ -293,6 +304,15 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       generatedJustification: initialGeneratedJustification,
       isGeneratingJustification: false,
       justificationError: null,
+    }));
+  }, []);
+
+  const clearChatModule = useCallback(() => {
+    setState(s => ({
+      ...s,
+      chatMessages: [],
+      isChatResponding: false,
+      chatError: null,
     }));
   }, []);
 
@@ -336,6 +356,12 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setGeneratedJustification,
     setIsGeneratingJustification,
     setJustificationError,
+    // Chat actions
+    addChatMessage,
+    setChatMessages,
+    setIsChatResponding,
+    setChatError,
+    // Clear functions
     clearImageModule,
     clearPdfModule,
     clearTextModule,
@@ -345,6 +371,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     clearTreatmentPlanModule,
     clearPatientAdviceModule,
     clearMedicalJustificationModule,
+    clearChatModule,
   };
 
   return (
@@ -361,3 +388,6 @@ export const useClinicalData = (): ClinicalDataContextType => {
   }
   return context;
 };
+
+
+    
