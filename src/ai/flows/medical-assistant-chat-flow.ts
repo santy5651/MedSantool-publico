@@ -8,8 +8,14 @@
  * - MedicalAssistantChatOutput - The return type for the medicalAssistantChatFlow function.
  */
 
+import Handlebars from 'handlebars'; // Moved to top
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+
+// Helper for Handlebars to check equality - Moved to top
+Handlebars.registerHelper('eq', function (a, b) {
+  return a === b;
+});
 
 // Define la estructura de un mensaje individual en el historial
 const ChatMessageHistoryItemSchema = z.object({
@@ -80,8 +86,4 @@ const flow = ai.defineFlow(
   }
 );
 
-// Helper for Handlebars to check equality
-import Handlebars from 'handlebars';
-Handlebars.registerHelper('eq', function (a, b) {
-  return a === b;
-});
+// Handlebars import and registration now at the top
