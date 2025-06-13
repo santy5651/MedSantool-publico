@@ -8,25 +8,21 @@
  * - MedicalAssistantChatOutput - The return type for the medicalAssistantChatFlow function.
  */
 
-import Handlebars from 'handlebars'; // Moved to top
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-// Helper for Handlebars to check equality - Moved to top
-Handlebars.registerHelper('eq', function (a, b) {
-  return a === b;
-});
-
-// Define la estructura de un mensaje individual en el historial
+// Define la estructura de un mensaje individual en el historial para el flujo
 const ChatMessageHistoryItemSchema = z.object({
   sender: z.enum(['user', 'ai']),
   text: z.string(),
+  isUser: z.boolean().optional().describe('True if the sender is the user.'),
+  isAI: z.boolean().optional().describe('True if the sender is the AI assistant.'),
 });
 export type ChatMessageHistoryItem = z.infer<typeof ChatMessageHistoryItemSchema>;
 
 const MedicalAssistantChatInputSchema = z.object({
   userInput: z.string().describe('The user\'s current message to the medical assistant.'),
-  chatHistory: z.array(ChatMessageHistoryItemSchema).optional().describe('The history of the conversation so far.'),
+  chatHistory: z.array(ChatMessageHistoryItemSchema).optional().describe('The history of the conversation so far, with flags for sender type.'),
 });
 export type MedicalAssistantChatInput = z.infer<typeof MedicalAssistantChatInputSchema>;
 
@@ -51,8 +47,8 @@ const medicalAssistantChatPrompt = ai.definePrompt({
 {{#if chatHistory.length}}
 This is the conversation history so far:
 {{#each chatHistory}}
-{{#if (eq this.sender "user")}}User: {{{this.text}}}{{/if}}
-{{#if (eq this.sender "ai")}}Assistant: {{{this.text}}}{{/if}}
+{{#if this.isUser}}User: {{{this.text}}}{{/if}}
+{{#if this.isAI}}Assistant: {{{this.text}}}{{/if}}
 {{/each}}
 ---
 Based on the history above, respond to the following:
@@ -76,7 +72,7 @@ Please respond to the user's query:
 // The flow is defined but not directly exported as the wrapper function is preferred.
 const flow = ai.defineFlow(
   {
-    name: 'medicalAssistantChatFlowInternal', // Renamed to avoid conflict if genkit auto-registers the exported one
+    name: 'medicalAssistantChatFlowInternal',
     inputSchema: MedicalAssistantChatInputSchema,
     outputSchema: MedicalAssistantChatOutputSchema,
   },
@@ -85,5 +81,3 @@ const flow = ai.defineFlow(
     return output!;
   }
 );
-
-// Handlebars import and registration now at the top
