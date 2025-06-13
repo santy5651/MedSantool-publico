@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState } from '@/types';
+import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState } from '@/types'; // Added DoseCalculator types
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const initialNursingSurveillanceState: NursingSurveillanceState = {
@@ -61,6 +61,28 @@ const initialGeneratedJustification: MedicalJustificationOutputState = {
     justificationText: null,
 };
 
+const initialDoseCalculatorInputs: DoseCalculatorInputState = {
+  patientWeight: '',
+  medicationName: '',
+  selectedMedication: null,
+  selectedUsage: null,
+  useSuggestedDose: false,
+  doseToUse: '',
+  doseUnit: '',
+  isInfusion: false,
+  infusionDrugAmount: '',
+  infusionDrugAmountUnit: '',
+  infusionTotalVolume: '',
+};
+
+const initialDoseCalculatorOutput: DoseCalculatorOutputState = {
+  calculatedBolusDose: null,
+  calculatedInfusionRate: null,
+  calculatedConcentration: null,
+  calculationWarning: null,
+  calculationError: null,
+};
+
 
 const initialState: ClinicalDataContextState = {
   imageFile: null,
@@ -109,10 +131,14 @@ const initialState: ClinicalDataContextState = {
   isGeneratingJustification: false,
   justificationError: null,
 
-  // Medical Assistant Chat
   chatMessages: [],
   isChatResponding: false,
   chatError: null,
+
+  doseCalculatorInputs: initialDoseCalculatorInputs,
+  doseCalculatorOutput: initialDoseCalculatorOutput,
+  isCalculatingDose: false,
+  doseCalculationError: null,
 };
 
 const ClinicalDataContext = createContext<ClinicalDataContextType | undefined>(undefined);
@@ -209,11 +235,22 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setIsGeneratingJustification = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingJustification: loading })), []);
   const setJustificationError = useCallback((error: string | null) => setState(s => ({ ...s, justificationError: error})), []);
 
-  // Chat Module setters and clear function
   const addChatMessage = useCallback((message: ChatMessage) => setState(s => ({ ...s, chatMessages: [...s.chatMessages, message] })), []);
   const setChatMessages = useCallback((messages: ChatMessage[]) => setState(s => ({ ...s, chatMessages: messages })), []);
   const setIsChatResponding = useCallback((loading: boolean) => setState(s => ({ ...s, isChatResponding: loading })), []);
   const setChatError = useCallback((error: string | null) => setState(s => ({ ...s, chatError: error })), []);
+
+  const setDoseCalculatorInputs = useCallback((inputsOrUpdater: DoseCalculatorInputState | ((prevState: DoseCalculatorInputState) => DoseCalculatorInputState)) => {
+    setState(s => ({
+      ...s,
+      doseCalculatorInputs: typeof inputsOrUpdater === 'function'
+        ? inputsOrUpdater(s.doseCalculatorInputs)
+        : inputsOrUpdater,
+    }));
+  }, []);
+  const setDoseCalculatorOutput = useCallback((output: DoseCalculatorOutputState) => setState(s => ({ ...s, doseCalculatorOutput: output })), []);
+  const setIsCalculatingDose = useCallback((loading: boolean) => setState(s => ({ ...s, isCalculatingDose: loading })), []);
+  const setDoseCalculationError = useCallback((error: string | null) => setState(s => ({ ...s, doseCalculationError: error})), []);
 
 
   const clearImageModule = useCallback(() => {
@@ -316,6 +353,16 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }));
   }, []);
 
+  const clearDoseCalculatorModule = useCallback(() => {
+    setState(s => ({
+      ...s,
+      doseCalculatorInputs: initialDoseCalculatorInputs,
+      doseCalculatorOutput: initialDoseCalculatorOutput,
+      isCalculatingDose: false,
+      doseCalculationError: null,
+    }));
+  }, []);
+
 
   const contextValue: ClinicalDataContextType = {
     ...state,
@@ -356,12 +403,14 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setGeneratedJustification,
     setIsGeneratingJustification,
     setJustificationError,
-    // Chat actions
     addChatMessage,
     setChatMessages,
     setIsChatResponding,
     setChatError,
-    // Clear functions
+    setDoseCalculatorInputs,
+    setDoseCalculatorOutput,
+    setIsCalculatingDose,
+    setDoseCalculationError,
     clearImageModule,
     clearPdfModule,
     clearTextModule,
@@ -372,6 +421,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     clearPatientAdviceModule,
     clearMedicalJustificationModule,
     clearChatModule,
+    clearDoseCalculatorModule,
   };
 
   return (
@@ -388,6 +438,5 @@ export const useClinicalData = (): ClinicalDataContextType => {
   }
   return context;
 };
-
 
     

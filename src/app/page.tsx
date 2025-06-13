@@ -11,7 +11,8 @@ import { TreatmentPlanModule } from '@/components/modules/treatment-plan-module'
 import { MedicalOrdersModule } from '@/components/modules/medical-orders-module';
 import { PatientAdviceModule } from '@/components/modules/patient-advice-module';
 import { MedicalJustificationModule } from '@/components/modules/medical-justification-module';
-import { MedicalAssistantChatModule } from '@/components/modules/medical-assistant-chat-module'; // Added import
+import { MedicalAssistantChatModule } from '@/components/modules/medical-assistant-chat-module';
+import { DoseCalculatorModule } from '@/components/modules/dose-calculator-module'; // Added import
 import { HistoryModule } from '@/components/modules/history-module';
 import { Button } from '@/components/ui/button';
 import { Eraser } from 'lucide-react';
@@ -43,7 +44,8 @@ export default function MedSanToolsPage() {
     clearMedicalOrdersModule,
     clearPatientAdviceModule,
     clearMedicalJustificationModule,
-    clearChatModule, // Added clearChatModule
+    clearChatModule,
+    clearDoseCalculatorModule, // Added clearDoseCalculatorModule
   } = useClinicalData();
   const { toast } = useToast();
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
@@ -58,7 +60,8 @@ export default function MedSanToolsPage() {
     clearMedicalOrdersModule();
     clearPatientAdviceModule();
     clearMedicalJustificationModule();
-    clearChatModule(); // Added call to clearChatModule
+    clearChatModule();
+    clearDoseCalculatorModule(); // Added call to clearDoseCalculatorModule
     toast({
       title: "Todos los Módulos Limpiados",
       description: "Se ha restablecido el estado de todos los módulos de datos.",
@@ -110,6 +113,7 @@ export default function MedSanToolsPage() {
         { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'image-analysis-module') && <ImageAnalysisModule id="image-analysis-module" /> }
         { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'medical-justification-module') && <MedicalJustificationModule id="medical-justification-module" /> }
         { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'medical-assistant-chat-module') && <MedicalAssistantChatModule id="medical-assistant-chat-module" /> }
+        { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'dose-calculator-module') && <DoseCalculatorModule id="dose-calculator-module" /> }
       </div>
 
       {/* History Module Section - se muestra siempre abajo y a todo lo ancho */}
@@ -119,3 +123,5 @@ export default function MedSanToolsPage() {
     </>
   );
 }
+
+    

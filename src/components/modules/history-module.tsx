@@ -14,8 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot } from 'lucide-react'; // Added Bot
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, TreatmentPlanInputData, MedicalOrderInputState, NursingSurveillanceState, PatientAdviceOutputState, PatientAdviceInputData, MedicalJustificationInputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType } from '@/types'; // Added ChatMessageType
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator } from 'lucide-react'; // Added Bot, Calculator
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, MedicalOrderInputState, NursingSurveillanceState, PatientAdviceOutputState, PatientAdviceInputData, MedicalJustificationInputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState } from '@/types'; // Added DoseCalculator types
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import type { ChatMessageHistoryItem } from '@/ai/flows/medical-assistant-chat-flow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -33,7 +33,8 @@ const moduleIcons: Record<ModuleType, LucideIcon> = {
   TreatmentPlanSuggestion: ListChecks,
   PatientAdvice: UserCheck,
   MedicalJustification: FileSignature,
-  MedicalAssistantChat: Bot, // Added Bot icon for chat
+  MedicalAssistantChat: Bot,
+  DoseCalculator: Calculator, // Added DoseCalculator
 };
 
 const statusIcons: Record<HistoryEntry['status'], LucideIcon> = {
@@ -78,6 +79,28 @@ const initialJustificationInput: MedicalJustificationInputState = {
 
 const initialGeneratedJustification: MedicalJustificationOutputState = {
     justificationText: null,
+};
+
+const initialDoseCalculatorInputs: DoseCalculatorInputState = {
+  patientWeight: '',
+  medicationName: '',
+  selectedMedication: null,
+  selectedUsage: null,
+  useSuggestedDose: false,
+  doseToUse: '',
+  doseUnit: '',
+  isInfusion: false,
+  infusionDrugAmount: '',
+  infusionDrugAmountUnit: '',
+  infusionTotalVolume: '',
+};
+
+const initialDoseCalculatorOutput: DoseCalculatorOutputState = {
+  calculatedBolusDose: null,
+  calculatedInfusionRate: null,
+  calculatedConcentration: null,
+  calculationWarning: null,
+  calculationError: null,
 };
 
 
@@ -233,12 +256,11 @@ export function HistoryModule() {
           break;
         case 'MedicalAssistantChat':
           if (outputData && outputData.messages && Array.isArray(outputData.messages)) {
-            // Transform sender back if necessary, or ensure ChatMessageType is compatible
             const loadedMessages: ChatMessageType[] = outputData.messages.map((msg: any, index: number) => ({
-              id: `loaded-${Date.now()}-${index}`, // Generate new IDs for loaded messages
-              sender: msg.sender, // Assuming 'user' | 'ai'
+              id: `loaded-${Date.now()}-${index}`, 
+              sender: msg.sender, 
               text: msg.text,
-              timestamp: msg.timestamp || Date.now(), // Use existing or new timestamp
+              timestamp: msg.timestamp || Date.now(), 
               error: msg.error,
             }));
             clinicalData.setChatMessages(loadedMessages);
@@ -246,6 +268,20 @@ export function HistoryModule() {
             clinicalData.setChatMessages([]);
           }
           clinicalData.setChatError(outputData?.error || null);
+          break;
+        case 'DoseCalculator':
+          if (inputData && typeof inputData === 'object') {
+            clinicalData.setDoseCalculatorInputs(inputData as DoseCalculatorInputState);
+          } else {
+             clinicalData.setDoseCalculatorInputs(initialDoseCalculatorInputs);
+          }
+          if (outputData && (outputData.calculatedBolusDose || outputData.calculatedInfusionRate || outputData.calculationError || outputData.calculationWarning)) {
+            clinicalData.setDoseCalculatorOutput(outputData as DoseCalculatorOutputState);
+            clinicalData.setDoseCalculationError(outputData.calculationError || null); // Also set the specific error field
+          } else {
+            clinicalData.setDoseCalculatorOutput(initialDoseCalculatorOutput);
+            clinicalData.setDoseCalculationError(null);
+          }
           break;
         default:
           toast({ variant: "destructive", title: "Módulo Desconocido", description: "No se puede cargar esta entrada." });
@@ -265,112 +301,92 @@ export function HistoryModule() {
 
 
   const renderFullOutput = (entry: HistoryEntry) => {
-    if (entry.status === 'error') {
-      return <pre className="text-xs whitespace-pre-wrap p-2 bg-destructive/10 rounded-md">{entry.errorDetails || "Error desconocido"}</pre>;
+    if (entry.status === 'error' && entry.errorDetails) {
+      return <pre className="text-xs whitespace-pre-wrap p-2 bg-destructive/10 rounded-md">{entry.errorDetails}</pre>;
     }
-    if (!entry.fullOutput) return <p className="text-xs text-muted-foreground">No hay detalles completos.</p>;
+    if (!entry.fullOutput) return <p className="text-xs text-muted-foreground">No hay detalles completos de salida.</p>;
 
-    try {
-      const output = typeof entry.fullOutput === 'string' && (entry.fullOutput.startsWith('{') || entry.fullOutput.startsWith('['))
+    const output = typeof entry.fullOutput === 'string' && (entry.fullOutput.startsWith('{') || entry.fullOutput.startsWith('['))
         ? JSON.parse(entry.fullOutput) 
         : entry.fullOutput;
-      
-      if (entry.module === 'DiagnosisSupport' && Array.isArray(output)) {
-        const diagnoses = output as DiagnosisResult[];
-        return (
-          <div className="overflow-x-auto rounded-md border text-xs">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>CIE-10</TableHead>
-                  <TableHead>Descripción</TableHead>
-                  <TableHead>Confianza</TableHead>
-                  <TableHead>Validado</TableHead>
-                  <TableHead>Principal</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {diagnoses.map((diag, idx) => (
-                  <TableRow key={idx} className={diag.isPrincipal ? "bg-primary/10" : ""}>
-                    <TableCell>{diag.code}</TableCell>
-                    <TableCell>{diag.description}</TableCell>
-                    <TableCell>{(diag.confidence * 100).toFixed(0)}%</TableCell>
-                    <TableCell>{diag.isValidated ? 'Sí' : 'No'}</TableCell>
-                    <TableCell>{diag.isPrincipal ? <Star className="h-4 w-4 text-accent fill-accent" /> : '-'}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        );
-      } else if (entry.module === 'PdfExtraction' && typeof output === 'object' && output !== null && 'structuredData' in output) {
-        const pdfOutput = output as { structuredData: PdfStructuredData[], clinicalNotes: string };
-        return (
-          <Accordion type="single" collapsible className="w-full text-xs">
-            <AccordionItem value="pdf-output">
-              <AccordionTrigger>Ver Detalles de Extracción PDF</AccordionTrigger>
-              <AccordionContent className="space-y-2">
-                {pdfOutput.structuredData && pdfOutput.structuredData.length > 0 && (
-                  <div>
-                    <strong>Datos Estructurados:</strong>
-                    <ul className="list-disc pl-4">
-                    {pdfOutput.structuredData.map((item, idx) => <li key={idx}><strong>{item.key}:</strong> {item.value}</li>)}
-                    </ul>
-                  </div>
-                )}
-                {pdfOutput.clinicalNotes && (
-                  <div>
-                    <strong>Notas Clínicas:</strong>
-                    <pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{pdfOutput.clinicalNotes}</pre>
-                  </div>
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        );
-      } else if (entry.module === 'MedicalOrders' && typeof output === 'object' && output !== null && 'generatedOrderText' in output) {
-          const medicalOrder = output as MedicalOrderOutputState;
-          return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{medicalOrder.generatedOrderText}</pre>;
-      } else if (entry.module === 'ClinicalAnalysis' && typeof output === 'object' && output !== null && 'clinicalAnalysis' in output) {
-        return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {clinicalAnalysis: string}).clinicalAnalysis}</pre>;
-      } else if ((entry.module === 'ImageAnalysis' || entry.module === 'TextAnalysis') && typeof output === 'object' && output !== null && ('summary' in output)) {
-        return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {summary: string}).summary}</pre>;
-      } else if (entry.module === 'TreatmentPlanSuggestion' && typeof output === 'object' && output !== null && 'suggestedPlanText' in output) {
-        return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {suggestedPlanText: string}).suggestedPlanText}</pre>;
-      } else if (entry.module === 'PatientAdvice' && typeof output === 'object' && output !== null && ('generalRecommendations' in output || 'alarmSigns' in output)) {
-        const adviceOutput = output as PatientAdviceOutputState;
-        return (
-            <div className="space-y-2 text-xs">
-                {adviceOutput.generalRecommendations && (
-                    <div>
-                        <strong>Recomendaciones Generales:</strong>
-                        <pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{adviceOutput.generalRecommendations}</pre>
-                    </div>
-                )}
-                {adviceOutput.alarmSigns && (
-                     <div>
-                        <strong>Signos de Alarma:</strong>
-                        <pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{adviceOutput.alarmSigns}</pre>
-                    </div>
-                )}
-            </div>
-        );
-      } else if (entry.module === 'MedicalJustification' && typeof output === 'object' && output !== null && 'justificationText' in output) {
-        const justificationOutput = output as MedicalJustificationOutputState;
-        return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{justificationOutput.justificationText}</pre>;
-      } else if (entry.module === 'MedicalAssistantChat' && typeof output === 'object' && output !== null && 'messages' in output) {
-        const chatOutput = output as { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string };
-        return (
-            <div className="space-y-1 text-xs">
-                {chatOutput.messages.map((msg, idx) => (
-                    <div key={idx} className={`p-1.5 rounded-md ${msg.sender === 'user' ? 'bg-primary/10 text-primary-foreground/80' : 'bg-muted/50'} ${msg.error ? 'border border-destructive text-destructive' : ''}`}>
-                        <strong>{msg.sender === 'user' ? 'Usuario:' : 'Asistente:'}</strong> {msg.text}
-                    </div>
-                ))}
-                {chatOutput.error && <p className="text-destructive mt-1">Error del Chat: {chatOutput.error}</p>}
-            </div>
-        );
+
+    try {
+      switch (entry.module) {
+        case 'DiagnosisSupport':
+          // existing rendering
+          if (Array.isArray(output)) {
+            const diagnoses = output as DiagnosisResult[];
+            return (
+              <div className="overflow-x-auto rounded-md border text-xs">
+                <Table>
+                  <TableHeader><TableRow><TableHead>CIE-10</TableHead><TableHead>Descripción</TableHead><TableHead>Confianza</TableHead><TableHead>Validado</TableHead><TableHead>Principal</TableHead></TableRow></TableHeader>
+                  <TableBody>{diagnoses.map((diag, idx) => (<TableRow key={idx} className={diag.isPrincipal ? "bg-primary/10" : ""}><TableCell>{diag.code}</TableCell><TableCell>{diag.description}</TableCell><TableCell>{(diag.confidence * 100).toFixed(0)}%</TableCell><TableCell>{diag.isValidated ? 'Sí' : 'No'}</TableCell><TableCell>{diag.isPrincipal ? <Star className="h-4 w-4 text-accent fill-accent" /> : '-'}</TableCell></TableRow>))}</TableBody>
+                </Table>
+              </div>
+            );
+          }
+          break;
+        case 'PdfExtraction':
+          // existing rendering
+          if (typeof output === 'object' && output !== null && 'structuredData' in output) {
+            const pdfOutput = output as { structuredData: PdfStructuredData[], clinicalNotes: string };
+            return (
+              <Accordion type="single" collapsible className="w-full text-xs">
+                <AccordionItem value="pdf-output"><AccordionTrigger>Ver Detalles de Extracción PDF</AccordionTrigger>
+                  <AccordionContent className="space-y-2">
+                    {pdfOutput.structuredData && pdfOutput.structuredData.length > 0 && (<div><strong>Datos Estructurados:</strong><ul className="list-disc pl-4">{pdfOutput.structuredData.map((item, idx) => <li key={idx}><strong>{item.key}:</strong> {item.value}</li>)}</ul></div>)}
+                    {pdfOutput.clinicalNotes && (<div><strong>Notas Clínicas:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{pdfOutput.clinicalNotes}</pre></div>)}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            );
+          }
+          break;
+        case 'MedicalOrders':
+          if (typeof output === 'object' && output !== null && 'generatedOrderText' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as MedicalOrderOutputState).generatedOrderText}</pre>; }
+          break;
+        case 'ClinicalAnalysis':
+          if (typeof output === 'object' && output !== null && 'clinicalAnalysis' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {clinicalAnalysis: string}).clinicalAnalysis}</pre>; }
+          break;
+        case 'ImageAnalysis':
+        case 'TextAnalysis':
+          if (typeof output === 'object' && output !== null && 'summary' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {summary: string}).summary}</pre>; }
+          break;
+        case 'TreatmentPlanSuggestion':
+          if (typeof output === 'object' && output !== null && 'suggestedPlanText' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as TreatmentPlanOutputState).suggestedPlanText}</pre>; }
+          break;
+        case 'PatientAdvice':
+          if (typeof output === 'object' && output !== null && ('generalRecommendations' in output || 'alarmSigns' in output)) {
+            const adviceOutput = output as PatientAdviceOutputState;
+            return (<div className="space-y-2 text-xs">{adviceOutput.generalRecommendations && (<div><strong>Recomendaciones Generales:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{adviceOutput.generalRecommendations}</pre></div>)}{adviceOutput.alarmSigns && (<div><strong>Signos de Alarma:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{adviceOutput.alarmSigns}</pre></div>)}</div>);
+          }
+          break;
+        case 'MedicalJustification':
+          if (typeof output === 'object' && output !== null && 'justificationText' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as MedicalJustificationOutputState).justificationText}</pre>; }
+          break;
+        case 'MedicalAssistantChat':
+          if (typeof output === 'object' && output !== null && 'messages' in output) {
+            const chatOutput = output as { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string };
+            return (<div className="space-y-1 text-xs">{chatOutput.messages.map((msg, idx) => (<div key={idx} className={`p-1.5 rounded-md ${msg.sender === 'user' ? 'bg-primary/10 text-primary-foreground/80' : 'bg-muted/50'} ${msg.error ? 'border border-destructive text-destructive' : ''}`}><strong>{msg.sender === 'user' ? 'Usuario:' : 'Asistente:'}</strong> {msg.text}</div>))}{chatOutput.error && <p className="text-destructive mt-1">Error del Chat: {chatOutput.error}</p>}</div>);
+          }
+          break;
+        case 'DoseCalculator':
+          if (typeof output === 'object' && output !== null) {
+            const doseOutput = output as DoseCalculatorOutputState;
+            if (doseOutput.calculationError) return <pre className="text-xs whitespace-pre-wrap p-2 bg-destructive/10 rounded-md">{doseOutput.calculationError}</pre>;
+            return (
+              <div className="space-y-1 text-xs p-2 bg-muted/30 rounded-md">
+                {doseOutput.calculatedBolusDose && <p><strong>Bolo:</strong> {doseOutput.calculatedBolusDose}</p>}
+                {doseOutput.calculatedConcentration && <p><strong>Concentración:</strong> {doseOutput.calculatedConcentration}</p>}
+                {doseOutput.calculatedInfusionRate && <p><strong>Perfusión:</strong> {doseOutput.calculatedInfusionRate}</p>}
+                {doseOutput.calculationWarning && <p className="text-yellow-700 dark:text-yellow-500"><strong>Advertencia:</strong> {doseOutput.calculationWarning}</p>}
+                {(!doseOutput.calculatedBolusDose && !doseOutput.calculatedInfusionRate && !doseOutput.calculationWarning) && <p>No se generaron resultados específicos.</p>}
+              </div>
+            );
+          }
+          break;
       }
+      // Default fallback for other types or unhandled structures
       return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{typeof output === 'string' ? output : JSON.stringify(output, null, 2)}</pre>;
     } catch (e) { 
       return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{String(entry.fullOutput)}</pre>;
@@ -398,6 +414,23 @@ export function HistoryModule() {
                         </div>
                     )}
                     <div><strong>Entrada Actual:</strong> {chatInput.userInput}</div>
+                </div>
+            );
+        }
+        if (entry.module === 'DoseCalculator') {
+            const doseInput = entry.fullInput as DoseCalculatorInputState;
+            return (
+                <div className="space-y-1 text-xs p-2 bg-muted/30 rounded-md">
+                    <p><strong>Peso:</strong> {doseInput.patientWeight} kg</p>
+                    <p><strong>Medicamento:</strong> {doseInput.selectedMedication?.name || doseInput.medicationName}</p>
+                    {doseInput.selectedUsage && <p><strong>Uso:</strong> {doseInput.selectedUsage.protocol}</p>}
+                    <p><strong>Dosis Usada:</strong> {doseInput.doseToUse} {doseInput.doseUnit}</p>
+                    {doseInput.isInfusion && (
+                        <>
+                          <p><strong>Infusión - Cantidad Droga:</strong> {doseInput.infusionDrugAmount} {doseInput.infusionDrugAmountUnit}</p>
+                          <p><strong>Infusión - Volumen Total:</strong> {doseInput.infusionTotalVolume} ml</p>
+                        </>
+                    )}
                 </div>
             );
         }
@@ -586,3 +619,5 @@ declare module "@/components/ui/button" {
     size?: "default" | "sm" | "lg" | "icon" | "xs";
   }
 }
+
+    

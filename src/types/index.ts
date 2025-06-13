@@ -1,7 +1,72 @@
 
-export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification';
+export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator'; // Added DoseCalculator
 
 export type ActiveView = 'analysis' | 'other' | 'all';
+
+// --- Medication Info for Dose Calculator ---
+export interface MedicationUsage {
+  protocol: string;
+  doseRange: string;
+  doseNumerical?: { min?: number; max?: number; value?: number }; // Parsed numerical dose for easier use
+  unit: string;
+  type: 'bolus' | 'infusion';
+  notes?: string;
+}
+
+export interface MedicationConcentration {
+  value: number; // e.g., 4 for 4mg/ml or 16 for 16mcg/ml
+  unit: 'mg/ml' | 'mcg/ml'; // Concentration unit
+  totalDrugAmount?: number; // e.g. 4 (for 4mg)
+  totalDrugAmountUnit?: 'mg' | 'mcg'; // Unit of the drug amount
+  totalVolume?: number; // e.g. 250 (for 250ml)
+  totalVolumeUnit?: 'ml';
+}
+
+
+export interface MedicationInfo {
+  id: string;
+  name: string;
+  categories: string[]; // For filtering: e.g., ["vasopresor", "UCI", "reanimacion", "SIR_protocol"]
+  keywords?: string[]; // Additional keywords for searching
+  usages: MedicationUsage[];
+  defaultConcentration?: MedicationConcentration; // Common preparation for infusions
+}
+
+// --- Dose Calculator Module Specific Types ---
+export type DoseUnit = 
+  | 'mcg' | 'mg' | 'g' | 'UI' 
+  | 'mcg/kg' | 'mg/kg' | 'g/kg'
+  | 'mcg/min' | 'mg/min' 
+  | 'mcg/kg/min' | 'mg/kg/min'
+  | 'mcg/kg/hora' | 'mg/kg/hora'
+  | 'ml/hora' // For infusion rate output
+  | 'mEq';
+
+export interface DoseCalculatorInputState {
+  patientWeight: string; // Using string to allow empty input, convert to number for calcs
+  medicationName: string; // Manual input or selected medication name
+  selectedMedication: MedicationInfo | null;
+  selectedUsage: MedicationUsage | null;
+  useSuggestedDose: boolean;
+  doseToUse: string; // Using string for input field
+  doseUnit: DoseUnit | '';
+  
+  // For infusions
+  isInfusion: boolean;
+  infusionDrugAmount: string;
+  infusionDrugAmountUnit: 'mg' | 'mcg' | '';
+  infusionTotalVolume: string; // in ml
+}
+
+export interface DoseCalculatorOutputState {
+  calculatedBolusDose: string | null; // e.g., "150 mcg"
+  calculatedInfusionRate: string | null; // e.g., "10 ml/hr"
+  calculatedConcentration: string | null; // e.g., "16 mcg/ml"
+  calculationWarning: string | null;
+  calculationError: string | null;
+}
+// --- End Dose Calculator Module Specific Types ---
+
 
 export interface HistoryEntry {
   id?: number;
@@ -10,8 +75,8 @@ export interface HistoryEntry {
   inputType: string;
   inputSummary: string;
   outputSummary: string;
-  fullInput?: string | Record<string, any>;
-  fullOutput?: string | Record<string, any> | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState;
+  fullInput?: string | Record<string, any> | DoseCalculatorInputState; // Added DoseCalculatorInputState
+  fullOutput?: string | Record<string, any> | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState; // Added DoseCalculatorOutputState
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
 }
@@ -102,6 +167,16 @@ export interface MedicalJustificationOutputState {
 }
 // --- End Medical Justification Module Specific Types ---
 
+// --- Medical Assistant Chat Module Specific Types ---
+export interface ChatMessage {
+  id: string;
+  sender: 'user' | 'ai';
+  text: string;
+  timestamp: number;
+  error?: boolean;
+}
+// --- End Medical Assistant Chat Module Specific Types ---
+
 
 export interface ClinicalDataContextState {
   // Image Analysis
@@ -158,6 +233,17 @@ export interface ClinicalDataContextState {
   generatedJustification: MedicalJustificationOutputState;
   isGeneratingJustification: boolean;
   justificationError: string | null;
+
+  // Medical Assistant Chat
+  chatMessages: ChatMessage[];
+  isChatResponding: boolean;
+  chatError: string | null;
+
+  // Dose Calculator
+  doseCalculatorInputs: DoseCalculatorInputState;
+  doseCalculatorOutput: DoseCalculatorOutputState;
+  isCalculatingDose: boolean; // To manage loading state for calculations
+  doseCalculationError: string | null; // For errors specific to calculation logic
 }
 
 export interface ClinicalDataContextActions {
@@ -206,6 +292,18 @@ export interface ClinicalDataContextActions {
   setGeneratedJustification: (justification: MedicalJustificationOutputState) => void;
   setIsGeneratingJustification: (loading: boolean) => void;
   setJustificationError: (error: string | null) => void;
+
+  // Chat actions
+  addChatMessage: (message: ChatMessage) => void;
+  setChatMessages: (messages: ChatMessage[]) => void;
+  setIsChatResponding: (loading: boolean) => void;
+  setChatError: (error: string | null) => void;
+
+  // Dose Calculator actions
+  setDoseCalculatorInputs: (inputsOrUpdater: DoseCalculatorInputState | ((prevState: DoseCalculatorInputState) => DoseCalculatorInputState)) => void;
+  setDoseCalculatorOutput: (output: DoseCalculatorOutputState) => void;
+  setIsCalculatingDose: (loading: boolean) => void;
+  setDoseCalculationError: (error: string | null) => void;
   
   clearImageModule: () => void;
   clearPdfModule: () => void;
@@ -216,6 +314,10 @@ export interface ClinicalDataContextActions {
   clearTreatmentPlanModule: () => void;
   clearPatientAdviceModule: () => void;
   clearMedicalJustificationModule: () => void;
+  clearChatModule: () => void;
+  clearDoseCalculatorModule: () => void; // Added
 }
 
 export type ClinicalDataContextType = ClinicalDataContextState & ClinicalDataContextActions;
+
+    
