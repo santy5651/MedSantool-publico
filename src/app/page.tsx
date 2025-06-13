@@ -11,6 +11,7 @@ import { TreatmentPlanModule } from '@/components/modules/treatment-plan-module'
 import { MedicalOrdersModule } from '@/components/modules/medical-orders-module';
 import { PatientAdviceModule } from '@/components/modules/patient-advice-module';
 import { MedicalJustificationModule } from '@/components/modules/medical-justification-module';
+import { MedicalAssistantChatModule } from '@/components/modules/medical-assistant-chat-module'; // Added import
 import { HistoryModule } from '@/components/modules/history-module';
 import { Button } from '@/components/ui/button';
 import { Eraser } from 'lucide-react';
@@ -42,6 +43,7 @@ export default function MedSanToolsPage() {
     clearMedicalOrdersModule,
     clearPatientAdviceModule,
     clearMedicalJustificationModule,
+    clearChatModule, // Added clearChatModule
   } = useClinicalData();
   const { toast } = useToast();
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
@@ -56,6 +58,7 @@ export default function MedSanToolsPage() {
     clearMedicalOrdersModule();
     clearPatientAdviceModule();
     clearMedicalJustificationModule();
+    clearChatModule(); // Added call to clearChatModule
     toast({
       title: "Todos los Módulos Limpiados",
       description: "Se ha restablecido el estado de todos los módulos de datos.",
@@ -90,8 +93,8 @@ export default function MedSanToolsPage() {
 
       <div
         className={cn(
-          "grid gap-6", // Siempre es un grid, el gap se aplica entre las celdas.
-          expandedModuleId ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2" // 1 col si expandido, sino 1 col en móvil y 2 en md+
+          "grid gap-6", 
+          expandedModuleId ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2" 
         )}
       >
         {/* Herramientas de Análisis */}
@@ -106,11 +109,12 @@ export default function MedSanToolsPage() {
         {/* Otras Herramientas */}
         { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'image-analysis-module') && <ImageAnalysisModule id="image-analysis-module" /> }
         { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'medical-justification-module') && <MedicalJustificationModule id="medical-justification-module" /> }
+        { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'medical-assistant-chat-module') && <MedicalAssistantChatModule id="medical-assistant-chat-module" /> }
       </div>
 
       {/* History Module Section - se muestra siempre abajo y a todo lo ancho */}
       <div className="mt-12 pt-6 border-t">
-        <HistoryModule /> {/* No necesita id para expansión si está fuera del grid principal */}
+        <HistoryModule /> 
       </div>
     </>
   );
