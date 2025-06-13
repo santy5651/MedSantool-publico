@@ -22,6 +22,7 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
   const {
     chatMessages,
     addChatMessage,
+    setChatMessages, // Added for history loading
     isChatResponding,
     setIsChatResponding,
     chatError,
@@ -59,20 +60,19 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       timestamp: Date.now(),
     };
     
-    const currentMessagesSnapshot = [...chatMessages, userMessage];
-    addChatMessage(userMessage); 
-    setCurrentUserInput('');
-    setIsChatResponding(true);
-    setChatError(null);
-
-    const historyForAI: ChatMessageHistoryItem[] = currentMessagesSnapshot
-      .slice(0, -1) 
-      .map(msg => ({
+    // Prepare history *before* adding the new user message to the context's chatMessages
+    const historyForAI: ChatMessageHistoryItem[] = chatMessages.map(msg => ({
         sender: msg.sender,
         text: msg.text,
         isUser: msg.sender === 'user',
         isAI: msg.sender === 'ai',
-      }));
+    }));
+
+    const currentMessagesSnapshot = [...chatMessages, userMessage]; // For history saving if needed
+    addChatMessage(userMessage); 
+    setCurrentUserInput('');
+    setIsChatResponding(true);
+    setChatError(null);
 
     try {
       const response = await medicalAssistantChatFlow({ 
@@ -88,7 +88,7 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       addChatMessage(aiMessage);
 
       if (isAutoSaveEnabled) {
-        await saveChatToHistory([...currentMessagesSnapshot, aiMessage], null);
+        await saveChatToHistory([...currentMessagesSnapshot, aiMessage], null, trimmedInput, historyForAI);
       }
     } catch (error: any) {
       console.error("Error in chat flow:", error);
@@ -104,7 +104,7 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       addChatMessage(errorAiMessage);
       toast({ title: "Error del Asistente", description: errorMessage, variant: "destructive" });
       if (isAutoSaveEnabled) {
-        await saveChatToHistory([...currentMessagesSnapshot, errorAiMessage], errorMessage);
+        await saveChatToHistory([...currentMessagesSnapshot, errorAiMessage], errorMessage, trimmedInput, historyForAI);
       }
     } finally {
       setIsChatResponding(false);
@@ -112,7 +112,12 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
     }
   };
   
-  const saveChatToHistory = async (messagesToSave: ChatMessage[], errorMsg: string | null) => {
+  const saveChatToHistory = async (
+    messagesToSave: ChatMessage[], 
+    errorMsg: string | null,
+    userInputForHistory: string,
+    chatHistoryForAI: ChatMessageHistoryItem[]
+  ) => {
     const status = errorMsg ? 'error' : 'completed';
     let outputSummary = 'Error en el chat';
     if (!errorMsg && messagesToSave.length > 0) {
@@ -121,20 +126,14 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
     }
 
     const fullInputForHistory = {
-      userInput: messagesToSave.findLast(m => m.sender === 'user')?.text || '',
-      chatHistory: messagesToSave.filter(m => m.id !== messagesToSave.findLast(m => m.sender === 'user')?.id)
-                     .map(m => ({ 
-                        sender: m.sender, 
-                        text: m.text,
-                        isUser: m.sender === 'user',
-                        isAI: m.sender === 'ai',
-                      })),
+      userInput: userInputForHistory,
+      chatHistory: chatHistoryForAI,
     };
 
     await addHistoryEntry({
       module: 'MedicalAssistantChat',
       inputType: 'chat',
-      inputSummary: `${messagesToSave.filter(m => m.sender === 'user').length} entradas de usuario`,
+      inputSummary: `${chatHistoryForAI.length + 1} mensajes en total (incluyendo actual)`,
       outputSummary: outputSummary,
       fullInput: fullInputForHistory,
       fullOutput: { messages: messagesToSave.map(m => ({sender: m.sender, text: m.text, error: m.error})), error: errorMsg },
@@ -154,7 +153,17 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       toast({ title: "Nada que Guardar", description: "Inicie una conversación primero.", variant: "default" });
       return;
     }
-    saveChatToHistory(chatMessages, chatError);
+    // For manual save, we need to reconstruct what the input to the *last* flow call would have been.
+    const lastUserMessage = chatMessages.filter(m => m.sender === 'user').pop();
+    const historyBeforeLastUserMessage = chatMessages.filter(m => m.id !== lastUserMessage?.id)
+                                          .map(msg => ({
+                                              sender: msg.sender,
+                                              text: msg.text,
+                                              isUser: msg.sender === 'user',
+                                              isAI: msg.sender === 'ai',
+                                          }));
+    
+    saveChatToHistory(chatMessages, chatError, lastUserMessage?.text || "", historyBeforeLastUserMessage);
   };
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -172,7 +181,7 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       description="Consulte dudas médicas. El asistente se basa en evidencia clínica y cita fuentes cuando es posible."
       icon={Bot}
       isLoading={isChatResponding}
-      contentClassName="flex flex-col"
+      contentClassName="flex flex-col overflow-hidden" // Added overflow-hidden here
     >
       <ScrollArea className="flex-grow p-4 border rounded-md mb-4 bg-muted/20 min-h-[200px]" ref={scrollAreaRef}>
         <div className="space-y-4">
