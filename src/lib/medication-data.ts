@@ -24,7 +24,7 @@ export const initialMedicationsList: MedicationInfo[] = [
       { protocol: 'Sedación y Analgesia (UCI)', doseRange: '0.7–10 mcg/kg/hora', doseNumerical: {min: 0.7, max: 10}, unit: 'mcg/kg/hora', type: 'infusion' },
       { protocol: 'Analgesia (bolo)', doseRange: '0.5-1 mcg/kg IV', doseNumerical: {min:0.5, max:1}, unit: 'mcg/kg', type: 'bolus', notes: 'lento, repetir según necesidad'}
     ],
-    defaultConcentration: { value: 50, unit: 'mcg/ml' } // Example: 2500mcg in 50ml -> 50mcg/ml
+    defaultConcentration: { value: 50, unit: 'mcg/ml' } 
   },
   {
     id: 'propofol',
@@ -36,7 +36,7 @@ export const initialMedicationsList: MedicationInfo[] = [
       { protocol: 'Mantenimiento anestesia', doseRange: '4–12 mg/kg/hora IV', doseNumerical: {min: 4, max: 12}, unit: 'mg/kg/hora', type: 'infusion' },
       { protocol: 'Sedación en UCI', doseRange: '0.3–4 mg/kg/hora IV', doseNumerical: {min: 0.3, max: 4}, unit: 'mg/kg/hora', type: 'infusion' },
     ],
-    defaultConcentration: { value: 10, unit: 'mg/ml' } // Propofol 1% (10mg/ml)
+    defaultConcentration: { value: 10, unit: 'mg/ml' } 
   },
   {
     id: 'noradrenaline',
@@ -46,7 +46,7 @@ export const initialMedicationsList: MedicationInfo[] = [
     usages: [
       { protocol: 'Shock (vasopresor)', doseRange: '0.01–3 mcg/kg/min IV', doseNumerical: {min: 0.01, max: 3}, unit: 'mcg/kg/min', type: 'infusion', notes: 'Titular según respuesta hemodinámica.' },
     ],
-    defaultConcentration: { value: 16, unit: 'mcg/ml', totalDrugAmount: 4, totalDrugAmountUnit: 'mg', totalVolume: 250, totalVolumeUnit: 'ml' } // Common: 4mg in 250ml NS/D5W
+    defaultConcentration: { value: 16, unit: 'mcg/ml', totalDrugAmount: 4, totalDrugAmountUnit: 'mg', totalVolume: 250, totalVolumeUnit: 'ml' } 
   },
   {
     id: 'dexmedetomidine',
@@ -57,7 +57,7 @@ export const initialMedicationsList: MedicationInfo[] = [
       { protocol: 'Sedación en UCI (carga)', doseRange: '0.5–1 mcg/kg IV', doseNumerical: {min: 0.5, max: 1}, unit: 'mcg/kg', type: 'bolus', notes: 'administrar en 10-20 minutos' },
       { protocol: 'Sedación en UCI (mantenimiento)', doseRange: '0.2–1.5 mcg/kg/hora IV', doseNumerical: {min: 0.2, max: 1.5}, unit: 'mcg/kg/hora', type: 'infusion', notes: 'Titular según nivel de sedación deseado.' },
     ],
-    defaultConcentration: { value: 4, unit: 'mcg/ml', totalDrugAmount: 400, totalDrugAmountUnit: 'mcg', totalVolume: 100, totalVolumeUnit: 'ml' } // e.g. 400mcg in 100ml NS
+    defaultConcentration: { value: 4, unit: 'mcg/ml', totalDrugAmount: 400, totalDrugAmountUnit: 'mcg', totalVolume: 100, totalVolumeUnit: 'ml' } 
   },
   {
     id: 'adrenaline',
@@ -70,7 +70,7 @@ export const initialMedicationsList: MedicationInfo[] = [
       { protocol: 'Shock (infusión)', doseRange: '0.01–1 mcg/kg/min IV', doseNumerical: {min: 0.01, max: 1}, unit: 'mcg/kg/min', type: 'infusion', notes: 'Titular según respuesta.' },
       { protocol: 'Bradicardia sintomática (ACLS)', doseRange: '2-10 mcg/min IV (o 0.02-0.1 mcg/kg/min)', doseNumerical: {min:2, max:10}, unit: 'mcg/min', type: 'infusion', notes: 'Como alternativa a marcapasos o dopamina.'}
     ],
-    defaultConcentration: { value: 1000, unit: 'mcg/ml', totalDrugAmount: 1, totalDrugAmountUnit: 'mg', totalVolume: 1, totalVolumeUnit: 'ml' } // Standard 1mg/1ml ampoule
+    defaultConcentration: { value: 1000, unit: 'mcg/ml', totalDrugAmount: 1, totalDrugAmountUnit: 'mg', totalVolume: 1, totalVolumeUnit: 'ml' } 
   },
   {
     id: 'midazolam',
@@ -83,7 +83,7 @@ export const initialMedicationsList: MedicationInfo[] = [
       { protocol: 'Status Epilepticus', doseRange: '0.1–0.2 mg/kg IM o 0.1-0.3 mg/kg IV', doseNumerical: {min: 0.1, max: 0.3}, unit: 'mg/kg', type: 'bolus', notes: 'IV máx 4mg/min.' },
       { protocol: 'Inducción (SIR)', doseRange: '0.1-0.3 mg/kg IV', doseNumerical: {min:0.1, max:0.3}, unit: 'mg/kg', type: 'bolus'}
     ],
-    defaultConcentration: { value: 1, unit: 'mg/ml' } // Common concentration e.g. 5mg/5ml or 1mg/ml solution
+    defaultConcentration: { value: 1, unit: 'mg/ml' } 
   },
   {
     id: 'rocuronium',
@@ -95,7 +95,7 @@ export const initialMedicationsList: MedicationInfo[] = [
         { protocol: 'Mantenimiento de Relajación (Bolos)', doseRange: '0.1-0.2 mg/kg IV', doseNumerical: { min: 0.1, max: 0.2 }, unit: 'mg/kg', type: 'bolus', notes: 'según necesidad (TOF).' },
         { protocol: 'Infusión continua (UCI)', doseRange: '5-12 mcg/kg/min IV', doseNumerical: { min: 5, max: 12 }, unit: 'mcg/kg/min', type: 'infusion', notes: 'Ajustar según TOF.' },
     ],
-    defaultConcentration: { value: 10, unit: 'mg/ml' } // Typically 10 mg/ml
+    defaultConcentration: { value: 10, unit: 'mg/ml' } 
   },
   {
     id: 'ketamine',
@@ -108,7 +108,7 @@ export const initialMedicationsList: MedicationInfo[] = [
         { protocol: 'Sedación Procedural', doseRange: '0.5-1 mg/kg IV o 2-4 mg/kg IM', doseNumerical: { min: 0.5, max: 1 }, unit: 'mg/kg', type: 'bolus' },
         { protocol: 'Infusión Analgésica/Sedante (UCI)', doseRange: '0.1-2 mg/kg/hora (equiv. ~1.5-30 mcg/kg/min)', doseNumerical: { min: 0.1, max: 2 }, unit: 'mg/kg/hora', type: 'infusion' },
     ],
-    defaultConcentration: { value: 50, unit: 'mg/ml' } // Commonly 10mg/ml, 50mg/ml, or 100mg/ml. Example: 50mg/ml.
+    defaultConcentration: { value: 50, unit: 'mg/ml' } 
   },
   {
     id: 'dopamine',
@@ -121,7 +121,7 @@ export const initialMedicationsList: MedicationInfo[] = [
       { protocol: 'Dosis Alfa (vasopresora)', doseRange: '>10 mcg/kg/min IV (hasta 20-50)', doseNumerical: { min: 10, max: 50 }, unit: 'mcg/kg/min', type: 'infusion' },
       { protocol: 'Bradicardia Sintomática (ACLS)', doseRange: '5-20 mcg/kg/min IV', doseNumerical: { min: 5, max: 20 }, unit: 'mcg/kg/min', type: 'infusion', notes: 'Segunda línea si atropina ineficaz.' },
     ],
-    defaultConcentration: { value: 1600, unit: 'mcg/ml', totalDrugAmount: 400, totalDrugAmountUnit: 'mg', totalVolume: 250, totalVolumeUnit: 'ml' } // e.g., 400mg in 250ml D5W -> 1600 mcg/ml
+    defaultConcentration: { value: 1600, unit: 'mcg/ml', totalDrugAmount: 400, totalDrugAmountUnit: 'mg', totalVolume: 250, totalVolumeUnit: 'ml' } 
   },
   {
     id: 'dobutamine',
@@ -131,9 +131,8 @@ export const initialMedicationsList: MedicationInfo[] = [
     usages: [
       { protocol: 'Insuficiencia Cardíaca / Shock Cardiogénico', doseRange: '2-20 mcg/kg/min IV', doseNumerical: { min: 2, max: 20 }, unit: 'mcg/kg/min', type: 'infusion', notes: 'Titular según respuesta hemodinámica.' },
     ],
-    defaultConcentration: { value: 1000, unit: 'mcg/ml', totalDrugAmount: 250, totalDrugAmountUnit: 'mg', totalVolume: 250, totalVolumeUnit: 'ml' } // e.g., 250mg in 250ml D5W -> 1000 mcg/ml
+    defaultConcentration: { value: 1000, unit: 'mcg/ml', totalDrugAmount: 250, totalDrugAmountUnit: 'mg', totalVolume: 250, totalVolumeUnit: 'ml' } 
   },
-  // Antibióticos de ejemplo
   {
     id: 'vancomycin',
     name: 'Vancomicina',
@@ -143,7 +142,6 @@ export const initialMedicationsList: MedicationInfo[] = [
       { protocol: 'Infecciones Sistémicas Graves (MRSA)', doseRange: '15-20 mg/kg IV cada 8-12 horas', doseNumerical: { min: 15, max: 20 }, unit: 'mg/kg', type: 'bolus', notes: 'Ajustar según niveles séricos y función renal. Infundir lentamente (mín 60 min por gramo).' },
       { protocol: 'Colitis por C. difficile (oral)', doseRange: '125 mg VO cada 6 horas por 10 días', doseNumerical: { value: 125 }, unit: 'mg', type: 'bolus', notes: 'Solo para vía oral en esta indicación.' },
     ],
-    // Para infusión IV, se reconstituye y luego se diluye, por ejemplo, 1g en 200ml NS. No hay una "concentración" estándar de la ampolla para infusión.
   },
   {
     id: 'piperacillin_tazobactam',
@@ -153,33 +151,34 @@ export const initialMedicationsList: MedicationInfo[] = [
     usages: [
       { protocol: 'Infecciones Graves (Ej: Neumonía nosocomial, Sepsis)', doseRange: '4.5 g IV cada 6-8 horas', doseNumerical: { value: 4.5 }, unit: 'g', type: 'bolus', notes: 'Infusión en 30 min. Ajustar en insuficiencia renal.' },
     ],
-    // Se reconstituye y diluye para infusión. Ejemplo: 4.5g en 100ml NS.
   },
 ];
 
-// Helper to get all unique categories for filtering
 export const getAllMedicationCategories = (): string[] => {
   const allCategories = new Set<string>();
   initialMedicationsList.forEach(med => {
     med.categories.forEach(cat => {
-        // Limpiar y estandarizar un poco los nombres de categoría para la UI
         const cleanedCat = cat.toLowerCase()
-                              .replace(/_/g, ' ') // Reemplazar guiones bajos por espacios
-                              .replace(/_protocol$/, '') // Quitar sufijo '_protocol'
-                              .replace(/\b\w/g, l => l.toUpperCase()); // Capitalizar cada palabra
-        allCategories.add(cleanedCat);
+                              .replace(/_/g, ' ') 
+                              .replace(/_protocol$/, '') 
+                              .replace(/\b\w/g, l => l.toUpperCase())
+                              .trim(); 
+        if (cleanedCat) { 
+            allCategories.add(cleanedCat);
+        }
     });
   });
   return Array.from(allCategories).sort();
 };
 
-// Helper to get all unique protocols for filtering (can be very numerous)
 export const getAllMedicationProtocols = (): string[] => {
     const allProtocols = new Set<string>();
     initialMedicationsList.forEach(med => {
-        med.usages.forEach(usage => allProtocols.add(usage.protocol));
+        med.usages.forEach(usage => {
+            if (usage.protocol && usage.protocol.trim() !== "") {
+                 allProtocols.add(usage.protocol.trim());
+            }
+        });
     });
     return Array.from(allProtocols).sort();
 };
-
-    
