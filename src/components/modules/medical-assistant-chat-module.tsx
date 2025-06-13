@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ModuleCardWrapper } from '@/components/common/module-card-wrapper';
 import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
-import { medicalAssistantChatFlow } from '@/ai/flows/medical-assistant-chat-flow'; // Ensure this flow exists
+import { medicalAssistantChatFlow } from '@/ai/flows/medical-assistant-chat-flow';
 import type { ChatMessage } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Bot, Send, Eraser, Save, User, AlertCircle } from 'lucide-react';
@@ -27,7 +27,7 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
     setIsChatResponding,
     chatError,
     setChatError,
-    clearChatModule: clearChatContext, // Renamed to avoid conflict
+    clearChatModule: clearChatContext,
   } = useClinicalData();
 
   const [currentUserInput, setCurrentUserInput] = useState('');
@@ -75,7 +75,6 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       addChatMessage(aiMessage);
 
       if (isAutoSaveEnabled) {
-        // Save chat history after AI responds
         await saveChatToHistory([...chatMessages, userMessage, aiMessage], null);
       }
     } catch (error: any) {
@@ -96,7 +95,7 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       }
     } finally {
       setIsChatResponding(false);
-      setTimeout(scrollToBottom, 0); // Ensure scroll after state update
+      setTimeout(scrollToBottom, 0); 
     }
   };
   
@@ -113,8 +112,8 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       inputType: 'chat',
       inputSummary: `${messagesToSave.filter(m => m.sender === 'user').length} entradas de usuario`,
       outputSummary: outputSummary,
-      fullInput: messagesToSave.filter(m => m.sender === 'user').map(m => m.text).join('\n---\n'), // Or a more structured representation
-      fullOutput: { messages: messagesToSave, error: errorMsg }, // Store all messages
+      fullInput: messagesToSave.filter(m => m.sender === 'user').map(m => m.text).join('\n---\n'),
+      fullOutput: { messages: messagesToSave, error: errorMsg },
       status: status,
       errorDetails: errorMsg || undefined,
     });
@@ -122,7 +121,7 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
 
 
   const handleClearChat = () => {
-    clearChatContext(); // Use the renamed context clear function
+    clearChatContext();
     toast({ title: "Chat Limpiado", description: "Se ha limpiado la conversación." });
   };
 
@@ -149,9 +148,9 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       description="Consulte dudas médicas. El asistente se basa en evidencia clínica y cita fuentes cuando es posible."
       icon={Bot}
       isLoading={isChatResponding}
-      contentClassName="flex flex-col h-[500px]" // Fixed height for chat
+      contentClassName="flex flex-col" // Removed h-[500px]
     >
-      <ScrollArea className="flex-grow p-4 border rounded-md mb-4 bg-muted/20" ref={scrollAreaRef}>
+      <ScrollArea className="flex-grow p-4 border rounded-md mb-4 bg-muted/20 min-h-[200px]" ref={scrollAreaRef}> {/* Added min-h for default view */}
         <div className="space-y-4">
           {chatMessages.map((msg) => (
             <div
