@@ -13,6 +13,7 @@ import type { ChatMessage } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Bot, Send, Eraser, Save, User, AlertCircle } from 'lucide-react';
 import { cn, getTextSummary } from '@/lib/utils';
+import { useView } from '@/contexts/view-context'; // Import useView
 
 interface MedicalAssistantChatModuleProps {
   id?: string;
@@ -22,13 +23,16 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
   const {
     chatMessages,
     addChatMessage,
-    setChatMessages, // Added for history loading
+    setChatMessages,
     isChatResponding,
     setIsChatResponding,
     chatError,
     setChatError,
     clearChatModule: clearChatContext,
   } = useClinicalData();
+
+  const { expandedModuleId } = useView(); // Get expandedModuleId from context
+  const isModuleExpanded = expandedModuleId === id; // Check if this module is currently expanded
 
   const [currentUserInput, setCurrentUserInput] = useState('');
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
@@ -60,7 +64,6 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       timestamp: Date.now(),
     };
     
-    // Prepare history *before* adding the new user message to the context's chatMessages
     const historyForAI: ChatMessageHistoryItem[] = chatMessages.map(msg => ({
         sender: msg.sender,
         text: msg.text,
@@ -68,7 +71,7 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
         isAI: msg.sender === 'ai',
     }));
 
-    const currentMessagesSnapshot = [...chatMessages, userMessage]; // For history saving if needed
+    const currentMessagesSnapshot = [...chatMessages, userMessage]; 
     addChatMessage(userMessage); 
     setCurrentUserInput('');
     setIsChatResponding(true);
@@ -127,13 +130,13 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
 
     const fullInputForHistory = {
       userInput: userInputForHistory,
-      chatHistory: chatHistoryForAI,
+      chatHistory: chatHistoryForAI.map(h => ({ sender: h.sender, text: h.text, isUser: h.isUser, isAI: h.isAI })) // ensure all fields are present
     };
 
     await addHistoryEntry({
       module: 'MedicalAssistantChat',
       inputType: 'chat',
-      inputSummary: `${chatHistoryForAI.length + 1} mensajes en total (incluyendo actual)`,
+      inputSummary: `${(fullInputForHistory.chatHistory?.length || 0) + 1} mensajes en total (incluyendo actual)`,
       outputSummary: outputSummary,
       fullInput: fullInputForHistory,
       fullOutput: { messages: messagesToSave.map(m => ({sender: m.sender, text: m.text, error: m.error})), error: errorMsg },
@@ -153,7 +156,6 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       toast({ title: "Nada que Guardar", description: "Inicie una conversación primero.", variant: "default" });
       return;
     }
-    // For manual save, we need to reconstruct what the input to the *last* flow call would have been.
     const lastUserMessage = chatMessages.filter(m => m.sender === 'user').pop();
     const historyBeforeLastUserMessage = chatMessages.filter(m => m.id !== lastUserMessage?.id)
                                           .map(msg => ({
@@ -181,9 +183,15 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       description="Consulte dudas médicas. El asistente se basa en evidencia clínica y cita fuentes cuando es posible."
       icon={Bot}
       isLoading={isChatResponding}
-      contentClassName="flex flex-col overflow-hidden" // Added overflow-hidden here
+      contentClassName="flex flex-col overflow-hidden" 
     >
-      <ScrollArea className="flex-grow p-4 border rounded-md mb-4 bg-muted/20 min-h-[200px]" ref={scrollAreaRef}>
+      <ScrollArea 
+        className={cn(
+          "flex-grow p-4 border rounded-md mb-4 bg-muted/20 min-h-[200px]",
+          !isModuleExpanded && "max-h-[400px]" // Apply max-height only when not expanded
+        )} 
+        ref={scrollAreaRef}
+      >
         <div className="space-y-4">
           {chatMessages.map((msg) => (
             <div
