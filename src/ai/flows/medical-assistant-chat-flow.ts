@@ -11,8 +11,16 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+// Define la estructura de un mensaje individual en el historial
+const ChatMessageHistoryItemSchema = z.object({
+  sender: z.enum(['user', 'ai']),
+  text: z.string(),
+});
+export type ChatMessageHistoryItem = z.infer<typeof ChatMessageHistoryItemSchema>;
+
 const MedicalAssistantChatInputSchema = z.object({
-  userInput: z.string().describe('The user\'s question or message to the medical assistant.'),
+  userInput: z.string().describe('The user\'s current message to the medical assistant.'),
+  chatHistory: z.array(ChatMessageHistoryItemSchema).optional().describe('The history of the conversation so far.'),
 });
 export type MedicalAssistantChatInput = z.infer<typeof MedicalAssistantChatInputSchema>;
 
@@ -24,8 +32,6 @@ export type MedicalAssistantChatOutput = z.infer<typeof MedicalAssistantChatOutp
 export async function medicalAssistantChatFlow(
   input: MedicalAssistantChatInput
 ): Promise<MedicalAssistantChatOutput> {
-  // In a real scenario, you might have more complex logic here,
-  // like retrieving context from a database or calling other tools.
   const {output} = await medicalAssistantChatPrompt(input);
   return output!;
 }
@@ -35,7 +41,17 @@ const medicalAssistantChatPrompt = ai.definePrompt({
   input: {schema: MedicalAssistantChatInputSchema},
   output: {schema: MedicalAssistantChatOutputSchema},
   prompt: `You are an expert AI Medical Assistant designed to communicate with healthcare professionals. Your primary goal is to provide accurate, evidence-based medical information in a technical and detailed manner. Assume the user is a medical professional with clinical knowledge.
-  
+
+{{#if chatHistory.length}}
+This is the conversation history so far:
+{{#each chatHistory}}
+{{#if (eq this.sender "user")}}User: {{{this.text}}}{{/if}}
+{{#if (eq this.sender "ai")}}Assistant: {{{this.text}}}{{/if}}
+{{/each}}
+---
+Based on the history above, respond to the following:
+{{/if}}
+
 User's query: {{{userInput}}}
 
 Please respond to the user's query:
@@ -54,15 +70,18 @@ Please respond to the user's query:
 // The flow is defined but not directly exported as the wrapper function is preferred.
 const flow = ai.defineFlow(
   {
-    name: 'medicalAssistantChatFlow', // This name is used for internal Genkit registration
+    name: 'medicalAssistantChatFlowInternal', // Renamed to avoid conflict if genkit auto-registers the exported one
     inputSchema: MedicalAssistantChatInputSchema,
     outputSchema: MedicalAssistantChatOutputSchema,
   },
   async (input) => {
-    // This internal flow calls the prompt directly.
-    // We could add more logic here if needed before or after the prompt.
     const {output} = await medicalAssistantChatPrompt(input);
     return output!;
   }
 );
 
+// Helper for Handlebars to check equality
+import Handlebars from 'handlebars';
+Handlebars.registerHelper('eq', function (a, b) {
+  return a === b;
+});

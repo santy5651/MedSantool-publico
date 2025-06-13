@@ -14,9 +14,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature } from 'lucide-react';
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, TreatmentPlanInputData, MedicalOrderInputState, NursingSurveillanceState, PatientAdviceOutputState, PatientAdviceInputData, MedicalJustificationInputState, MedicalJustificationOutputState } from '@/types';
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot } from 'lucide-react'; // Added Bot
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, TreatmentPlanInputData, MedicalOrderInputState, NursingSurveillanceState, PatientAdviceOutputState, PatientAdviceInputData, MedicalJustificationInputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType } from '@/types'; // Added ChatMessageType
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
+import type { ChatMessageHistoryItem } from '@/ai/flows/medical-assistant-chat-flow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { useClinicalData } from '@/contexts/clinical-data-context'; 
 import { useToast } from '@/hooks/use-toast'; 
@@ -32,6 +33,7 @@ const moduleIcons: Record<ModuleType, LucideIcon> = {
   TreatmentPlanSuggestion: ListChecks,
   PatientAdvice: UserCheck,
   MedicalJustification: FileSignature,
+  MedicalAssistantChat: Bot, // Added Bot icon for chat
 };
 
 const statusIcons: Record<HistoryEntry['status'], LucideIcon> = {
@@ -229,6 +231,22 @@ export function HistoryModule() {
           }
           clinicalData.setJustificationError(outputData?.error || null);
           break;
+        case 'MedicalAssistantChat':
+          if (outputData && outputData.messages && Array.isArray(outputData.messages)) {
+            // Transform sender back if necessary, or ensure ChatMessageType is compatible
+            const loadedMessages: ChatMessageType[] = outputData.messages.map((msg: any, index: number) => ({
+              id: `loaded-${Date.now()}-${index}`, // Generate new IDs for loaded messages
+              sender: msg.sender, // Assuming 'user' | 'ai'
+              text: msg.text,
+              timestamp: msg.timestamp || Date.now(), // Use existing or new timestamp
+              error: msg.error,
+            }));
+            clinicalData.setChatMessages(loadedMessages);
+          } else {
+            clinicalData.setChatMessages([]);
+          }
+          clinicalData.setChatError(outputData?.error || null);
+          break;
         default:
           toast({ variant: "destructive", title: "Módulo Desconocido", description: "No se puede cargar esta entrada." });
           return;
@@ -253,7 +271,7 @@ export function HistoryModule() {
     if (!entry.fullOutput) return <p className="text-xs text-muted-foreground">No hay detalles completos.</p>;
 
     try {
-      const output = typeof entry.fullOutput === 'string' 
+      const output = typeof entry.fullOutput === 'string' && (entry.fullOutput.startsWith('{') || entry.fullOutput.startsWith('['))
         ? JSON.parse(entry.fullOutput) 
         : entry.fullOutput;
       
@@ -340,6 +358,18 @@ export function HistoryModule() {
       } else if (entry.module === 'MedicalJustification' && typeof output === 'object' && output !== null && 'justificationText' in output) {
         const justificationOutput = output as MedicalJustificationOutputState;
         return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{justificationOutput.justificationText}</pre>;
+      } else if (entry.module === 'MedicalAssistantChat' && typeof output === 'object' && output !== null && 'messages' in output) {
+        const chatOutput = output as { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string };
+        return (
+            <div className="space-y-1 text-xs">
+                {chatOutput.messages.map((msg, idx) => (
+                    <div key={idx} className={`p-1.5 rounded-md ${msg.sender === 'user' ? 'bg-primary/10 text-primary-foreground/80' : 'bg-muted/50'} ${msg.error ? 'border border-destructive text-destructive' : ''}`}>
+                        <strong>{msg.sender === 'user' ? 'Usuario:' : 'Asistente:'}</strong> {msg.text}
+                    </div>
+                ))}
+                {chatOutput.error && <p className="text-destructive mt-1">Error del Chat: {chatOutput.error}</p>}
+            </div>
+        );
       }
       return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{typeof output === 'string' ? output : JSON.stringify(output, null, 2)}</pre>;
     } catch (e) { 
@@ -353,6 +383,24 @@ export function HistoryModule() {
         return <p className="text-xs text-muted-foreground">{entry.fullInput || "Entrada vacía"}</p>; 
      }
      if (typeof entry.fullInput === 'object') {
+        if (entry.module === 'MedicalAssistantChat' && 'userInput' in entry.fullInput && 'chatHistory' in entry.fullInput) {
+            const chatInput = entry.fullInput as {userInput: string, chatHistory: ChatMessageHistoryItem[]};
+            return (
+                <div className="space-y-1 text-xs">
+                    {chatInput.chatHistory && chatInput.chatHistory.length > 0 && (
+                         <div>
+                            <strong>Historial Previo:</strong>
+                            {chatInput.chatHistory.map((msg, idx) => (
+                                <div key={idx} className="ml-2 p-1 rounded-sm bg-muted/20">
+                                    <em>{msg.sender === 'user' ? 'Usuario:' : 'Asistente:'}</em> {msg.text}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    <div><strong>Entrada Actual:</strong> {chatInput.userInput}</div>
+                </div>
+            );
+        }
         return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{JSON.stringify(entry.fullInput, null, 2)}</pre>;
      }
      return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{String(entry.fullInput)}</pre>;

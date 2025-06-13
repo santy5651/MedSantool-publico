@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ModuleCardWrapper } from '@/components/common/module-card-wrapper';
 import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
-import { medicalAssistantChatFlow } from '@/ai/flows/medical-assistant-chat-flow';
+import { medicalAssistantChatFlow, type ChatMessageHistoryItem } from '@/ai/flows/medical-assistant-chat-flow'; 
 import type { ChatMessage } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Bot, Send, Eraser, Save, User, AlertCircle } from 'lucide-react';
@@ -22,7 +22,7 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
   const {
     chatMessages,
     addChatMessage,
-    setChatMessages,
+    // setChatMessages, // No longer directly setting all messages, addChatMessage handles it
     isChatResponding,
     setIsChatResponding,
     chatError,
@@ -59,23 +59,38 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       text: trimmedInput,
       timestamp: Date.now(),
     };
-    addChatMessage(userMessage);
+    
+    // Create a snapshot of messages to send to the flow, including the new user message
+    const currentMessagesSnapshot = [...chatMessages, userMessage];
+    addChatMessage(userMessage); // Add user message to UI immediately
     setCurrentUserInput('');
     setIsChatResponding(true);
     setChatError(null);
 
+    // Prepare history for the AI flow
+    const historyForAI: ChatMessageHistoryItem[] = currentMessagesSnapshot
+      .slice(0, -1) // Exclude the current user input from history sent *to* the prompt, it's handled by userInput
+      .map(msg => ({
+        sender: msg.sender,
+        text: msg.text,
+      }));
+
     try {
-      const response = await medicalAssistantChatFlow({ userInput: trimmedInput });
+      const response = await medicalAssistantChatFlow({ 
+        userInput: trimmedInput,
+        chatHistory: historyForAI 
+      });
       const aiMessage: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
         text: response.assistantResponse,
         timestamp: Date.now(),
       };
-      addChatMessage(aiMessage);
+      addChatMessage(aiMessage); // Add AI response to UI
 
       if (isAutoSaveEnabled) {
-        await saveChatToHistory([...chatMessages, userMessage, aiMessage], null);
+        // Pass the state *after* AI response for saving
+        await saveChatToHistory([...currentMessagesSnapshot, aiMessage], null);
       }
     } catch (error: any) {
       console.error("Error in chat flow:", error);
@@ -88,10 +103,11 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
         timestamp: Date.now(),
         error: true,
       };
-      addChatMessage(errorAiMessage);
+      addChatMessage(errorAiMessage); // Add error message to UI
       toast({ title: "Error del Asistente", description: errorMessage, variant: "destructive" });
       if (isAutoSaveEnabled) {
-        await saveChatToHistory([...chatMessages, userMessage, errorAiMessage], errorMessage);
+         // Pass the state *after* error for saving
+        await saveChatToHistory([...currentMessagesSnapshot, errorAiMessage], errorMessage);
       }
     } finally {
       setIsChatResponding(false);
@@ -107,13 +123,20 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
         outputSummary = lastAiMessage ? getTextSummary(lastAiMessage.text, 70) : `${messagesToSave.length} mensajes`;
     }
 
+    // For fullInput, let's save the structured chat history used by the prompt
+    const fullInputForHistory = {
+      userInput: messagesToSave.findLast(m => m.sender === 'user')?.text || '',
+      chatHistory: messagesToSave.filter(m => m.id !== messagesToSave.findLast(m => m.sender === 'user')?.id)
+                     .map(m => ({ sender: m.sender, text: m.text })),
+    };
+
     await addHistoryEntry({
       module: 'MedicalAssistantChat',
       inputType: 'chat',
       inputSummary: `${messagesToSave.filter(m => m.sender === 'user').length} entradas de usuario`,
       outputSummary: outputSummary,
-      fullInput: messagesToSave.filter(m => m.sender === 'user').map(m => m.text).join('\n---\n'),
-      fullOutput: { messages: messagesToSave, error: errorMsg },
+      fullInput: fullInputForHistory,
+      fullOutput: { messages: messagesToSave.map(m => ({sender: m.sender, text: m.text, error: m.error})), error: errorMsg },
       status: status,
       errorDetails: errorMsg || undefined,
     });
@@ -148,9 +171,9 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
       description="Consulte dudas médicas. El asistente se basa en evidencia clínica y cita fuentes cuando es posible."
       icon={Bot}
       isLoading={isChatResponding}
-      contentClassName="flex flex-col" // Removed h-[500px]
+      contentClassName="flex flex-col"
     >
-      <ScrollArea className="flex-grow p-4 border rounded-md mb-4 bg-muted/20 min-h-[200px]" ref={scrollAreaRef}> {/* Added min-h for default view */}
+      <ScrollArea className="flex-grow p-4 border rounded-md mb-4 bg-muted/20 min-h-[200px]" ref={scrollAreaRef}>
         <div className="space-y-4">
           {chatMessages.map((msg) => (
             <div
@@ -214,4 +237,3 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
     </ModuleCardWrapper>
   );
 }
-      
