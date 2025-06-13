@@ -27,8 +27,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useView } from '@/contexts/view-context';
 
-export default function MedInsightPage() {
+export default function MedSanToolsPage() {
+  const { activeView } = useView();
   const {
     clearImageModule,
     clearPdfModule,
@@ -60,6 +62,26 @@ export default function MedInsightPage() {
     setShowClearAllConfirm(false);
   };
 
+  const analysisToolsSection = (
+    <>
+      <PdfExtractionModule />
+      <TextAnalysisModule />
+      <ClinicalAnalysisModule />
+      <DiagnosisSupportModule />
+      <TreatmentPlanModule />
+      <MedicalOrdersModule />
+      <PatientAdviceModule />
+    </>
+  );
+
+  const otherToolsSection = (
+    <>
+      <ImageAnalysisModule />
+      <MedicalJustificationModule />
+    </>
+  );
+
+
   return (
     <>
       <div className="mb-6 flex justify-end">
@@ -86,18 +108,8 @@ export default function MedInsightPage() {
       </div>
 
       <div className="space-y-6">
-        {/* Analysis Modules Section */}
-        <div className="space-y-6">
-          <ImageAnalysisModule />
-          <PdfExtractionModule />
-          <TextAnalysisModule />
-          <ClinicalAnalysisModule />
-          <DiagnosisSupportModule />
-          <TreatmentPlanModule />
-          <MedicalOrdersModule />
-          <PatientAdviceModule />
-          <MedicalJustificationModule />
-        </div>
+        {(activeView === 'analysis' || activeView === 'all') && analysisToolsSection}
+        {(activeView === 'other' || activeView === 'all') && otherToolsSection}
 
         {/* History Module Section - Moved to the bottom */}
         <div className="mt-12 pt-6 border-t"> {/* Added margin and a top border for separation */}

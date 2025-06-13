@@ -1,6 +1,8 @@
 
 export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification';
 
+export type ActiveView = 'analysis' | 'other' | 'all';
+
 export interface HistoryEntry {
   id?: number;
   timestamp: number;
