@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ClipboardPlus, ListChecks, UserCheck } from 'lucide-react';
 
-const AUTOSAVE_STORAGE_KEY = 'medinsight-autosave-preference';
+const AUTOSAVE_STORAGE_KEY = 'medsantools-autosave-preference';
 
 export function useHistoryStore() {
   const { toast } = useToast();
@@ -84,7 +84,7 @@ export function useHistoryStore() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `medinsight_historial_${format(new Date(), 'yyyyMMdd_HHmmss')}.json`;
+      a.download = `medsantools_historial_${format(new Date(), 'yyyyMMdd_HHmmss')}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

@@ -9,7 +9,7 @@ export function AppHeader() {
       <div className="container mx-auto px-4 py-4 flex items-center">
         <BrainCircuit className="h-8 w-8 mr-3" />
         <Link href="/" className="text-2xl font-headline font-bold">
-          MedInsight IA
+          MedSanTools
         </Link>
       </div>
     </header>

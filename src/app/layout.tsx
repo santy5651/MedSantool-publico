@@ -7,7 +7,7 @@ import { AppFooter } from '@/components/layout/app-footer';
 
 
 export const metadata: Metadata = {
-  title: 'MedInsight IA',
+  title: 'MedSanTools',
   description: 'Plataforma Inteligente de Análisis Clínico y Soporte Diagnóstico Avanzado',
 };
 
