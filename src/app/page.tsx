@@ -82,9 +82,9 @@ export default function MedInsightPage() {
         </AlertDialog>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Left Column: Analysis Modules */}
-        <div className="lg:col-span-2 space-y-6">
+      <div className="space-y-6">
+        {/* Analysis Modules Section */}
+        <div className="space-y-6">
           <ImageAnalysisModule />
           <PdfExtractionModule />
           <TextAnalysisModule />
@@ -95,8 +95,8 @@ export default function MedInsightPage() {
           <PatientAdviceModule />
         </div>
 
-        {/* Right Column: History Module */}
-        <div className="lg:col-span-1 sticky top-6"> {/* Sticky for desktop view */}
+        {/* History Module Section - Moved to the bottom */}
+        <div className="mt-12 pt-6 border-t"> {/* Added margin and a top border for separation */}
           <HistoryModule />
         </div>
       </div>
