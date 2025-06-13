@@ -14,12 +14,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck } from 'lucide-react';
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, TreatmentPlanInputData, MedicalOrderInputState, NursingSurveillanceState, PatientAdviceOutputState, PatientAdviceInputData } from '@/types';
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature } from 'lucide-react';
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, TreatmentPlanInputData, MedicalOrderInputState, NursingSurveillanceState, PatientAdviceOutputState, PatientAdviceInputData, MedicalJustificationInputState, MedicalJustificationOutputState } from '@/types';
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { useClinicalData } from '@/contexts/clinical-data-context'; // Importar useClinicalData
-import { useToast } from '@/hooks/use-toast'; // Importar useToast si no está ya
+import { useClinicalData } from '@/contexts/clinical-data-context'; 
+import { useToast } from '@/hooks/use-toast'; 
 
 
 const moduleIcons: Record<ModuleType, LucideIcon> = {
@@ -31,6 +31,7 @@ const moduleIcons: Record<ModuleType, LucideIcon> = {
   MedicalOrders: FileEdit,
   TreatmentPlanSuggestion: ListChecks,
   PatientAdvice: UserCheck,
+  MedicalJustification: FileSignature,
 };
 
 const statusIcons: Record<HistoryEntry['status'], LucideIcon> = {
@@ -68,6 +69,15 @@ const initialGeneratedPatientAdvice: PatientAdviceOutputState = {
   alarmSigns: null,
 };
 
+const initialJustificationInput: MedicalJustificationInputState = {
+    conceptToJustify: null,
+    relevantClinicalInfo: null,
+};
+
+const initialGeneratedJustification: MedicalJustificationOutputState = {
+    justificationText: null,
+};
+
 
 export function HistoryModule() {
   const { 
@@ -80,8 +90,8 @@ export function HistoryModule() {
     importHistory 
   } = useHistoryStore();
 
-  const clinicalData = useClinicalData(); // Obtener el contexto clínico
-  const { toast } = useToast(); // Para notificaciones
+  const clinicalData = useClinicalData(); 
+  const { toast } = useToast(); 
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<number | null>(null);
@@ -112,6 +122,7 @@ export function HistoryModule() {
     if (!entry) return;
 
     const outputData = entry.fullOutput as any; 
+    const inputData = entry.fullInput as any;
 
     try {
       switch (entry.module) {
@@ -135,21 +146,21 @@ export function HistoryModule() {
           toast({ title: "Datos Cargados", description: "Datos de PDF cargados. Seleccione un nuevo archivo para re-analizar." });
           break;
         case 'TextAnalysis':
-          clinicalData.setClinicalNotesInput(entry.fullInput as string || '');
+          clinicalData.setClinicalNotesInput(inputData as string || '');
           if (outputData && outputData.summary) {
             clinicalData.setTextAnalysisSummary(outputData.summary);
           }
           clinicalData.setTextAnalysisError(outputData?.error || null);
           break;
         case 'ClinicalAnalysis':
-          clinicalData.setClinicalAnalysisInput(entry.fullInput as string || null);
+          clinicalData.setClinicalAnalysisInput(inputData as string || null);
            if (outputData && outputData.clinicalAnalysis) {
             clinicalData.setGeneratedClinicalAnalysis(outputData.clinicalAnalysis);
           }
           clinicalData.setClinicalAnalysisError(outputData?.error || null);
           break;
         case 'DiagnosisSupport':
-          clinicalData.setDiagnosisInputData(entry.fullInput as string || '');
+          clinicalData.setDiagnosisInputData(inputData as string || '');
           if (outputData && !outputData.error) {
             clinicalData.setDiagnosisResults(outputData as DiagnosisResult[]);
           } else {
@@ -158,8 +169,8 @@ export function HistoryModule() {
           clinicalData.setDiagnosisError(outputData?.error || null);
           break;
         case 'MedicalOrders':
-          if (entry.fullInput && typeof entry.fullInput === 'object') {
-            const fi = entry.fullInput as GenerateMedicalOrderInput; 
+          if (inputData && typeof inputData === 'object') {
+            const fi = inputData as GenerateMedicalOrderInput; 
             clinicalData.setMedicalOrderInputs({
                 orderType: fi.orderType || '',
                 oxygen: fi.oxygen || "NO REQUIERE OXÍGENO",
@@ -184,8 +195,8 @@ export function HistoryModule() {
           clinicalData.setMedicalOrderError(outputData?.error || null);
           break;
         case 'TreatmentPlanSuggestion':
-          if (entry.fullInput && typeof entry.fullInput === 'object') {
-             clinicalData.setTreatmentPlanInput(entry.fullInput as TreatmentPlanInputData);
+          if (inputData && typeof inputData === 'object') {
+             clinicalData.setTreatmentPlanInput(inputData as TreatmentPlanInputData);
           }
           if (outputData && outputData.suggestedPlanText) {
             clinicalData.setGeneratedTreatmentPlan(outputData as TreatmentPlanOutputState);
@@ -195,8 +206,8 @@ export function HistoryModule() {
           clinicalData.setTreatmentPlanError(outputData?.error || null);
           break;
         case 'PatientAdvice':
-          if (entry.fullInput && typeof entry.fullInput === 'object') {
-            clinicalData.setPatientAdviceInput(entry.fullInput as PatientAdviceInputData);
+          if (inputData && typeof inputData === 'object') {
+            clinicalData.setPatientAdviceInput(inputData as PatientAdviceInputData);
           }
           if (outputData && (outputData.generalRecommendations || outputData.alarmSigns)) {
             clinicalData.setGeneratedPatientAdvice(outputData as PatientAdviceOutputState);
@@ -204,6 +215,19 @@ export function HistoryModule() {
             clinicalData.setGeneratedPatientAdvice(initialGeneratedPatientAdvice);
           }
           clinicalData.setPatientAdviceError(outputData?.error || null);
+          break;
+        case 'MedicalJustification':
+          if (inputData && typeof inputData === 'object') {
+            clinicalData.setJustificationInput(inputData as MedicalJustificationInputState);
+          } else {
+            clinicalData.setJustificationInput(initialJustificationInput);
+          }
+          if (outputData && outputData.justificationText) {
+            clinicalData.setGeneratedJustification(outputData as MedicalJustificationOutputState);
+          } else {
+            clinicalData.setGeneratedJustification(initialGeneratedJustification);
+          }
+          clinicalData.setJustificationError(outputData?.error || null);
           break;
         default:
           toast({ variant: "destructive", title: "Módulo Desconocido", description: "No se puede cargar esta entrada." });
@@ -313,6 +337,9 @@ export function HistoryModule() {
                 )}
             </div>
         );
+      } else if (entry.module === 'MedicalJustification' && typeof output === 'object' && output !== null && 'justificationText' in output) {
+        const justificationOutput = output as MedicalJustificationOutputState;
+        return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{justificationOutput.justificationText}</pre>;
       }
       return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{typeof output === 'string' ? output : JSON.stringify(output, null, 2)}</pre>;
     } catch (e) { 

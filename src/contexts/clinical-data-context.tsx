@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState } from '@/types';
+import type { ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState } from '@/types';
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const initialNursingSurveillanceState: NursingSurveillanceState = {
@@ -52,6 +52,15 @@ const initialGeneratedPatientAdvice: PatientAdviceOutputState = {
   alarmSigns: null,
 };
 
+const initialJustificationInput: MedicalJustificationInputState = {
+    conceptToJustify: null,
+    relevantClinicalInfo: null,
+};
+
+const initialGeneratedJustification: MedicalJustificationOutputState = {
+    justificationText: null,
+};
+
 
 const initialState: ClinicalDataContextState = {
   imageFile: null,
@@ -94,6 +103,11 @@ const initialState: ClinicalDataContextState = {
   generatedPatientAdvice: initialGeneratedPatientAdvice,
   isGeneratingPatientAdvice: false,
   patientAdviceError: null,
+
+  justificationInput: initialJustificationInput,
+  generatedJustification: initialGeneratedJustification,
+  isGeneratingJustification: false,
+  justificationError: null,
 };
 
 const ClinicalDataContext = createContext<ClinicalDataContextType | undefined>(undefined);
@@ -145,17 +159,20 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setIsGeneratingMedicalOrder = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingMedicalOrder: loading })), []);
   const setMedicalOrderError = useCallback((error: string | null) => setState(s => ({ ...s, medicalOrderError: error })), []);
 
-  // Treatment Plan Suggestion
   const setTreatmentPlanInput = useCallback((input: TreatmentPlanInputData) => setState(s => ({ ...s, treatmentPlanInput: input })), []);
   const setGeneratedTreatmentPlan = useCallback((plan: TreatmentPlanOutputState) => setState(s => ({ ...s, generatedTreatmentPlan: plan })), []);
   const setIsGeneratingTreatmentPlan = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingTreatmentPlan: loading })), []);
   const setTreatmentPlanError = useCallback((error: string | null) => setState(s => ({ ...s, treatmentPlanError: error})), []);
 
-  // Patient Advice
   const setPatientAdviceInput = useCallback((input: PatientAdviceInputData) => setState(s => ({ ...s, patientAdviceInput: input })), []);
   const setGeneratedPatientAdvice = useCallback((advice: PatientAdviceOutputState) => setState(s => ({ ...s, generatedPatientAdvice: advice })), []);
   const setIsGeneratingPatientAdvice = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingPatientAdvice: loading })), []);
   const setPatientAdviceError = useCallback((error: string | null) => setState(s => ({ ...s, patientAdviceError: error})), []);
+
+  const setJustificationInput = useCallback((input: MedicalJustificationInputState) => setState(s => ({ ...s, justificationInput: input })), []);
+  const setGeneratedJustification = useCallback((justification: MedicalJustificationOutputState) => setState(s => ({ ...s, generatedJustification: justification })), []);
+  const setIsGeneratingJustification = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingJustification: loading })), []);
+  const setJustificationError = useCallback((error: string | null) => setState(s => ({ ...s, justificationError: error})), []);
 
 
   const clearImageModule = useCallback(() => {
@@ -193,7 +210,6 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const clearClinicalAnalysisModule = useCallback(() => {
     setState(s => ({
       ...s,
-      // clinicalAnalysisInput: null, // This is linked to textAnalysisSummary, so clearing textAnalysisSummary above handles it.
       generatedClinicalAnalysis: null,
       isGeneratingClinicalAnalysis: false,
       clinicalAnalysisError: null,
@@ -240,6 +256,16 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }));
   }, []);
 
+  const clearMedicalJustificationModule = useCallback(() => {
+    setState(s => ({
+      ...s,
+      justificationInput: initialJustificationInput,
+      generatedJustification: initialGeneratedJustification,
+      isGeneratingJustification: false,
+      justificationError: null,
+    }));
+  }, []);
+
 
   const contextValue: ClinicalDataContextType = {
     ...state,
@@ -276,6 +302,10 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setGeneratedPatientAdvice,
     setIsGeneratingPatientAdvice,
     setPatientAdviceError,
+    setJustificationInput,
+    setGeneratedJustification,
+    setIsGeneratingJustification,
+    setJustificationError,
     clearImageModule,
     clearPdfModule,
     clearTextModule,
@@ -284,6 +314,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     clearMedicalOrdersModule,
     clearTreatmentPlanModule,
     clearPatientAdviceModule,
+    clearMedicalJustificationModule,
   };
 
   return (

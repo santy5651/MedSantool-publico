@@ -4,11 +4,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState } from '@/types';
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ClipboardPlus, ListChecks, UserCheck } from 'lucide-react';
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ClipboardPlus, ListChecks, UserCheck, FileSignature } from 'lucide-react';
 
 const AUTOSAVE_STORAGE_KEY = 'medsantools-autosave-preference';
 
@@ -144,6 +144,3 @@ export function useHistoryStore() {
     importHistory,
   };
 }
-
-// Helper for HistoryModule display (kept in history-module.tsx as it's UI specific)
-// const moduleIcons: Record<ModuleType, LucideIcon> = { ... };

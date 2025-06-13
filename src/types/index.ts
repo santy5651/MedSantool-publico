@@ -1,5 +1,5 @@
 
-export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice';
+export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification';
 
 export interface HistoryEntry {
   id?: number;
@@ -9,7 +9,7 @@ export interface HistoryEntry {
   inputSummary: string;
   outputSummary: string;
   fullInput?: string | Record<string, any>;
-  fullOutput?: string | Record<string, any> | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | TreatmentPlanOutputState | PatientAdviceOutputState;
+  fullOutput?: string | Record<string, any> | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState;
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
 }
@@ -89,6 +89,17 @@ export interface PatientAdviceOutputState {
 }
 // --- End Patient Advice Module Specific Types ---
 
+// --- Medical Justification Module Specific Types ---
+export interface MedicalJustificationInputState {
+  conceptToJustify: string | null;
+  relevantClinicalInfo: string | null;
+}
+
+export interface MedicalJustificationOutputState {
+  justificationText: string | null;
+}
+// --- End Medical Justification Module Specific Types ---
+
 
 export interface ClinicalDataContextState {
   // Image Analysis
@@ -139,6 +150,12 @@ export interface ClinicalDataContextState {
   generatedPatientAdvice: PatientAdviceOutputState;
   isGeneratingPatientAdvice: boolean;
   patientAdviceError: string | null;
+
+  // Medical Justification
+  justificationInput: MedicalJustificationInputState;
+  generatedJustification: MedicalJustificationOutputState;
+  isGeneratingJustification: boolean;
+  justificationError: string | null;
 }
 
 export interface ClinicalDataContextActions {
@@ -173,17 +190,20 @@ export interface ClinicalDataContextActions {
   setIsGeneratingMedicalOrder: (loading: boolean) => void;
   setMedicalOrderError: (error: string | null) => void;
   
-  // Treatment Plan Suggestion Actions
   setTreatmentPlanInput: (input: TreatmentPlanInputData) => void;
   setGeneratedTreatmentPlan: (plan: TreatmentPlanOutputState) => void;
   setIsGeneratingTreatmentPlan: (loading: boolean) => void;
   setTreatmentPlanError: (error: string | null) => void;
 
-  // Patient Advice Actions
   setPatientAdviceInput: (input: PatientAdviceInputData) => void;
   setGeneratedPatientAdvice: (advice: PatientAdviceOutputState) => void;
   setIsGeneratingPatientAdvice: (loading: boolean) => void;
   setPatientAdviceError: (error: string | null) => void;
+
+  setJustificationInput: (input: MedicalJustificationInputState) => void;
+  setGeneratedJustification: (justification: MedicalJustificationOutputState) => void;
+  setIsGeneratingJustification: (loading: boolean) => void;
+  setJustificationError: (error: string | null) => void;
   
   clearImageModule: () => void;
   clearPdfModule: () => void;
@@ -193,6 +213,7 @@ export interface ClinicalDataContextActions {
   clearMedicalOrdersModule: () => void;
   clearTreatmentPlanModule: () => void;
   clearPatientAdviceModule: () => void;
+  clearMedicalJustificationModule: () => void;
 }
 
 export type ClinicalDataContextType = ClinicalDataContextState & ClinicalDataContextActions;
