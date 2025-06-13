@@ -14,13 +14,17 @@ import { analyzeMedicalImage, type AnalyzeMedicalImageOutput } from '@/ai/flows/
 import { useToast } from '@/hooks/use-toast';
 import { ScanSearch, Eraser, Send, Save } from 'lucide-react';
 
-export function ImageAnalysisModule() {
+interface ImageAnalysisModuleProps {
+  id?: string;
+}
+
+export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
   const { 
     imageFile, setImageFile, 
     imageAnalysisSummary, setImageAnalysisSummary,
     isImageAnalyzing, setIsImageAnalyzing,
     imageAnalysisError, setImageAnalysisError,
-    setClinicalNotesInput, // For "Usar Resumen en Comprensión de Texto"
+    setClinicalNotesInput, 
     clearImageModule
   } = useClinicalData();
   
@@ -41,7 +45,7 @@ export function ImageAnalysisModule() {
 
   const handleFileSelect = (file: File | null) => {
     setImageFile(file);
-    setImageAnalysisSummary(null); // Clear previous summary
+    setImageAnalysisSummary(null); 
     setImageAnalysisError(null);
   };
 
@@ -68,7 +72,7 @@ export function ImageAnalysisModule() {
           inputType: imageFile.type,
           inputSummary: getFileSummary(imageFile),
           outputSummary: getTextSummary(analysisOutput.summary, 100),
-          fullInput: `Data URI for ${imageFile.name}`, // Or consider storing a smaller identifier if URI is too large for summary
+          fullInput: `Data URI for ${imageFile.name}`, 
           fullOutput: analysisOutput,
           status: 'completed',
         });
@@ -97,7 +101,7 @@ export function ImageAnalysisModule() {
 
   const handleClearSelection = () => {
     clearImageModule();
-    setPreviewUrl(null); // Ensure preview is also cleared
+    setPreviewUrl(null); 
     toast({ title: "Selección Limpiada", description: "Se ha limpiado la selección de imagen." });
   };
 
@@ -107,7 +111,6 @@ export function ImageAnalysisModule() {
         `${prev ? prev + '\n\n' : ''}[Resumen de Imagen - ${getFileSummary(imageFile)}]:\n${imageAnalysisSummary}`
       );
       toast({ title: "Resumen Enviado", description: "El resumen de la imagen se ha añadido a las notas clínicas." });
-      // Optional: Scroll to Text Analysis Module
       const textModule = document.getElementById('text-analysis-module');
       textModule?.scrollIntoView({ behavior: 'smooth' });
     }
@@ -139,11 +142,11 @@ export function ImageAnalysisModule() {
   return (
     <ModuleCardWrapper
       ref={moduleRef}
+      id={id}
       title="Análisis Avanzado de Imágenes Médicas"
       description="Cargue imágenes médicas (radiografías, TAC, RMN) para análisis por IA. Obtenga un resumen de hallazgos."
       icon={ScanSearch}
       isLoading={isImageAnalyzing}
-      id="image-analysis-module"
     >
       <div className="space-y-4">
         <FileInput 

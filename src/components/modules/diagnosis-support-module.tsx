@@ -17,14 +17,17 @@ import { Badge } from "@/components/ui/badge";
 import { Stethoscope, Eraser, Pin, Star, Save, Lightbulb, GripVertical, Send } from 'lucide-react';
 import { getTextSummary, cn } from '@/lib/utils';
 
-export function DiagnosisSupportModule() {
+interface DiagnosisSupportModuleProps {
+  id?: string;
+}
+
+export function DiagnosisSupportModule({ id }: DiagnosisSupportModuleProps) {
   const {
     diagnosisInputData, setDiagnosisInputData,
-    diagnosisResults, setDiagnosisResults, // Crucial para la reactividad
+    diagnosisResults, setDiagnosisResults, 
     isDiagnosing, setIsDiagnosing,
     diagnosisError, setDiagnosisError,
     clearDiagnosisModule,
-    // Para el botón "Enviar a Plan Terapéutico"
     generatedClinicalAnalysis, 
     textAnalysisSummary,
     setTreatmentPlanInput,
@@ -59,8 +62,7 @@ export function DiagnosisSupportModule() {
     try {
       const aiOutput = await suggestDiagnosis({ clinicalData: currentInput });
       const initialResults: DiagnosisResult[] = aiOutput.map(d => ({ ...d, isValidated: false, isPrincipal: false }));
-      setDiagnosisResults(initialResults); // Actualiza el estado global
-      // setLocalDiagnosisResults se actualizará a través del useEffect
+      setDiagnosisResults(initialResults); 
       toast({ title: "Sugerencias de Diagnóstico Obtenidas", description: `${initialResults.length} diagnósticos sugeridos.` });
 
       if (isAutoSaveEnabled) {
@@ -70,8 +72,7 @@ export function DiagnosisSupportModule() {
       console.error("Error suggesting diagnosis:", error);
       const errorMessage = error.message || "Ocurrió un error desconocido.";
       setDiagnosisError(errorMessage);
-      setDiagnosisResults(null); // Actualiza el estado global
-      // setLocalDiagnosisResults se actualizará a través del useEffect
+      setDiagnosisResults(null); 
       toast({ title: "Error en Sugerencia de Diagnóstico", description: errorMessage, variant: "destructive" });
       if (isAutoSaveEnabled) {
         await saveToHistory(null, errorMessage, currentInput);
@@ -83,7 +84,6 @@ export function DiagnosisSupportModule() {
 
   const handleClearData = () => {
     clearDiagnosisModule();
-    // setLocalDiagnosisResults se actualizará a través del useEffect que escucha a diagnosisResults
     toast({ title: "Datos Limpiados", description: "Se han limpiado los datos para diagnóstico." });
   };
 
@@ -92,7 +92,7 @@ export function DiagnosisSupportModule() {
       i === index ? { ...diag, isValidated: !diag.isValidated } : diag
     );
     setLocalDiagnosisResults(updatedResults);
-    setDiagnosisResults(updatedResults); // Actualiza el estado global
+    setDiagnosisResults(updatedResults); 
   };
 
   const setPrincipalDiagnosis = (index: number) => {
@@ -106,7 +106,7 @@ export function DiagnosisSupportModule() {
       updatedResults = [principal, ...updatedResults.filter(diag => !diag.isPrincipal)];
     }
     setLocalDiagnosisResults(updatedResults);
-    setDiagnosisResults(updatedResults); // Actualiza el estado global
+    setDiagnosisResults(updatedResults); 
   };
 
   const getConfidenceBadgeVariant = (confidence: number): "default" | "secondary" | "destructive" => {
@@ -181,7 +181,6 @@ export function DiagnosisSupportModule() {
   };
 
 
-  // Drag and Drop Handlers
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
   };
@@ -193,7 +192,7 @@ export function DiagnosisSupportModule() {
   };
 
   const handleDragOver = (event: React.DragEvent) => {
-    event.preventDefault(); // Necessary to allow dropping
+    event.preventDefault(); 
   };
 
   const handleDrop = (dropTargetIndex: number) => {
@@ -205,11 +204,11 @@ export function DiagnosisSupportModule() {
 
     const newResults = [...localDiagnosisResults];
     const itemToMove = newResults[draggedIndex];
-    newResults.splice(draggedIndex, 1); // Remove item from old position
-    newResults.splice(dropTargetIndex, 0, itemToMove); // Insert item at new position
+    newResults.splice(draggedIndex, 1); 
+    newResults.splice(dropTargetIndex, 0, itemToMove); 
     
     setLocalDiagnosisResults(newResults);
-    setDiagnosisResults(newResults); // Actualiza el estado global
+    setDiagnosisResults(newResults); 
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
@@ -224,11 +223,11 @@ export function DiagnosisSupportModule() {
   return (
     <ModuleCardWrapper
       ref={moduleRef}
+      id={id}
       title="Diagnóstico Inteligente Asistido por IA"
       description="Ingrese datos clínicos consolidados. La IA sugerirá diagnósticos (CIE-10) con niveles de confianza. Puede reordenarlos manualmente."
       icon={Lightbulb}
       isLoading={isDiagnosing}
-      id="diagnosis-support-module"
     >
       <div className="space-y-4">
         <div>
@@ -317,6 +316,3 @@ export function DiagnosisSupportModule() {
     </ModuleCardWrapper>
   );
 }
-
-
-    

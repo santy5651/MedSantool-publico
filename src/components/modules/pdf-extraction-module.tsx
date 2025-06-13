@@ -15,14 +15,18 @@ import type { PdfStructuredData } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Eraser, Send, Save, ListTree } from 'lucide-react';
 
-export function PdfExtractionModule() {
+interface PdfExtractionModuleProps {
+  id?: string;
+}
+
+export function PdfExtractionModule({ id }: PdfExtractionModuleProps) {
   const {
     pdfFile, setPdfFile,
     pdfExtractedNotes, setPdfExtractedNotes,
     pdfStructuredData, setPdfStructuredData,
     isPdfExtracting, setIsPdfExtracting,
     pdfExtractionError, setPdfExtractionError,
-    clinicalNotesInput, // Get current clinical notes for appending
+    clinicalNotesInput, 
     setClinicalNotesInput, 
     clearPdfModule
   } = useClinicalData();
@@ -56,7 +60,6 @@ export function PdfExtractionModule() {
       setPdfStructuredData(analysisOutput.structuredData as PdfStructuredData[]);
       toast({ title: "Extracción Completada", description: "La información del PDF ha sido extraída." });
       
-      // Automatically transfer extracted notes to Text Analysis Module
       if (analysisOutput.clinicalNotes) {
         const notesHeader = `[Notas Extraídas de PDF - ${getFileSummary(pdfFile)}]:\n${analysisOutput.clinicalNotes}`;
         const updatedClinicalNotes = `${clinicalNotesInput ? clinicalNotesInput + '\n\n' : ''}${notesHeader}`;
@@ -140,11 +143,11 @@ export function PdfExtractionModule() {
   return (
     <ModuleCardWrapper
       ref={moduleRef}
+      id={id}
       title="Extracción Inteligente desde Documentos (PDF)"
       description="Cargue documentos médicos PDF. La IA extraerá datos estructurados y notas clínicas."
       icon={FileText}
       isLoading={isPdfExtracting}
-      id="pdf-extraction-module"
     >
       <div className="space-y-4">
         <FileInput 

@@ -12,7 +12,11 @@ import { useToast } from '@/hooks/use-toast';
 import { ClipboardEdit, Eraser, Copy, Save, MessageSquareText, Send } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 
-export function TextAnalysisModule() {
+interface TextAnalysisModuleProps {
+  id?: string;
+}
+
+export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
   const {
     clinicalNotesInput, setClinicalNotesInput,
     textAnalysisSummary, setTextAnalysisSummary,
@@ -44,14 +48,13 @@ export function TextAnalysisModule() {
       setTextAnalysisSummary(newSummaryContent || null);
       toast({ title: "Análisis de Texto Completado", description: "Las notas han sido resumidas." });
 
-      // Auto-transfer to diagnosis module
       if (newSummaryContent) {
         const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${newSummaryContent}`;
-        const currentDiagnosisText = String(diagnosisInputData || ''); // Leer estado actual
+        const currentDiagnosisText = String(diagnosisInputData || ''); 
 
         if (!currentDiagnosisText.includes(summaryBlockToAdd)) {
           const newDiagnosisValue = `${currentDiagnosisText ? currentDiagnosisText + '\n\n' : ''}${summaryBlockToAdd}`;
-          setDiagnosisInputData(newDiagnosisValue); // Pasar valor directamente
+          setDiagnosisInputData(newDiagnosisValue); 
           toast({
             title: "Resumen Enviado a Diagnóstico",
             description: "El resumen de notas se ha añadido automáticamente para soporte diagnóstico.",
@@ -123,17 +126,16 @@ export function TextAnalysisModule() {
     }
 
     const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${summaryToSend}`;
-    const currentDiagnosisText = String(diagnosisInputData || ''); // Leer estado actual
+    const currentDiagnosisText = String(diagnosisInputData || ''); 
 
     if (currentDiagnosisText.includes(summaryBlockToAdd)) {
       toast({ title: "Resumen ya Incluido", description: "El contenido del cuadro 'Resumen de Información Clave' ya está en los datos de diagnóstico.", variant: "default" });
     } else {
       const newDiagnosisValue = `${currentDiagnosisText ? currentDiagnosisText + '\n\n' : ''}${summaryBlockToAdd}`;
-      setDiagnosisInputData(newDiagnosisValue); // Pasar valor directamente
+      setDiagnosisInputData(newDiagnosisValue); 
       toast({ title: "Resumen Enviado a Diagnóstico", description: "El contenido del cuadro 'Resumen de Información Clave' ha sido añadido para soporte diagnóstico." });
     }
 
-    // Scroll to diagnosis module
     setTimeout(() => {
         const diagnosisModule = document.getElementById('diagnosis-support-module');
         diagnosisModule?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -170,11 +172,11 @@ export function TextAnalysisModule() {
   return (
     <ModuleCardWrapper
       ref={moduleRef}
+      id={id}
       title="Comprensión Profunda de Texto Clínico"
       description="Ingrese notas clínicas o use datos de módulos anteriores. La IA generará un resumen clave."
       icon={MessageSquareText}
       isLoading={isTextAnalyzing}
-      id="text-analysis-module"
     >
       <div className="space-y-4">
         <div>

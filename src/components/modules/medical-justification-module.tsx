@@ -13,7 +13,11 @@ import { FileSignature, Eraser, Save, Copy, MessageCircleMore } from 'lucide-rea
 import { getTextSummary } from '@/lib/utils';
 import type { MedicalJustificationInputState } from '@/types';
 
-export function MedicalJustificationModule() {
+interface MedicalJustificationModuleProps {
+  id?: string;
+}
+
+export function MedicalJustificationModule({ id }: MedicalJustificationModuleProps) {
   const {
     justificationInput, setJustificationInput,
     generatedJustification, setGeneratedJustification,
@@ -138,11 +142,11 @@ export function MedicalJustificationModule() {
   return (
     <ModuleCardWrapper
       ref={moduleRef}
+      id={id}
       title="Justificaciones Médicas Asistidas por IA"
       description="Ingrese el concepto a justificar y (opcionalmente) información clínica. La IA generará una justificación profesional."
       icon={FileSignature}
       isLoading={isGeneratingJustification}
-      id="medical-justification-module"
     >
       <div className="space-y-4">
         <div>

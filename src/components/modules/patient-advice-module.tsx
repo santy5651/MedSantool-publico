@@ -10,16 +10,18 @@ import { useHistoryStore } from '@/hooks/use-history-store';
 import { generatePatientAdvice, type GeneratePatientAdviceOutput, type GeneratePatientAdviceInput } from '@/ai/flows/generate-patient-advice';
 import type { PatientAdviceInputData, ValidatedDiagnosis, PatientAdviceOutputState } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { UserCheck, Eraser, Save, Copy, AlertTriangle } from 'lucide-react';
+import { UserCheck, Eraser, Save, Copy, AlertTriangle, ALargeSmall } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 
-export function PatientAdviceModule() {
+interface PatientAdviceModuleProps {
+  id?: string;
+}
+
+export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
   const {
-    // Inputs from other modules
     generatedClinicalAnalysis,
     textAnalysisSummary,
     diagnosisResults,
-    // State for this module
     patientAdviceInput, setPatientAdviceInput,
     generatedPatientAdvice, setGeneratedPatientAdvice,
     isGeneratingPatientAdvice, setIsGeneratingPatientAdvice,
@@ -31,7 +33,6 @@ export function PatientAdviceModule() {
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
-  // Effect to assemble input for this module when dependencies change
   useEffect(() => {
     const validatedDiagnoses: ValidatedDiagnosis[] = diagnosisResults
       ?.filter(d => d.isValidated)
@@ -161,11 +162,11 @@ export function PatientAdviceModule() {
   return (
     <ModuleCardWrapper
       ref={moduleRef}
+      id={id}
       title="Recomendaciones y Signos de Alarma para Paciente"
       description="Genera consejos y signos de alarma (en mayúsculas por defecto) basados en el análisis, resumen y diagnósticos validados. Los títulos se incluyen automáticamente."
       icon={UserCheck}
       isLoading={isGeneratingPatientAdvice}
-      id="patient-advice-module"
     >
       <div className="space-y-4">
         <div className="space-y-2 p-3 border rounded-md bg-muted/30 text-sm">
@@ -266,4 +267,3 @@ export function PatientAdviceModule() {
     </ModuleCardWrapper>
   );
 }
-

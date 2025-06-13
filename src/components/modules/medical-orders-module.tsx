@@ -18,7 +18,11 @@ import { FileEdit, Eraser, Save, ClipboardCopy, WrapText, Baseline, ALargeSmall 
 import type { MedicalOrderType, TransferConditionType, MedicalOrderInputState } from '@/types';
 import { getTextSummary } from '@/lib/utils';
 
-export function MedicalOrdersModule() {
+interface MedicalOrdersModuleProps {
+  id?: string;
+}
+
+export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
   const {
     medicalOrderInputs, setMedicalOrderInputs,
     medicalOrderOutput, setMedicalOrderOutput,
@@ -213,14 +217,13 @@ export function MedicalOrdersModule() {
   return (
     <ModuleCardWrapper
       ref={moduleRef}
+      id={id}
       title="Órdenes Médicas Generales"
       description="Complete los campos para generar órdenes médicas detalladas. La IA asistirá en la redacción y formato."
       icon={FileEdit}
       isLoading={isGeneratingMedicalOrder}
-      id="medical-orders-module"
     >
       <div className="space-y-4">
-        {/* Input Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="orderType">Tipo de Orden</Label>
@@ -338,7 +341,6 @@ export function MedicalOrdersModule() {
           <Textarea id="specialConsiderations" value={medicalOrderInputs.specialConsiderations} onChange={(e) => handleInputChange('specialConsiderations', e.target.value)} rows={3} placeholder="Notas adicionales..." disabled={isGeneratingMedicalOrder}/>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <Button onClick={handleGenerateOrder} disabled={isGeneratingMedicalOrder || !medicalOrderInputs.orderType || !medicalOrderInputs.transferConditions} className="flex-1">
             <FileEdit className="mr-2 h-4 w-4" />
@@ -350,7 +352,6 @@ export function MedicalOrdersModule() {
           </Button>
         </div>
 
-        {/* Output Display */}
         {medicalOrderOutput.generatedOrderText !== null && (
           <div className="space-y-2">
             <h3 className="text-md font-semibold font-headline">Órdenes Médicas Generadas:</h3>
@@ -395,4 +396,3 @@ export function MedicalOrdersModule() {
     </ModuleCardWrapper>
   );
 }
-    

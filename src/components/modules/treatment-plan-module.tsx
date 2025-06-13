@@ -13,13 +13,15 @@ import { useToast } from '@/hooks/use-toast';
 import { ClipboardPlus, Eraser, Save, Copy, ListChecks } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 
-export function TreatmentPlanModule() {
+interface TreatmentPlanModuleProps {
+  id?: string;
+}
+
+export function TreatmentPlanModule({ id }: TreatmentPlanModuleProps) {
   const {
-    // Inputs from other modules
     generatedClinicalAnalysis,
     textAnalysisSummary,
     diagnosisResults,
-    // State for this module
     treatmentPlanInput, setTreatmentPlanInput,
     generatedTreatmentPlan, setGeneratedTreatmentPlan,
     isGeneratingTreatmentPlan, setIsGeneratingTreatmentPlan,
@@ -31,7 +33,6 @@ export function TreatmentPlanModule() {
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
-  // Effect to assemble input for this module when dependencies change
   useEffect(() => {
     const validatedDiagnoses: ValidatedDiagnosis[] = diagnosisResults
       ?.filter(d => d.isValidated)
@@ -152,11 +153,11 @@ export function TreatmentPlanModule() {
   return (
     <ModuleCardWrapper
       ref={moduleRef}
+      id={id}
       title="Sugerencia de Plan Terapéutico Asistido por IA"
       description="Genera sugerencias de medicamentos y conductas basadas en el análisis clínico, resumen de texto y diagnósticos validados."
       icon={ListChecks}
       isLoading={isGeneratingTreatmentPlan}
-      id="treatment-plan-module"
     >
       <div className="space-y-4">
         <div className="space-y-2 p-3 border rounded-md bg-muted/30 text-sm">

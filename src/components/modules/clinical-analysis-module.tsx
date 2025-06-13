@@ -12,14 +12,18 @@ import { useToast } from '@/hooks/use-toast';
 import { FileText, Brain, Eraser, Send, Save, Copy } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 
-export function ClinicalAnalysisModule() {
+interface ClinicalAnalysisModuleProps {
+  id?: string;
+}
+
+export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
   const {
-    clinicalAnalysisInput, setClinicalAnalysisInput, // This will be populated from textAnalysisSummary
-    textAnalysisSummary, // Used to auto-populate clinicalAnalysisInput
+    clinicalAnalysisInput, setClinicalAnalysisInput, 
+    textAnalysisSummary, 
     generatedClinicalAnalysis, setGeneratedClinicalAnalysis,
     isGeneratingClinicalAnalysis, setIsGeneratingClinicalAnalysis,
     clinicalAnalysisError, setClinicalAnalysisError,
-    setDiagnosisInputData, // To send output to diagnosis module
+    setDiagnosisInputData, 
     clearClinicalAnalysisModule,
   } = useClinicalData();
 
@@ -27,12 +31,10 @@ export function ClinicalAnalysisModule() {
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
-  // Auto-populate clinicalAnalysisInput when textAnalysisSummary changes
   useEffect(() => {
     if (textAnalysisSummary !== clinicalAnalysisInput) {
         setClinicalAnalysisInput(textAnalysisSummary);
     }
-  // Only re-run if textAnalysisSummary changes. Avoid dependency on clinicalAnalysisInput to prevent loops.
   // eslint-disable-next-line react-hooks/exhaustive-deps 
   }, [textAnalysisSummary, setClinicalAnalysisInput]);
 
@@ -54,7 +56,6 @@ export function ClinicalAnalysisModule() {
       setGeneratedClinicalAnalysis(newAnalysisContent || null);
       toast({ title: "Análisis Clínico Generado", description: "El caso ha sido analizado por la IA." });
       
-      // Auto-transfer to diagnosis module if content exists
       if (newAnalysisContent) {
         const analysisBlockToAdd = `[Análisis Clínico del Caso por IA]:\n${newAnalysisContent}`;
         setDiagnosisInputData(prev => `${prev ? prev + '\n\n' : ''}${analysisBlockToAdd}`);
@@ -62,7 +63,6 @@ export function ClinicalAnalysisModule() {
           title: "Análisis Enviado a Diagnóstico",
           description: "El análisis clínico del caso se ha añadido automáticamente para soporte diagnóstico.",
         });
-        // Scroll to diagnosis module
         setTimeout(() => {
           const diagnosisModule = document.getElementById('diagnosis-support-module');
           diagnosisModule?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -105,9 +105,6 @@ export function ClinicalAnalysisModule() {
 
   const handleClearModule = () => {
     clearClinicalAnalysisModule();
-    // clinicalAnalysisInput is linked to textAnalysisSummary, so clearing it directly
-    // might be overridden. It's better to clear the output.
-    // setClinicalAnalysisInput(''); // Optionally clear if user should manually re-trigger population
     toast({ title: "Módulo Limpiado", description: "Se ha limpiado el análisis clínico generado." });
   };
 
@@ -119,12 +116,10 @@ export function ClinicalAnalysisModule() {
     }
     const analysisBlockToAdd = `[Análisis Clínico del Caso por IA]:\n${analysisToSend}`;
      setDiagnosisInputData(prev => {
-        // Avoid re-adding if it's already there from auto-send
         if (prev.includes(analysisBlockToAdd)) return prev;
         return `${prev ? prev + '\n\n' : ''}${analysisBlockToAdd}`;
     });
     toast({ title: "Análisis Enviado a Diagnóstico", description: "El análisis clínico se ha añadido para soporte diagnóstico." });
-     // Scroll to diagnosis module
     setTimeout(() => {
         const diagnosisModule = document.getElementById('diagnosis-support-module');
         diagnosisModule?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -168,11 +163,11 @@ export function ClinicalAnalysisModule() {
   return (
     <ModuleCardWrapper
       ref={moduleRef}
+      id={id}
       title="Análisis Clínico Asistido por IA"
       description="Utiliza el resumen de información clave del Módulo 3 para generar un análisis del caso clínico en formato profesional."
       icon={Brain}
       isLoading={isGeneratingClinicalAnalysis}
-      id="clinical-analysis-module"
     >
       <div className="space-y-4">
         <div>
@@ -183,7 +178,7 @@ export function ClinicalAnalysisModule() {
             id="clinicalSummaryInput"
             placeholder="El resumen del Módulo 3 aparecerá aquí automáticamente. Puede editarlo si es necesario antes de generar el análisis."
             value={clinicalAnalysisInput || ''}
-            onChange={(e) => setClinicalAnalysisInput(e.target.value)} // Allow editing
+            onChange={(e) => setClinicalAnalysisInput(e.target.value)} 
             rows={6}
             disabled={isGeneratingClinicalAnalysis}
             className="bg-muted/30"
@@ -206,7 +201,7 @@ export function ClinicalAnalysisModule() {
             <h3 className="text-md font-semibold font-headline">Análisis Clínico Generado:</h3>
             <Textarea
               value={generatedClinicalAnalysis || ''}
-              readOnly // Keep read-only or make editable based on preference
+              readOnly 
               rows={8}
               className="bg-muted/30"
             />
