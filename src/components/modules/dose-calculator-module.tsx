@@ -24,6 +24,8 @@ interface DoseCalculatorModuleProps {
   id?: string;
 }
 
+const ALL_CATEGORIES_VALUE = "__ALL_CATEGORIES__";
+
 export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
   const {
     doseCalculatorInputs,
@@ -42,28 +44,25 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
 
   const [medicationSearch, setMedicationSearch] = useState('');
   const [medicationComboboxOpen, setMedicationComboboxOpen] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [categoryFilter, setCategoryFilter] = useState<string>(ALL_CATEGORIES_VALUE);
   const medicationCategories = useMemo(() => getAllMedicationCategories(), []);
 
 
   const filteredMedications = useMemo(() => {
     let medications = initialMedicationsList;
 
-    if (categoryFilter) {
-      // La categoría en el filtro puede tener espacios y mayúsculas,
-      // mientras que en los datos puede tener guiones bajos y minúsculas.
-      // Necesitamos normalizar para la comparación.
+    if (categoryFilter && categoryFilter !== ALL_CATEGORIES_VALUE) {
       const normalizedFilter = categoryFilter.toLowerCase().replace(/ /g, '_');
       medications = medications.filter(med => 
         med.categories.some(cat => cat.toLowerCase().replace(/_protocol$/, '').includes(normalizedFilter))
       );
     }
 
-    if (!medicationSearch) return medications;
+    if (!medicationSearch.trim()) return medications;
     
     return medications.filter(med => 
-      med.name.toLowerCase().includes(medicationSearch.toLowerCase()) ||
-      med.keywords?.some(kw => kw.toLowerCase().includes(medicationSearch.toLowerCase()))
+      med.name.toLowerCase().includes(medicationSearch.toLowerCase().trim()) ||
+      med.keywords?.some(kw => kw.toLowerCase().includes(medicationSearch.toLowerCase().trim()))
     );
   }, [medicationSearch, categoryFilter]);
 
@@ -96,7 +95,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
       infusionDrugAmountUnit: med?.defaultConcentration?.totalDrugAmountUnit || '',
       infusionTotalVolume: med?.defaultConcentration?.totalVolume?.toString() || '',
     }));
-    setMedicationSearch(''); // Clear search after selection
+    setMedicationSearch(''); 
     setMedicationComboboxOpen(false);
   };
 
@@ -255,7 +254,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
     setMedicationSearch('');
     setMedicationComboboxOpen(false);
     setDoseCalculationError(null); 
-    setCategoryFilter('');
+    setCategoryFilter(ALL_CATEGORIES_VALUE);
     toast({ title: "Campos Limpiados", description: "Se han restablecido los campos de la calculadora." });
   };
 
@@ -321,20 +320,20 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-2 items-end">
             <div>
                 <Label htmlFor="medicationCategoryFilter">Filtrar por Categoría</Label>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value); setMedicationSearch(''); }}>
                     <SelectTrigger id="medicationCategoryFilter" className="w-full">
                         <SelectValue placeholder="Todas las categorías..." />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="">Todas las categorías</SelectItem>
-                        {medicationCategories.map(cat => (
+                        <SelectItem value={ALL_CATEGORIES_VALUE}>Todas las categorías</SelectItem>
+                        {medicationCategories.filter(Boolean).map(cat => (
                             <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
             </div>
-            {categoryFilter && (
-                 <Button variant="ghost" size="sm" onClick={() => setCategoryFilter('')} className="self-end mb-1">
+            {categoryFilter && categoryFilter !== ALL_CATEGORIES_VALUE && (
+                 <Button variant="ghost" size="sm" onClick={() => {setCategoryFilter(ALL_CATEGORIES_VALUE); setMedicationSearch('');}} className="self-end mb-1">
                     <Filter className="mr-1 h-4 w-4" /> Quitar Filtro
                 </Button>
             )}
@@ -366,7 +365,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
                 />
                 <CommandList>
                   <CommandEmpty>
-                    {filteredMedications.length === 0 && medicationSearch ? "No se encontró el medicamento con los filtros actuales." : "No se encontró el medicamento."}
+                    {filteredMedications.length === 0 && (medicationSearch.trim() || (categoryFilter !== ALL_CATEGORIES_VALUE)) ? "No se encontró el medicamento con los filtros actuales." : "No se encontró el medicamento."}
                   </CommandEmpty>
                   <CommandGroup>
                     {filteredMedications.map((med) => (
@@ -418,13 +417,15 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
                       <SelectValue placeholder="Seleccione un uso..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {doseCalculatorInputs.selectedMedication.usages.map(u => (
+                      {doseCalculatorInputs.selectedMedication.usages
+                        .filter(u => u.protocol && u.protocol.trim() !== "")
+                        .map(u => (
                         <SelectItem key={u.protocol} value={u.protocol}>{u.protocol} ({u.type})</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              ) : doseCalculatorInputs.selectedMedication.usages.length === 1 && (
+              ) : doseCalculatorInputs.selectedMedication.usages.length === 1 && doseCalculatorInputs.selectedMedication.usages[0].protocol && doseCalculatorInputs.selectedMedication.usages[0].protocol.trim() !== "" && (
                  <div className="text-sm p-2 border rounded-md bg-background">
                     <p><strong>Protocolo Único:</strong> {doseCalculatorInputs.selectedMedication.usages[0].protocol} ({doseCalculatorInputs.selectedMedication.usages[0].type})</p>
                  </div>
@@ -472,7 +473,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
             >
               <SelectTrigger id="doseUnit"><SelectValue placeholder="Seleccione unidad..." /></SelectTrigger>
               <SelectContent>
-                {commonDoseUnits.map(unit => <SelectItem key={unit} value={unit}>{unit}</SelectItem>)}
+                {commonDoseUnits.filter(Boolean).map(unit => <SelectItem key={unit} value={unit}>{unit}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -505,7 +506,7 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
                   >
                     <SelectTrigger id="infusionDrugAmountUnit"><SelectValue placeholder="mg o mcg" /></SelectTrigger>
                     <SelectContent>
-                      {infusionDrugAmountUnits.map(unit => <SelectItem key={unit} value={unit}>{unit}</SelectItem>)}
+                      {infusionDrugAmountUnits.filter(Boolean).map(unit => <SelectItem key={unit} value={unit}>{unit}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -579,5 +580,3 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
     </ModuleCardWrapper>
   );
 }
-
-    

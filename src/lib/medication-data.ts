@@ -9,9 +9,9 @@ export const commonDoseUnits: string[] = [
   'mcg/kg/hora', 'mg/kg/hora',
   'ml/hora',
   'mEq'
-];
+].filter(Boolean); // Ensure no empty strings
 
-export const infusionDrugAmountUnits: Array<'mcg' | 'mg'> = ['mcg', 'mg'];
+export const infusionDrugAmountUnits: Array<'mcg' | 'mg'> = ['mcg', 'mg'].filter(Boolean) as Array<'mcg' | 'mg'>; // Ensure no empty strings
 
 export const initialMedicationsList: MedicationInfo[] = [
   {
@@ -152,23 +152,28 @@ export const initialMedicationsList: MedicationInfo[] = [
       { protocol: 'Infecciones Graves (Ej: Neumonía nosocomial, Sepsis)', doseRange: '4.5 g IV cada 6-8 horas', doseNumerical: { value: 4.5 }, unit: 'g', type: 'bolus', notes: 'Infusión en 30 min. Ajustar en insuficiencia renal.' },
     ],
   },
-];
+].map(med => ({
+    ...med,
+    usages: med.usages.filter(usage => usage.protocol && usage.protocol.trim() !== "")
+})).filter(med => med.name && med.name.trim() !== ""); // Ensure medication names and protocols are not empty
 
 export const getAllMedicationCategories = (): string[] => {
   const allCategories = new Set<string>();
   initialMedicationsList.forEach(med => {
     med.categories.forEach(cat => {
-        const cleanedCat = cat.toLowerCase()
-                              .replace(/_/g, ' ') 
-                              .replace(/_protocol$/, '') 
-                              .replace(/\b\w/g, l => l.toUpperCase())
-                              .trim(); 
-        if (cleanedCat) { 
-            allCategories.add(cleanedCat);
+        if (cat && cat.trim() !== "") {
+            const cleanedCat = cat.toLowerCase()
+                                  .replace(/_/g, ' ') 
+                                  .replace(/_protocol$/, '') 
+                                  .replace(/\b\w/g, l => l.toUpperCase())
+                                  .trim(); 
+            if (cleanedCat && cleanedCat.trim() !== "") { 
+                allCategories.add(cleanedCat);
+            }
         }
     });
   });
-  return Array.from(allCategories).sort();
+  return Array.from(allCategories).sort().filter(Boolean); // Final filter for safety
 };
 
 export const getAllMedicationProtocols = (): string[] => {
@@ -180,5 +185,5 @@ export const getAllMedicationProtocols = (): string[] => {
             }
         });
     });
-    return Array.from(allProtocols).sort();
+    return Array.from(allProtocols).sort().filter(Boolean); // Final filter for safety
 };
