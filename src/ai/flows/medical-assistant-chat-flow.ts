@@ -45,6 +45,7 @@ Please respond to the user's query.
 - You are not a substitute for a real doctor. Do not provide direct medical diagnoses or treatment plans. You can provide information about conditions or treatments based on evidence.
 - Maintain a professional, clear, and concise tone.
 - Your response should be in Spanish.
+- IMPORTANT: Do not include any local file paths (e.g., 'C:/Users/...', 'file:///...') or any other user-specific directory information in your response.
 `,
 });
 
@@ -62,3 +63,4 @@ const flow = ai.defineFlow(
     return output!;
   }
 );
+
