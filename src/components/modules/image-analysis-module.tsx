@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -12,7 +13,8 @@ import { useHistoryStore } from '@/hooks/use-history-store';
 import { readFileAsDataURL, getFileSummary, getTextSummary } from '@/lib/utils';
 import { analyzeMedicalImage, type AnalyzeMedicalImageOutput } from '@/ai/flows/analyze-medical-image';
 import { useToast } from '@/hooks/use-toast';
-import { ScanSearch, Eraser, Send, Save } from 'lucide-react';
+import { ScanSearch, Eraser, Send, Save, Copy, FileJson } from 'lucide-react';
+import type { ImageAnalysisOutputState } from '@/types';
 
 interface ImageAnalysisModuleProps {
   id?: string;
@@ -21,7 +23,7 @@ interface ImageAnalysisModuleProps {
 export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
   const { 
     imageFile, setImageFile, 
-    imageAnalysisSummary, setImageAnalysisSummary,
+    imageAnalysisOutput, setImageAnalysisOutput,
     isImageAnalyzing, setIsImageAnalyzing,
     imageAnalysisError, setImageAnalysisError,
     setClinicalNotesInput, 
@@ -31,7 +33,6 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const resultsTextareaRef = useRef<HTMLTextAreaElement>(null);
   const moduleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
 
   const handleFileSelect = (file: File | null) => {
     setImageFile(file);
-    setImageAnalysisSummary(null); 
+    setImageAnalysisOutput({ summary: null, radiologistReading: null }); 
     setImageAnalysisError(null);
   };
 
@@ -57,13 +58,16 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
 
     setIsImageAnalyzing(true);
     setImageAnalysisError(null);
-    let analysisOutput: AnalyzeMedicalImageOutput | null = null;
+    let aiOutput: AnalyzeMedicalImageOutput | null = null;
     let dataUri = '';
 
     try {
       dataUri = await readFileAsDataURL(imageFile);
-      analysisOutput = await analyzeMedicalImage({ photoDataUri: dataUri });
-      setImageAnalysisSummary(analysisOutput.summary);
+      aiOutput = await analyzeMedicalImage({ photoDataUri: dataUri });
+      setImageAnalysisOutput({
+        summary: aiOutput.summary,
+        radiologistReading: aiOutput.radiologistReading
+      });
       toast({ title: "Análisis Completado", description: "La imagen ha sido analizada exitosamente." });
 
       if (isAutoSaveEnabled) {
@@ -71,9 +75,9 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
           module: 'ImageAnalysis',
           inputType: imageFile.type,
           inputSummary: getFileSummary(imageFile),
-          outputSummary: getTextSummary(analysisOutput.summary, 100),
+          outputSummary: `Resumen: ${getTextSummary(aiOutput.summary, 50)}. Lectura: ${getTextSummary(aiOutput.radiologistReading, 50)}`,
           fullInput: `Data URI for ${imageFile.name}`, 
-          fullOutput: analysisOutput,
+          fullOutput: aiOutput as ImageAnalysisOutputState,
           status: 'completed',
         });
       }
@@ -81,6 +85,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
       console.error("Error analyzing image:", error);
       const errorMessage = error.message || "Ocurrió un error desconocido.";
       setImageAnalysisError(errorMessage);
+      setImageAnalysisOutput({ summary: null, radiologistReading: null });
       toast({ title: "Error de Análisis", description: errorMessage, variant: "destructive" });
       if (isAutoSaveEnabled) {
          await addHistoryEntry({
@@ -89,7 +94,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
           inputSummary: getFileSummary(imageFile),
           outputSummary: 'Error en el análisis',
           fullInput: `Data URI for ${imageFile.name}`,
-          fullOutput: { error: errorMessage },
+          fullOutput: { error: errorMessage } as any, // Cast for error case
           status: 'error',
           errorDetails: errorMessage,
         });
@@ -106,25 +111,48 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
   };
 
   const handleSendSummaryToText = () => {
-    if (imageAnalysisSummary) {
+    if (imageAnalysisOutput.summary) {
       setClinicalNotesInput(prev => 
-        `${prev ? prev + '\n\n' : ''}[Resumen de Imagen - ${getFileSummary(imageFile)}]:\n${imageAnalysisSummary}`
+        `${prev ? prev + '\n\n' : ''}[Resumen de Imagen - ${getFileSummary(imageFile)}]:\n${imageAnalysisOutput.summary}`
       );
       toast({ title: "Resumen Enviado", description: "El resumen de la imagen se ha añadido a las notas clínicas." });
       const textModule = document.getElementById('text-analysis-module');
       textModule?.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  const handleSendReadingToText = () => {
+    if (imageAnalysisOutput.radiologistReading) {
+      setClinicalNotesInput(prev => 
+        `${prev ? prev + '\n\n' : ''}[Lectura Radiológica de Imagen - ${getFileSummary(imageFile)}]:\n${imageAnalysisOutput.radiologistReading}`
+      );
+      toast({ title: "Lectura Enviada", description: "La lectura radiológica se ha añadido a las notas clínicas." });
+      const textModule = document.getElementById('text-analysis-module');
+      textModule?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleCopyToClipboard = (text: string | null, type: string) => {
+    if (text) {
+      navigator.clipboard.writeText(text)
+        .then(() => toast({ title: `${type} copiado(a)`, description: `El contenido ha sido copiado.` }))
+        .catch(() => toast({ title: "Error al Copiar", variant: "destructive" }));
+    } else {
+      toast({ title: `Nada que Copiar`, description: `No hay ${type.toLowerCase()} para copiar.` });
+    }
+  };
   
   const handleSaveManually = async () => {
-    if (!imageFile || (!imageAnalysisSummary && !imageAnalysisError)) {
+    if (!imageFile || (!imageAnalysisOutput.summary && !imageAnalysisOutput.radiologistReading && !imageAnalysisError)) {
       toast({ title: "Nada que Guardar", description: "Analice una imagen primero.", variant: "default" });
       return;
     }
     
     const status = imageAnalysisError ? 'error' : 'completed';
-    const output = imageAnalysisError ? { error: imageAnalysisError } : { summary: imageAnalysisSummary };
-    const outputSum = imageAnalysisError ? 'Error en el análisis' : getTextSummary(imageAnalysisSummary, 100);
+    const outputToSave = imageAnalysisError ? { error: imageAnalysisError } : imageAnalysisOutput;
+    const outputSum = imageAnalysisError 
+        ? 'Error en el análisis' 
+        : `Resumen: ${getTextSummary(imageAnalysisOutput.summary, 50)}. Lectura: ${getTextSummary(imageAnalysisOutput.radiologistReading, 50)}`;
 
     await addHistoryEntry({
       module: 'ImageAnalysis',
@@ -132,7 +160,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
       inputSummary: getFileSummary(imageFile),
       outputSummary: outputSum,
       fullInput: `Data URI for ${imageFile.name}`,
-      fullOutput: output,
+      fullOutput: outputToSave as ImageAnalysisOutputState, // Cast as it will be ImageAnalysisOutputState or {error: string}
       status: status,
       errorDetails: imageAnalysisError || undefined,
     });
@@ -144,7 +172,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
       ref={moduleRef}
       id={id}
       title="Análisis Avanzado de Imágenes Médicas"
-      description="Cargue imágenes médicas (radiografías, TAC, RMN) para análisis por IA. Obtenga un resumen de hallazgos."
+      description="Cargue imágenes médicas (radiografías, TAC, RMN) para análisis por IA. Obtenga un resumen de hallazgos y una lectura detallada."
       icon={ScanSearch}
       isLoading={isImageAnalyzing}
     >
@@ -180,27 +208,58 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
           </Button>
         </div>
 
-        {imageAnalysisSummary && (
+        {imageAnalysisOutput.summary && (
           <div className="space-y-2">
             <h3 className="text-md font-semibold font-headline">Resumen de Hallazgos:</h3>
             <Textarea
-              ref={resultsTextareaRef}
-              value={imageAnalysisSummary || ''}
+              value={imageAnalysisOutput.summary || ''}
               readOnly
               rows={6}
               className="bg-muted/30"
             />
-            <Button onClick={handleSendSummaryToText} variant="default" size="sm">
-              <Send className="mr-2 h-4 w-4" />
-              Usar Resumen en Comprensión de Texto
-            </Button>
+            <div className="flex space-x-2">
+              <Button onClick={() => handleCopyToClipboard(imageAnalysisOutput.summary, 'Resumen')} variant="outline" size="sm">
+                <Copy className="mr-2 h-4 w-4" />
+                Copiar Resumen
+              </Button>
+              <Button onClick={handleSendSummaryToText} variant="default" size="sm">
+                <Send className="mr-2 h-4 w-4" />
+                Usar Resumen en Comprensión de Texto
+              </Button>
+            </div>
           </div>
         )}
+
+        {imageAnalysisOutput.radiologistReading && (
+          <div className="space-y-2 mt-4">
+            <h3 className="text-md font-semibold font-headline flex items-center">
+              <FileJson className="mr-2 h-5 w-5 text-primary" />
+              Lectura Radiológica Detallada:
+            </h3>
+            <Textarea
+              value={imageAnalysisOutput.radiologistReading || ''}
+              readOnly
+              rows={10}
+              className="bg-muted/30"
+            />
+            <div className="flex space-x-2">
+              <Button onClick={() => handleCopyToClipboard(imageAnalysisOutput.radiologistReading, 'Lectura Radiológica')} variant="outline" size="sm">
+                <Copy className="mr-2 h-4 w-4" />
+                Copiar Lectura
+              </Button>
+               <Button onClick={handleSendReadingToText} variant="default" size="sm">
+                <Send className="mr-2 h-4 w-4" />
+                Usar Lectura en Comprensión de Texto
+              </Button>
+            </div>
+          </div>
+        )}
+
         {imageAnalysisError && (
           <p className="text-sm text-destructive">Error: {imageAnalysisError}</p>
         )}
         
-        {!isAutoSaveEnabled && (imageAnalysisSummary || imageAnalysisError) && (
+        {!isAutoSaveEnabled && (imageAnalysisOutput.summary || imageAnalysisOutput.radiologistReading || imageAnalysisError) && (
           <Button onClick={handleSaveManually} variant="secondary" className="w-full mt-2">
             <Save className="mr-2 h-4 w-4" /> Guardar en Historial
           </Button>
@@ -209,3 +268,4 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
     </ModuleCardWrapper>
   );
 }
+

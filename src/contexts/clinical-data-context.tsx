@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState } from '@/types'; // Added DoseCalculator types
+import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState } from '@/types';
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const initialNursingSurveillanceState: NursingSurveillanceState = {
@@ -83,10 +84,15 @@ const initialDoseCalculatorOutput: DoseCalculatorOutputState = {
   calculationError: null,
 };
 
+const initialImageAnalysisOutput: ImageAnalysisOutputState = {
+  summary: null,
+  radiologistReading: null,
+};
+
 
 const initialState: ClinicalDataContextState = {
   imageFile: null,
-  imageAnalysisSummary: null,
+  imageAnalysisOutput: initialImageAnalysisOutput,
   isImageAnalyzing: false,
   imageAnalysisError: null,
 
@@ -147,7 +153,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [state, setState] = useState<ClinicalDataContextState>(initialState);
 
   const setImageFile = useCallback((file: File | null) => setState(s => ({ ...s, imageFile: file })), []);
-  const setImageAnalysisSummary = useCallback((summary: string | null) => setState(s => ({ ...s, imageAnalysisSummary: summary })), []);
+  const setImageAnalysisOutput = useCallback((output: ImageAnalysisOutputState) => setState(s => ({ ...s, imageAnalysisOutput: output })), []);
   const setIsImageAnalyzing = useCallback((loading: boolean) => setState(s => ({ ...s, isImageAnalyzing: loading })), []);
   const setImageAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, imageAnalysisError: error})), []);
 
@@ -257,7 +263,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setState(s => ({
       ...s,
       imageFile: null,
-      imageAnalysisSummary: null,
+      imageAnalysisOutput: initialImageAnalysisOutput,
       isImageAnalyzing: false,
       imageAnalysisError: null,
     }));
@@ -367,7 +373,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const contextValue: ClinicalDataContextType = {
     ...state,
     setImageFile,
-    setImageAnalysisSummary,
+    setImageAnalysisOutput,
     setIsImageAnalyzing,
     setImageAnalysisError,
     setPdfFile,

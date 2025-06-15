@@ -1,5 +1,6 @@
 
-export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator'; // Added DoseCalculator
+
+export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator';
 
 export type ActiveView = 'analysis' | 'other' | 'all';
 
@@ -67,6 +68,10 @@ export interface DoseCalculatorOutputState {
 }
 // --- End Dose Calculator Module Specific Types ---
 
+export interface ImageAnalysisOutputState {
+  summary: string | null;
+  radiologistReading: string | null;
+}
 
 export interface HistoryEntry {
   id?: number;
@@ -75,8 +80,8 @@ export interface HistoryEntry {
   inputType: string;
   inputSummary: string;
   outputSummary: string;
-  fullInput?: string | Record<string, any> | DoseCalculatorInputState; // Added DoseCalculatorInputState
-  fullOutput?: string | Record<string, any> | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState; // Added DoseCalculatorOutputState
+  fullInput?: string | Record<string, any> | DoseCalculatorInputState;
+  fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState;
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
 }
@@ -181,7 +186,7 @@ export interface ChatMessage {
 export interface ClinicalDataContextState {
   // Image Analysis
   imageFile: File | null;
-  imageAnalysisSummary: string | null;
+  imageAnalysisOutput: ImageAnalysisOutputState;
   isImageAnalyzing: boolean;
   imageAnalysisError: string | null;
 
@@ -248,7 +253,7 @@ export interface ClinicalDataContextState {
 
 export interface ClinicalDataContextActions {
   setImageFile: (file: File | null) => void;
-  setImageAnalysisSummary: (summary: string | null) => void;
+  setImageAnalysisOutput: (output: ImageAnalysisOutputState) => void;
   setIsImageAnalyzing: (loading: boolean) => void;
   setImageAnalysisError: (error: string | null) => void;
 
@@ -315,7 +320,7 @@ export interface ClinicalDataContextActions {
   clearPatientAdviceModule: () => void;
   clearMedicalJustificationModule: () => void;
   clearChatModule: () => void;
-  clearDoseCalculatorModule: () => void; // Added
+  clearDoseCalculatorModule: () => void;
 }
 
 export type ClinicalDataContextType = ClinicalDataContextState & ClinicalDataContextActions;

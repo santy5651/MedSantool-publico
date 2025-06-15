@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -14,8 +15,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator } from 'lucide-react'; // Added Bot, Calculator
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, MedicalOrderInputState, NursingSurveillanceState, PatientAdviceOutputState, PatientAdviceInputData, MedicalJustificationInputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState } from '@/types'; // Added DoseCalculator types
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson } from 'lucide-react';
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState } from '@/types';
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import type { ChatMessageHistoryItem } from '@/ai/flows/medical-assistant-chat-flow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -34,7 +35,7 @@ const moduleIcons: Record<ModuleType, LucideIcon> = {
   PatientAdvice: UserCheck,
   MedicalJustification: FileSignature,
   MedicalAssistantChat: Bot,
-  DoseCalculator: Calculator, // Added DoseCalculator
+  DoseCalculator: Calculator,
 };
 
 const statusIcons: Record<HistoryEntry['status'], LucideIcon> = {
@@ -103,6 +104,11 @@ const initialDoseCalculatorOutput: DoseCalculatorOutputState = {
   calculationError: null,
 };
 
+const initialImageAnalysisOutput: ImageAnalysisOutputState = {
+  summary: null,
+  radiologistReading: null,
+};
+
 
 export function HistoryModule() {
   const { 
@@ -153,11 +159,16 @@ export function HistoryModule() {
       switch (entry.module) {
         case 'ImageAnalysis':
           clinicalData.setImageFile(null); 
-          if (outputData && outputData.summary) {
-            clinicalData.setImageAnalysisSummary(outputData.summary);
+          if (outputData && (outputData.summary !== undefined || outputData.radiologistReading !== undefined)) {
+            clinicalData.setImageAnalysisOutput({
+              summary: outputData.summary || null,
+              radiologistReading: outputData.radiologistReading || null,
+            });
+          } else {
+            clinicalData.setImageAnalysisOutput(initialImageAnalysisOutput);
           }
           clinicalData.setImageAnalysisError(outputData?.error || null);
-          toast({ title: "Datos Cargados", description: "Resumen de imagen cargado. Seleccione un nuevo archivo para re-analizar." });
+          toast({ title: "Datos Cargados", description: "Resultados de análisis de imagen cargados. Seleccione un nuevo archivo para re-analizar." });
           break;
         case 'PdfExtraction':
           clinicalData.setPdfFile(null); 
@@ -277,7 +288,7 @@ export function HistoryModule() {
           }
           if (outputData && (outputData.calculatedBolusDose || outputData.calculatedInfusionRate || outputData.calculationError || outputData.calculationWarning)) {
             clinicalData.setDoseCalculatorOutput(outputData as DoseCalculatorOutputState);
-            clinicalData.setDoseCalculationError(outputData.calculationError || null); // Also set the specific error field
+            clinicalData.setDoseCalculationError(outputData.calculationError || null);
           } else {
             clinicalData.setDoseCalculatorOutput(initialDoseCalculatorOutput);
             clinicalData.setDoseCalculationError(null);
@@ -312,8 +323,23 @@ export function HistoryModule() {
 
     try {
       switch (entry.module) {
+        case 'ImageAnalysis':
+          if (typeof output === 'object' && output !== null && ('summary' in output || 'radiologistReading' in output)) {
+            const imageOutput = output as ImageAnalysisOutputState;
+            return (
+              <Accordion type="single" collapsible className="w-full text-xs">
+                <AccordionItem value="image-output">
+                  <AccordionTrigger>Ver Detalles del Análisis de Imagen</AccordionTrigger>
+                  <AccordionContent className="space-y-2">
+                    {imageOutput.summary && (<div><strong>Resumen de Hallazgos:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{imageOutput.summary}</pre></div>)}
+                    {imageOutput.radiologistReading && (<div><strong><FileJson className="inline h-4 w-4 mr-1" />Lectura Radiológica:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{imageOutput.radiologistReading}</pre></div>)}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            );
+          }
+          break;
         case 'DiagnosisSupport':
-          // existing rendering
           if (Array.isArray(output)) {
             const diagnoses = output as DiagnosisResult[];
             return (
@@ -327,7 +353,6 @@ export function HistoryModule() {
           }
           break;
         case 'PdfExtraction':
-          // existing rendering
           if (typeof output === 'object' && output !== null && 'structuredData' in output) {
             const pdfOutput = output as { structuredData: PdfStructuredData[], clinicalNotes: string };
             return (
@@ -348,7 +373,6 @@ export function HistoryModule() {
         case 'ClinicalAnalysis':
           if (typeof output === 'object' && output !== null && 'clinicalAnalysis' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {clinicalAnalysis: string}).clinicalAnalysis}</pre>; }
           break;
-        case 'ImageAnalysis':
         case 'TextAnalysis':
           if (typeof output === 'object' && output !== null && 'summary' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {summary: string}).summary}</pre>; }
           break;
@@ -386,7 +410,6 @@ export function HistoryModule() {
           }
           break;
       }
-      // Default fallback for other types or unhandled structures
       return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{typeof output === 'string' ? output : JSON.stringify(output, null, 2)}</pre>;
     } catch (e) { 
       return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{String(entry.fullOutput)}</pre>;
