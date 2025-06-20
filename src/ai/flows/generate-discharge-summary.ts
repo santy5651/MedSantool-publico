@@ -52,7 +52,7 @@ Debes seguir esta estructura EXACTA. Además, aplica las siguientes reglas espec
 4.  **Laboratorios de Control Ambulatorios:** Si la plantilla muestra laboratorios específicos, úsalos después de corregir ortografía. Si indica "NO SE ENVIA LABORATORIOS DE CONTROL", mantenlo.
 5.  **Próximo Control Médico:** Si la plantilla muestra un control específico, úsalo corrigiendo ortografía. Si indica "CONTROL SEGÚN INDICACIONES DE SU EPS", mantenlo. Después de esta sección, SIEMPRE incluye la siguiente frase en una nueva línea: "ASISTIR A PROGRAMAS DE PROMOCION Y PREVENCION EN SU ENTIDAD DE PRIMER NIVEL EN CONSULTA EXTERNA, SEGUN PROGRAMAS DISPONIBLES Y BRINDADOS POR SU EPS."
 6.  **Incapacidad:** Si la sección "*** INCAPACIDAD ***" y su contenido están presentes en la plantilla, inclúyelos. Si la sección está ausente en la plantilla (porque no se proporcionó incapacidad), no la agregues.
-7.  **Signos de Alarma, Indicaciones sobre la Dieta, Cuidados Generales, Recomendaciones Generales:** Si la plantilla muestra contenido para estas secciones, úsalo. Estos deben estar en MAYÚSCULAS. Si la plantilla indica "NO SE PROPORCIONAN INDICACIONES ESPECÍFICAS." para alguna de estas secciones, mantenlo así para esa sección.
+7.  **Signos de Alarma, Indicaciones sobre la Dieta, Cuidados Generales, Recomendaciones Generales:** Si la plantilla muestra contenido para estas secciones (que ya debe incluir un título con emoji como '⚠️ ***SIGNOS DE ALARMA***'), úsalo. TODO EL CONTENIDO DE ESTAS SECCIONES DEBE ESTAR EN MAYÚSCULAS (la IA debe asegurar esto si no lo está ya). Si la plantilla indica (en el 'else' de la lógica Handlebars que se muestra abajo) que no hay información específica, usa el texto por defecto proporcionado en ese 'else' (que ya incluye el título con emoji y la indicación).
 8.  **Condiciones Generales de Salida:** Si la plantilla muestra condiciones específicas, revísalas, corrige errores de ortografía y mejora ligeramente la redacción para asegurar claridad y profesionalismo. Si la plantilla indica "PACIENTE EN CONDICIONES GENERALES ESTABLES, ALERTA, CONSCIENTE, ORIENTADO, HIDRATADO, CON ADECUADA CLASE FUNCIONAL PARA EGRESO.", mantenlo.
 9.  **Trámites Correspondientes:** Si la plantilla muestra "EPS CORRESPONDIENTE: [información EPS]", úsalo. Si indica "EPS CORRESPONDIENTE: PENDIENTE POR DEFINIR/NO APLICA", mantenlo así.
 
@@ -80,17 +80,33 @@ ASISTIR A PROGRAMAS DE PROMOCION Y PREVENCION EN SU ENTIDAD DE PRIMER NIVEL EN C
 {{{incapacidad}}}
 {{/if}}
 
-*** SIGNOS DE ALARMA ***
-{{#if signosAlarma}}{{{signosAlarma}}}{{else}}NO SE PROPORCIONAN INDICACIONES ESPECÍFICAS.{{/if}}
+{{#if signosAlarma}}
+{{{signosAlarma}}}
+{{else}}
+⚠️ ***SIGNOS DE ALARMA***
+CONSULTE CON SU MÉDICO ANTE CUALQUIER SÍNTOMA NUEVO O EMPEORAMIENTO DE SU CONDICIÓN ACTUAL.
+{{/if}}
 
-*** INDICACIONES SOBRE LA DIETA ***
-{{#if indicacionesDieta}}{{{indicacionesDieta}}}{{else}}NO SE PROPORCIONAN INDICACIONES ESPECÍFICAS.{{/if}}
+{{#if indicacionesDieta}}
+{{{indicacionesDieta}}}
+{{else}}
+🍽️ ***INDICACIONES SOBRE LA DIETA***
+NO SE PUEDEN DAR INDICACIONES DIETÉTICAS ESPECÍFICAS SIN INFORMACIÓN DIAGNÓSTICA. CONSULTE A SU MÉDICO O NUTRICIONISTA.
+{{/if}}
 
-*** CUIDADOS GENERALES ***
-{{#if cuidadosGenerales}}{{{cuidadosGenerales}}}{{else}}NO SE PROPORCIONAN INDICACIONES ESPECÍFICAS.{{/if}}
+{{#if cuidadosGenerales}}
+{{{cuidadosGenerales}}}
+{{else}}
+⚕️ ***CUIDADOS GENERALES***
+ES IMPORTANTE SEGUIR LAS INDICACIONES GENERALES DE SU MÉDICO Y MANTENER UN ESTILO DE VIDA SALUDABLE. PARA CUIDADOS ESPECÍFICOS, CONSULTE A SU MÉDICO.
+{{/if}}
 
+{{#if recomendacionesGenerales}}
+{{{recomendacionesGenerales}}}
+{{else}}
 ***RECOMENDACIONES GENERALES***
-{{#if recomendacionesGenerales}}{{{recomendacionesGenerales}}}{{else}}NO SE PROPORCIONAN INDICACIONES ESPECÍFICAS.{{/if}}
+NO SE HA PROPORCIONADO INFORMACIÓN DIAGNÓSTICA ESPECÍFICA (DIAGNÓSTICOS VALIDADOS O TEXTO MANUAL). ES FUNDAMENTAL CONSULTAR CON SU MÉDICO PARA RECIBIR INDICACIONES PERSONALIZADAS.
+{{/if}}
 
 *** CONDICIONES GENERALES DE SALIDA ***
 {{#if condicionesSalida}}{{{condicionesSalida}}}{{else}}PACIENTE EN CONDICIONES GENERALES ESTABLES, ALERTA, CONSCIENTE, ORIENTADO, HIDRATADO, CON ADECUADA CLASE FUNCIONAL PARA EGRESO.{{/if}}
@@ -129,7 +145,21 @@ const generateDischargeSummaryFlow = ai.defineFlow(
     const fieldsToUppercase: Array<keyof GenerateDischargeSummaryInput> = ['signosAlarma', 'indicacionesDieta', 'cuidadosGenerales', 'recomendacionesGenerales'];
     fieldsToUppercase.forEach(field => {
         if (processedInput[field] && typeof processedInput[field] === 'string') {
-            processedInput[field] = (processedInput[field] as string).toUpperCase();
+            // Solo convertir a mayúsculas si no es ya el texto por defecto que ya viene en mayúsculas y con emoji
+            const defaultValueForSigns = "⚠️ ***SIGNOS DE ALARMA***\nCONSULTE CON SU MÉDICO ANTE CUALQUIER SÍNTOMA NUEVO O EMPEORAMIENTO DE SU CONDICIÓN ACTUAL.";
+            const defaultValueForDiet = "🍽️ ***INDICACIONES SOBRE LA DIETA***\nNO SE PUEDEN DAR INDICACIONES DIETÉTICAS ESPECÍFICAS SIN INFORMACIÓN DIAGNÓSTICA. CONSULTE A SU MÉDICO O NUTRICIONISTA.";
+            const defaultValueForCare = "⚕️ ***CUIDADOS GENERALES***\nES IMPORTANTE SEGUIR LAS INDICACIONES GENERALES DE SU MÉDICO Y MANTENER UN ESTILO DE VIDA SALUDABLE. PARA CUIDADOS ESPECÍFICOS, CONSULTE A SU MÉDICO.";
+            const defaultValueForRecs = "***RECOMENDACIONES GENERALES***\nNO SE HA PROPORCIONADO INFORMACIÓN DIAGNÓSTICA ESPECÍFICA (DIAGNÓSTICOS VALIDADOS O TEXTO MANUAL). ES FUNDAMENTAL CONSULTAR CON SU MÉDICO PARA RECIBIR INDICACIONES PERSONALIZADAS.";
+
+            let isDefaultValue = false;
+            if (field === 'signosAlarma' && processedInput[field] === defaultValueForSigns) isDefaultValue = true;
+            if (field === 'indicacionesDieta' && processedInput[field] === defaultValueForDiet) isDefaultValue = true;
+            if (field === 'cuidadosGenerales' && processedInput[field] === defaultValueForCare) isDefaultValue = true;
+            if (field === 'recomendacionesGenerales' && processedInput[field] === defaultValueForRecs) isDefaultValue = true;
+            
+            if (!isDefaultValue) { // Solo convertir a mayúsculas si no es uno de los textos por defecto que ya están formateados.
+                 processedInput[field] = (processedInput[field] as string).toUpperCase();
+            }
         }
     });
 
@@ -138,3 +168,4 @@ const generateDischargeSummaryFlow = ai.defineFlow(
     return output!;
   }
 );
+
