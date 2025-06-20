@@ -1,8 +1,9 @@
 
 
+
 'use client';
 
-import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState } from '@/types';
+import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, DischargeSummaryInputState, DischargeSummaryOutputState } from '@/types';
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const initialNursingSurveillanceState: NursingSurveillanceState = {
@@ -106,6 +107,24 @@ const initialImageAnalysisOutput: ImageAnalysisOutputState = {
   radiologistReading: null,
 };
 
+const initialDischargeSummaryInputs: DischargeSummaryInputState = {
+  formulaMedica: null,
+  conciliacionMedicamentosa: null,
+  laboratoriosControl: null,
+  proximoControl: null,
+  tramites: null,
+  incapacidad: null,
+  signosAlarma: null,
+  indicacionesDieta: null,
+  cuidadosGenerales: null,
+  recomendacionesGenerales: null,
+  condicionesSalida: null,
+};
+
+const initialGeneratedDischargeSummary: DischargeSummaryOutputState = {
+  generatedSummary: null,
+};
+
 
 const initialState: ClinicalDataContextState = {
   imageFile: null,
@@ -162,6 +181,11 @@ const initialState: ClinicalDataContextState = {
   doseCalculatorOutput: initialDoseCalculatorOutput,
   isCalculatingDose: false,
   doseCalculationError: null,
+
+  dischargeSummaryInputs: initialDischargeSummaryInputs,
+  generatedDischargeSummary: initialGeneratedDischargeSummary,
+  isGeneratingDischargeSummary: false,
+  dischargeSummaryError: null,
 };
 
 const ClinicalDataContext = createContext<ClinicalDataContextType | undefined>(undefined);
@@ -275,6 +299,18 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setIsCalculatingDose = useCallback((loading: boolean) => setState(s => ({ ...s, isCalculatingDose: loading })), []);
   const setDoseCalculationError = useCallback((error: string | null) => setState(s => ({ ...s, doseCalculationError: error})), []);
 
+  const setDischargeSummaryInputs = useCallback((inputsOrUpdater: DischargeSummaryInputState | ((prevState: DischargeSummaryInputState) => DischargeSummaryInputState)) => {
+    setState(s => ({
+      ...s,
+      dischargeSummaryInputs: typeof inputsOrUpdater === 'function'
+        ? inputsOrUpdater(s.dischargeSummaryInputs)
+        : inputsOrUpdater,
+    }));
+  }, []);
+  const setGeneratedDischargeSummary = useCallback((summary: DischargeSummaryOutputState) => setState(s => ({ ...s, generatedDischargeSummary: summary })), []);
+  const setIsGeneratingDischargeSummary = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingDischargeSummary: loading })), []);
+  const setDischargeSummaryError = useCallback((error: string | null) => setState(s => ({ ...s, dischargeSummaryError: error })), []);
+
 
   const clearImageModule = useCallback(() => {
     setState(s => ({
@@ -386,6 +422,16 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }));
   }, []);
 
+  const clearDischargeSummaryModule = useCallback(() => {
+    setState(s => ({
+      ...s,
+      dischargeSummaryInputs: initialDischargeSummaryInputs,
+      generatedDischargeSummary: initialGeneratedDischargeSummary,
+      isGeneratingDischargeSummary: false,
+      dischargeSummaryError: null,
+    }));
+  }, []);
+
 
   const contextValue: ClinicalDataContextType = {
     ...state,
@@ -434,6 +480,10 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setDoseCalculatorOutput,
     setIsCalculatingDose,
     setDoseCalculationError,
+    setDischargeSummaryInputs,
+    setGeneratedDischargeSummary,
+    setIsGeneratingDischargeSummary,
+    setDischargeSummaryError,
     clearImageModule,
     clearPdfModule,
     clearTextModule,
@@ -445,6 +495,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     clearMedicalJustificationModule,
     clearChatModule,
     clearDoseCalculatorModule,
+    clearDischargeSummaryModule,
   };
 
   return (
@@ -463,3 +514,4 @@ export const useClinicalData = (): ClinicalDataContextType => {
 };
 
     
+

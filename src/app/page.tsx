@@ -10,9 +10,10 @@ import { DiagnosisSupportModule } from '@/components/modules/diagnosis-support-m
 import { TreatmentPlanModule } from '@/components/modules/treatment-plan-module';
 import { MedicalOrdersModule } from '@/components/modules/medical-orders-module';
 import { PatientAdviceModule } from '@/components/modules/patient-advice-module';
+import { DischargeSummaryModule } from '@/components/modules/discharge-summary-module'; // Added import
 import { MedicalJustificationModule } from '@/components/modules/medical-justification-module';
 import { MedicalAssistantChatModule } from '@/components/modules/medical-assistant-chat-module';
-import { DoseCalculatorModule } from '@/components/modules/dose-calculator-module'; // Added import
+import { DoseCalculatorModule } from '@/components/modules/dose-calculator-module';
 import { HistoryModule } from '@/components/modules/history-module';
 import { Button } from '@/components/ui/button';
 import { Eraser } from 'lucide-react';
@@ -43,9 +44,10 @@ export default function MedSanToolsPage() {
     clearTreatmentPlanModule,
     clearMedicalOrdersModule,
     clearPatientAdviceModule,
+    clearDischargeSummaryModule, // Added clearDischargeSummaryModule
     clearMedicalJustificationModule,
     clearChatModule,
-    clearDoseCalculatorModule, // Added clearDoseCalculatorModule
+    clearDoseCalculatorModule,
   } = useClinicalData();
   const { toast } = useToast();
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
@@ -59,9 +61,10 @@ export default function MedSanToolsPage() {
     clearTreatmentPlanModule();
     clearMedicalOrdersModule();
     clearPatientAdviceModule();
+    clearDischargeSummaryModule(); // Added call to clearDischargeSummaryModule
     clearMedicalJustificationModule();
     clearChatModule();
-    clearDoseCalculatorModule(); // Added call to clearDoseCalculatorModule
+    clearDoseCalculatorModule();
     toast({
       title: "Todos los Módulos Limpiados",
       description: "Se ha restablecido el estado de todos los módulos de datos.",
@@ -108,6 +111,7 @@ export default function MedSanToolsPage() {
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'treatment-plan-module') && <TreatmentPlanModule id="treatment-plan-module" /> }
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'medical-orders-module') && <MedicalOrdersModule id="medical-orders-module" /> }
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'patient-advice-module') && <PatientAdviceModule id="patient-advice-module" /> }
+        { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'discharge-summary-module') && <DischargeSummaryModule id="discharge-summary-module" /> }
         
         {/* Otras Herramientas */}
         { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'image-analysis-module') && <ImageAnalysisModule id="image-analysis-module" /> }

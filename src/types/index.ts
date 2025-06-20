@@ -1,6 +1,7 @@
 
 
-export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator';
+
+export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator' | 'DischargeSummary';
 
 export type ActiveView = 'analysis' | 'other' | 'all';
 export type FontSize = 'small' | 'normal' | 'large';
@@ -74,6 +75,27 @@ export interface ImageAnalysisOutputState {
   radiologistReading: string | null;
 }
 
+// --- Discharge Summary Module Specific Types ---
+export interface DischargeSummaryInputState {
+  formulaMedica: string | null;
+  conciliacionMedicamentosa: string | null;
+  laboratoriosControl: string | null;
+  proximoControl: string | null;
+  tramites: string | null;
+  incapacidad: string | null;
+  signosAlarma: string | null;
+  indicacionesDieta: string | null;
+  cuidadosGenerales: string | null;
+  recomendacionesGenerales: string | null;
+  condicionesSalida: string | null;
+}
+
+export interface DischargeSummaryOutputState {
+  generatedSummary: string | null;
+}
+// --- End Discharge Summary Module Specific Types ---
+
+
 export interface HistoryEntry {
   id?: number;
   timestamp: number;
@@ -81,8 +103,8 @@ export interface HistoryEntry {
   inputType: string;
   inputSummary: string;
   outputSummary: string;
-  fullInput?: string | Record<string, any> | DoseCalculatorInputState | PatientAdviceInputData;
-  fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState;
+  fullInput?: string | Record<string, any> | DoseCalculatorInputState | PatientAdviceInputData | DischargeSummaryInputState;
+  fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState | DischargeSummaryOutputState;
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
 }
@@ -274,6 +296,12 @@ export interface ClinicalDataContextState {
   doseCalculatorOutput: DoseCalculatorOutputState;
   isCalculatingDose: boolean; // To manage loading state for calculations
   doseCalculationError: string | null; // For errors specific to calculation logic
+
+  // Discharge Summary
+  dischargeSummaryInputs: DischargeSummaryInputState;
+  generatedDischargeSummary: DischargeSummaryOutputState;
+  isGeneratingDischargeSummary: boolean;
+  dischargeSummaryError: string | null;
 }
 
 export interface ClinicalDataContextActions {
@@ -334,6 +362,12 @@ export interface ClinicalDataContextActions {
   setDoseCalculatorOutput: (output: DoseCalculatorOutputState) => void;
   setIsCalculatingDose: (loading: boolean) => void;
   setDoseCalculationError: (error: string | null) => void;
+
+  // Discharge Summary actions
+  setDischargeSummaryInputs: (inputs: DischargeSummaryInputState | ((prevState: DischargeSummaryInputState) => DischargeSummaryInputState)) => void;
+  setGeneratedDischargeSummary: (summary: DischargeSummaryOutputState) => void;
+  setIsGeneratingDischargeSummary: (loading: boolean) => void;
+  setDischargeSummaryError: (error: string | null) => void;
   
   clearImageModule: () => void;
   clearPdfModule: () => void;
@@ -346,6 +380,7 @@ export interface ClinicalDataContextActions {
   clearMedicalJustificationModule: () => void;
   clearChatModule: () => void;
   clearDoseCalculatorModule: () => void;
+  clearDischargeSummaryModule: () => void;
 }
 
 export type ClinicalDataContextType = ClinicalDataContextState & ClinicalDataContextActions;
@@ -360,3 +395,4 @@ export interface ViewContextType {
   setFontSize: (size: FontSize) => void;
 }
     
+

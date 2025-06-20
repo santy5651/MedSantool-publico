@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -15,8 +16,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson, Utensils, ShieldPlus } from 'lucide-react';
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData } from '@/types';
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson, Utensils, ShieldPlus, FileOutput } from 'lucide-react';
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData, DischargeSummaryInputState, DischargeSummaryOutputState } from '@/types';
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import type { ChatMessageHistoryItem } from '@/ai/flows/medical-assistant-chat-flow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -36,6 +37,7 @@ const moduleIcons: Record<ModuleType, LucideIcon> = {
   MedicalJustification: FileSignature,
   MedicalAssistantChat: Bot,
   DoseCalculator: Calculator,
+  DischargeSummary: FileOutput,
 };
 
 const statusIcons: Record<HistoryEntry['status'], LucideIcon> = {
@@ -124,6 +126,24 @@ const initialDoseCalculatorOutput: DoseCalculatorOutputState = {
 const initialImageAnalysisOutput: ImageAnalysisOutputState = {
   summary: null,
   radiologistReading: null,
+};
+
+const initialDischargeSummaryInputs: DischargeSummaryInputState = {
+  formulaMedica: null,
+  conciliacionMedicamentosa: null,
+  laboratoriosControl: null,
+  proximoControl: null,
+  tramites: null,
+  incapacidad: null,
+  signosAlarma: null,
+  indicacionesDieta: null,
+  cuidadosGenerales: null,
+  recomendacionesGenerales: null,
+  condicionesSalida: null,
+};
+
+const initialGeneratedDischargeSummary: DischargeSummaryOutputState = {
+  generatedSummary: null,
 };
 
 
@@ -319,6 +339,19 @@ export function HistoryModule() {
             clinicalData.setDoseCalculationError(null);
           }
           break;
+        case 'DischargeSummary':
+          if (inputData && typeof inputData === 'object') {
+             clinicalData.setDischargeSummaryInputs(inputData as DischargeSummaryInputState);
+          } else {
+             clinicalData.setDischargeSummaryInputs(initialDischargeSummaryInputs);
+          }
+          if (outputData && outputData.generatedSummary) {
+             clinicalData.setGeneratedDischargeSummary(outputData as DischargeSummaryOutputState);
+          } else {
+             clinicalData.setGeneratedDischargeSummary(initialGeneratedDischargeSummary);
+          }
+          clinicalData.setDischargeSummaryError(outputData?.error || null);
+          break;
         default:
           toast({ variant: "destructive", title: "Módulo Desconocido", description: "No se puede cargar esta entrada." });
           return;
@@ -441,6 +474,11 @@ export function HistoryModule() {
             );
           }
           break;
+        case 'DischargeSummary':
+          if (typeof output === 'object' && output !== null && 'generatedSummary' in output) {
+            return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as DischargeSummaryOutputState).generatedSummary}</pre>;
+          }
+          break;
       }
       return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{typeof output === 'string' ? output : JSON.stringify(output, null, 2)}</pre>;
     } catch (e) { 
@@ -503,6 +541,16 @@ export function HistoryModule() {
                     {adviceInput.textSummary && <p><strong>Resumen Texto:</strong> {adviceInput.textSummary.substring(0,50)}...</p>}
                  </div>
             );
+        }
+        if (entry.module === 'DischargeSummary') {
+          const dischargeInput = entry.fullInput as DischargeSummaryInputState;
+          return (
+            <div className="space-y-1 text-xs p-2 bg-muted/30 rounded-md">
+              {Object.entries(dischargeInput).map(([key, value]) => 
+                value && <p key={key}><strong>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</strong> {String(value).substring(0,70)}{String(value).length > 70 ? '...' : ''}</p>
+              )}
+            </div>
+          );
         }
         return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{JSON.stringify(entry.fullInput, null, 2)}</pre>;
      }
@@ -691,3 +739,4 @@ declare module "@/components/ui/button" {
 }
 
     
+
