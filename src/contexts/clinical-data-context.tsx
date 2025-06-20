@@ -66,6 +66,8 @@ const initialPatientAdviceInput: PatientAdviceInputData = {
 const initialGeneratedPatientAdvice: PatientAdviceOutputState = {
   generalRecommendations: null,
   alarmSigns: null,
+  dietaryIndications: null,
+  generalCare: null,
 };
 
 const initialJustificationInput: MedicalJustificationInputState = {

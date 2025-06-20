@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson } from 'lucide-react';
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson, Utensils, ShieldPlus } from 'lucide-react';
 import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData } from '@/types';
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import type { ChatMessageHistoryItem } from '@/ai/flows/medical-assistant-chat-flow';
@@ -60,6 +60,20 @@ const initialNursingSurveillanceState: NursingSurveillanceState = {
   monitorPain: false,
   monitorWounds: false,
   monitorBleeding: false,
+  vigilarDiuresis: false,
+  cuidadosCateterVenoso: false,
+  cuidadosSondaVesical: false,
+  cuidadosDrenajesQuirurgicos: false,
+  cuidadosTraqueostomia: false,
+  controlGlicemicoTurno: false,
+  controlGlicemicoAyunas: false,
+  hojaNeurologica: false,
+  realizarCuraciones: false,
+  restriccionHidrica800: false,
+  controlLiquidosAdminElim: false,
+  registroBalanceHidrico24h: false,
+  calcularDiuresisHoraria: false,
+  pesoDiario: false,
 };
 
 const initialPatientAdviceInputData: PatientAdviceInputData = {
@@ -72,6 +86,8 @@ const initialPatientAdviceInputData: PatientAdviceInputData = {
 const initialGeneratedPatientAdvice: PatientAdviceOutputState = {
   generalRecommendations: null,
   alarmSigns: null,
+  dietaryIndications: null,
+  generalCare: null,
 };
 
 const initialJustificationInput: MedicalJustificationInputState = {
@@ -244,7 +260,6 @@ export function HistoryModule() {
           break;
         case 'PatientAdvice':
           if (inputData && typeof inputData === 'object') {
-            // Ensure all fields of PatientAdviceInputData are potentially present
             const loadedPatientAdviceInput: PatientAdviceInputData = {
                 clinicalAnalysis: (inputData as PatientAdviceInputData).clinicalAnalysis || null,
                 textSummary: (inputData as PatientAdviceInputData).textSummary || null,
@@ -255,7 +270,7 @@ export function HistoryModule() {
           } else {
              clinicalData.setPatientAdviceInput(initialPatientAdviceInputData);
           }
-          if (outputData && (outputData.generalRecommendations || outputData.alarmSigns)) {
+          if (outputData && (outputData.generalRecommendations || outputData.alarmSigns || outputData.dietaryIndications || outputData.generalCare)) {
             clinicalData.setGeneratedPatientAdvice(outputData as PatientAdviceOutputState);
           } else {
             clinicalData.setGeneratedPatientAdvice(initialGeneratedPatientAdvice);
@@ -392,7 +407,14 @@ export function HistoryModule() {
         case 'PatientAdvice':
           if (typeof output === 'object' && output !== null && ('generalRecommendations' in output || 'alarmSigns' in output)) {
             const adviceOutput = output as PatientAdviceOutputState;
-            return (<div className="space-y-2 text-xs">{adviceOutput.generalRecommendations && (<div><strong>Recomendaciones Generales:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{adviceOutput.generalRecommendations}</pre></div>)}{adviceOutput.alarmSigns && (<div><strong>Signos de Alarma:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{adviceOutput.alarmSigns}</pre></div>)}</div>);
+            return (
+              <div className="space-y-2 text-xs">
+                {adviceOutput.generalRecommendations && (<div><strong><UserCheck className="inline h-4 w-4 mr-1"/>Recomendaciones Generales:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{adviceOutput.generalRecommendations}</pre></div>)}
+                {adviceOutput.dietaryIndications && (<div><strong><Utensils className="inline h-4 w-4 mr-1"/>Indicaciones sobre la Dieta:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{adviceOutput.dietaryIndications}</pre></div>)}
+                {adviceOutput.generalCare && (<div><strong><ShieldPlus className="inline h-4 w-4 mr-1"/>Cuidados Generales:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{adviceOutput.generalCare}</pre></div>)}
+                {adviceOutput.alarmSigns && (<div><strong><AlertTriangle className="inline h-4 w-4 mr-1 text-destructive"/>Signos de Alarma:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{adviceOutput.alarmSigns}</pre></div>)}
+              </div>
+            );
           }
           break;
         case 'MedicalJustification':

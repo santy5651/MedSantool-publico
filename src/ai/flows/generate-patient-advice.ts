@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview Genera recomendaciones generales y signos de alarma para el paciente.
+ * @fileOverview Genera recomendaciones generales, signos de alarma, indicaciones dietéticas y cuidados generales para el paciente.
  *
  * - generatePatientAdvice - Función que maneja la generación de consejos para el paciente.
  * - GeneratePatientAdviceInput - Tipo de entrada para generatePatientAdvice.
@@ -20,13 +20,15 @@ const GeneratePatientAdviceInputSchema = z.object({
   clinicalAnalysis: z.string().optional().describe('El análisis clínico del caso generado por IA (del Módulo 4). (Opcional, no usado directamente para generar consejos si hay diagnósticos validados o texto manual)'),
   textSummary: z.string().optional().describe('El resumen de información clave (del Módulo 3). (Opcional, no usado directamente para generar consejos si hay diagnósticos validados o texto manual)'),
   validatedDiagnoses: z.array(ValidatedDiagnosisSchema).optional().describe('Lista de diagnósticos validados por el usuario (del Módulo 5). Fuente prioritaria de información.'),
-  manualDiagnosisOrAnalysis: z.string().optional().describe('Diagnóstico o breve análisis ingresado manualmente por el usuario. Usado si no hay diagnósticos validados.'),
+  manualDiagnosisOrAnalysis: z.string().optional().describe('Diagnóstico o breve análisis ingresado manually por el usuario. Usado si no hay diagnósticos validados.'),
 });
 export type GeneratePatientAdviceInput = z.infer<typeof GeneratePatientAdviceInputSchema>;
 
 const GeneratePatientAdviceOutputSchema = z.object({
   generalRecommendations: z.string().describe('Recomendaciones generales para el paciente, EN MAYÚSCULAS, en lenguaje claro y sencillo, formateadas como una lista o párrafos, y comenzando con el título literal "***RECOMENDACIONES GENERALES***" seguido de un salto de línea.'),
   alarmSigns: z.string().describe('Signos de alarma específicos por los cuales el paciente debería buscar atención médica urgente, EN MAYÚSCULAS, presentados como una lista o párrafos, en lenguaje claro y sencillo, y comenzando con el título literal "***SIGNOS DE ALARMA***" seguido de un salto de línea.'),
+  dietaryIndications: z.string().describe('Indicaciones sobre la dieta para el paciente, EN MAYÚSCULAS, en lenguaje claro y sencillo, y comenzando con el título literal "***INDICACIONES SOBRE LA DIETA***" seguido de un salto de línea.'),
+  generalCare: z.string().describe('Cuidados generales para el paciente, EN MAYÚSCULAS, en lenguaje claro y sencillo, y comenzando con el título literal "***CUIDADOS GENERALES***" seguido de un salto de línea.'),
 });
 export type GeneratePatientAdviceOutput = z.infer<typeof GeneratePatientAdviceOutputSchema>;
 
@@ -41,7 +43,11 @@ const prompt = ai.definePrompt({
   input: {schema: GeneratePatientAdviceInputSchema},
   output: {schema: GeneratePatientAdviceOutputSchema},
   prompt: `Eres un asistente médico virtual encargado de proporcionar información clara y útil para pacientes.
-Tu tarea es generar "Recomendaciones Generales" y "Signos de Alarma".
+Tu tarea es generar:
+1.  **Recomendaciones Generales**
+2.  **Signos de Alarma**
+3.  **Indicaciones sobre la Dieta**
+4.  **Cuidados Generales**
 
 **Prioridad de Información:**
 1.  Si se proporcionan "Diagnósticos Validados", úsalos como la fuente principal de información.
@@ -51,7 +57,9 @@ Tu tarea es generar "Recomendaciones Generales" y "Signos de Alarma".
 **Instrucciones para la Salida:**
 -   Las "Recomendaciones Generales" DEBEN comenzar exactamente con "***RECOMENDACIONES GENERALES***" seguido de un salto de línea.
 -   Los "Signos de Alarma" DEBEN comenzar exactamente con "***SIGNOS DE ALARMA***" seguido de un salto de línea.
--   TODO EL CONTENIDO DE AMBAS SECCIONES (RECOMENDACIONES Y SIGNOS DE ALARMA) DEBE ESTAR EN MAYÚSCULAS.
+-   Las "Indicaciones sobre la Dieta" DEBEN comenzar exactamente con "***INDICACIONES SOBRE LA DIETA***" seguido de un salto de línea.
+-   Los "Cuidados Generales" DEBEN comenzar exactamente con "***CUIDADOS GENERALES***" seguido de un salto de línea.
+-   TODO EL CONTENIDO DE LAS CUATRO SECCIONES DEBE ESTAR EN MAYÚSCULAS.
 -   Utiliza un lenguaje sencillo, empático y directo. La información debe estar en español.
 -   Puedes usar listas con viñetas (-) o párrafos numerados para mejorar la legibilidad después de los títulos.
 -   Asegúrate de que las recomendaciones y signos de alarma sean relevantes para la información diagnóstica proporcionada.
@@ -72,11 +80,13 @@ Tu tarea es generar "Recomendaciones Generales" y "Signos de Alarma".
 {{/if}}
 
 **Instrucciones Específicas de Salida si no hay información diagnóstica suficiente:**
--   Si no hay diagnósticos validados ni texto manual, la salida de "generalRecommendations" y "alarmSigns" debe reflejar la incapacidad de dar consejos específicos. Ejemplo:
+-   Si no hay diagnósticos validados ni texto manual, la salida de "generalRecommendations", "alarmSigns", "dietaryIndications" y "generalCare" debe reflejar la incapacidad de dar consejos específicos. Ejemplo:
     "generalRecommendations": "***RECOMENDACIONES GENERALES***\\nNO SE HA PROPORCIONADO INFORMACIÓN DIAGNÓSTICA ESPECÍFICA (DIAGNÓSTICOS VALIDADOS O TEXTO MANUAL). ES FUNDAMENTAL CONSULTAR CON SU MÉDICO PARA RECIBIR INDICACIONES PERSONALIZADAS.",
-    "alarmSigns": "***SIGNOS DE ALARMA***\\nCONSULTE CON SU MÉDICO ANTE CUALQUIER SÍNTOMA NUEVO O EMPEORAMIENTO DE SU CONDICIÓN ACTUAL."
+    "alarmSigns": "***SIGNOS DE ALARMA***\\nCONSULTE CON SU MÉDICO ANTE CUALQUIER SÍNTOMA NUEVO O EMPEORAMIENTO DE SU CONDICIÓN ACTUAL.",
+    "dietaryIndications": "***INDICACIONES SOBRE LA DIETA***\\nNO SE PUEDEN DAR INDICACIONES DIETÉTICAS ESPECÍFICAS SIN INFORMACIÓN DIAGNÓSTICA. CONSULTE A SU MÉDICO O NUTRICIONISTA.",
+    "generalCare": "***CUIDADOS GENERALES***\\nES IMPORTANTE SEGUIR LAS INDICACIONES GENERALES DE SU MÉDICO Y MANTENER UN ESTILO DE VIDA SALUDABLE. PARA CUIDADOS ESPECÍFICOS, CONSULTE A SU MÉDICO."
 
-Genera las recomendaciones y signos de alarma:
+Genera las recomendaciones, signos de alarma, indicaciones de dieta y cuidados generales:
 `,
 });
 

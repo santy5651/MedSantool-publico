@@ -81,7 +81,7 @@ export interface HistoryEntry {
   inputType: string;
   inputSummary: string;
   outputSummary: string;
-  fullInput?: string | Record<string, any> | DoseCalculatorInputState | PatientAdviceInputData; // Updated PatientAdviceInputData
+  fullInput?: string | Record<string, any> | DoseCalculatorInputState | PatientAdviceInputData;
   fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState;
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
@@ -181,6 +181,8 @@ export interface PatientAdviceInputData {
 export interface PatientAdviceOutputState {
   generalRecommendations: string | null;
   alarmSigns: string | null;
+  dietaryIndications: string | null;
+  generalCare: string | null;
 }
 // --- End Patient Advice Module Specific Types ---
 
