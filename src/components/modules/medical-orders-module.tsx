@@ -103,7 +103,7 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
   const outputTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [showPaduaCalculator, setShowPaduaCalculator] = useState(false);
-  const [paduaItems, setPaduaItems] = useState<Record<string, PaduaItem>>(initialPaduaItems);
+  const [paduaItems, setPaduaItems] = useState<Record<string, PaduaItem>>(JSON.parse(JSON.stringify(initialPaduaItems))); // Deep copy
   const [currentPaduaScore, setCurrentPaduaScore] = useState(0);
 
 
@@ -225,7 +225,7 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
 
   const handleClearSelection = () => {
     clearMedicalOrdersModule();
-    setPaduaItems(initialPaduaItems); 
+    setPaduaItems(JSON.parse(JSON.stringify(initialPaduaItems))); // Reset Padua items
     toast({ title: "Campos Limpiados", description: "Se han limpiado todos los campos de órdenes médicas." });
   };
 
@@ -243,13 +243,18 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
   const handleCapitalizeSentenceCase = () => {
     if (medicalOrderOutput.generatedOrderText) {
       const text = medicalOrderOutput.generatedOrderText;
-      const lowercasedText = text.toLowerCase();
-      const lines = lowercasedText.split('\\n');
+      // Assuming actual newlines \n from AI
+      const lines = text.split('\n'); 
       const sentenceCasedLines = lines.map(line => {
-        if (line.trim().length === 0) return line; 
-        return line.charAt(0).toUpperCase() + line.slice(1);
+        const trimmedLine = line.trim();
+        if (trimmedLine.length === 0) return line; // Keep empty lines as is if they are intentional (e.g. between major sections)
+        // Capitalize only if it looks like a sentence start (not all caps title or a list item)
+        if (trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length > 3) { // Likely a title
+            return line; 
+        }
+        return trimmedLine.charAt(0).toUpperCase() + trimmedLine.slice(1).toLowerCase();
       });
-      setMedicalOrderOutput({ generatedOrderText: sentenceCasedLines.join('\\n') });
+      setMedicalOrderOutput({ generatedOrderText: sentenceCasedLines.join('\n') });
       toast({ title: "Texto Formateado", description: "Las órdenes médicas se han formateado a tipo frase." });
     }
   };
@@ -263,7 +268,8 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
 
   const handleCompactText = () => {
     if (medicalOrderOutput.generatedOrderText) {
-      const compactedText = medicalOrderOutput.generatedOrderText.replace(/\\n{2,}/g, '\\n').trim();
+      // This regex looks for two or more actual newline characters
+      const compactedText = medicalOrderOutput.generatedOrderText.replace(/\n{2,}/g, '\n').trim();
       setMedicalOrderOutput({ generatedOrderText: compactedText });
       toast({ title: "Texto Compactado", description: "Se han normalizado los saltos de línea múltiples." });
     }
