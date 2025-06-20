@@ -3,6 +3,7 @@
 export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator';
 
 export type ActiveView = 'analysis' | 'other' | 'all';
+export type FontSize = 'small' | 'normal' | 'large';
 
 // --- Medication Info for Dose Calculator ---
 export interface MedicationUsage {
@@ -326,4 +327,13 @@ export interface ClinicalDataContextActions {
 
 export type ClinicalDataContextType = ClinicalDataContextState & ClinicalDataContextActions;
 
+
+export interface ViewContextType {
+  activeView: ActiveView;
+  setActiveView: (view: ActiveView) => void;
+  expandedModuleId: string | null;
+  setExpandedModuleId: (id: string | null) => void;
+  fontSize: FontSize;
+  setFontSize: (size: FontSize) => void;
+}
     

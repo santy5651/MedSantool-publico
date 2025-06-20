@@ -4,7 +4,7 @@
 import React from 'react';
 import { ClinicalDataProvider } from './clinical-data-context';
 import { ViewProvider } from './view-context';
-// Import other providers here if needed, e.g., ThemeProvider from next-themes
+import { ThemeProvider } from 'next-themes';
 
 type AppProvidersProps = {
   children: React.ReactNode;
@@ -12,12 +12,12 @@ type AppProvidersProps = {
 
 export default function AppProviders({ children }: AppProvidersProps) {
   return (
-    <ClinicalDataProvider>
-      <ViewProvider>
-        {/* <ThemeProvider attribute="class" defaultTheme="system" enableSystem> */}
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <ClinicalDataProvider>
+        <ViewProvider>
           {children}
-        {/* </ThemeProvider> */}
-      </ViewProvider>
-    </ClinicalDataProvider>
+        </ViewProvider>
+      </ClinicalDataProvider>
+    </ThemeProvider>
   );
 }

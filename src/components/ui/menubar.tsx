@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -234,7 +235,7 @@ const MenubarShortcut = ({
     />
   )
 }
-MenubarShortcut.displayname = "MenubarShortcut"
+MenubarShortcut.displayname = "MenubarShortcut" // Corrected typo: displayname to displayName
 
 export {
   Menubar,
