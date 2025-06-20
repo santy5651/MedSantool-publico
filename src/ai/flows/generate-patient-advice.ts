@@ -17,9 +17,10 @@ const ValidatedDiagnosisSchema = z.object({
 });
 
 const GeneratePatientAdviceInputSchema = z.object({
-  clinicalAnalysis: z.string().optional().describe('El análisis clínico del caso generado por IA (del Módulo 4). (Opcional, se priorizan diagnósticos validados)'),
-  textSummary: z.string().optional().describe('El resumen de información clave (del Módulo 3). (Opcional, se priorizan diagnósticos validados)'),
-  validatedDiagnoses: z.array(ValidatedDiagnosisSchema).optional().describe('Lista de diagnósticos validados por el usuario (del Módulo 5), si existen. Esta es la fuente principal de información.'),
+  clinicalAnalysis: z.string().optional().describe('El análisis clínico del caso generado por IA (del Módulo 4). (Opcional, no usado directamente para generar consejos si hay diagnósticos validados o texto manual)'),
+  textSummary: z.string().optional().describe('El resumen de información clave (del Módulo 3). (Opcional, no usado directamente para generar consejos si hay diagnósticos validados o texto manual)'),
+  validatedDiagnoses: z.array(ValidatedDiagnosisSchema).optional().describe('Lista de diagnósticos validados por el usuario (del Módulo 5). Fuente prioritaria de información.'),
+  manualDiagnosisOrAnalysis: z.string().optional().describe('Diagnóstico o breve análisis ingresado manualmente por el usuario. Usado si no hay diagnósticos validados.'),
 });
 export type GeneratePatientAdviceInput = z.infer<typeof GeneratePatientAdviceInputSchema>;
 
@@ -40,31 +41,40 @@ const prompt = ai.definePrompt({
   input: {schema: GeneratePatientAdviceInputSchema},
   output: {schema: GeneratePatientAdviceOutputSchema},
   prompt: `Eres un asistente médico virtual encargado de proporcionar información clara y útil para pacientes.
-Basado EXCLUSIVAMENTE en los siguientes diagnósticos validados, genera:
-1.  **Recomendaciones Generales:** Consejos prácticos y generales que el paciente puede seguir para su bienestar, relacionados con su(s) condición(es). Deben ser fáciles de entender. El texto generado para esta sección DEBE comenzar exactamente con "***RECOMENDACIONES GENERALES***" seguido de un salto de línea. TODO EL CONTENIDO DE ESTA SECCIÓN DEBE ESTAR EN MAYÚSCULAS.
-2.  **Signos de Alarma:** Una lista de síntomas o situaciones específicas por las cuales el paciente debe buscar atención médica de inmediato. Estos deben ser muy claros y directos. El texto generado para esta sección DEBE comenzar exactamente con "***SIGNOS DE ALARMA***" seguido de un salto de línea. TODO EL CONTENIDO DE ESTA SECCIÓN DEBE ESTAR EN MAYÚSCULAS.
+Tu tarea es generar "Recomendaciones Generales" y "Signos de Alarma".
 
-Si no se proporcionan diagnósticos validados, indica que no se puede generar consejo específico sin diagnósticos y recomienda consultar a un profesional médico para una evaluación.
+**Prioridad de Información:**
+1.  Si se proporcionan "Diagnósticos Validados", úsalos como la fuente principal de información.
+2.  Si NO hay "Diagnósticos Validados" PERO se proporciona "Diagnóstico/Análisis Manual", usa esa información como fuente principal.
+3.  Si no se proporciona ninguna de las anteriores, indica que no se puede generar consejo específico sin información diagnóstica y recomienda consultar a un profesional médico.
 
-Utiliza un lenguaje sencillo, empático y directo. La información debe estar en español.
+**Instrucciones para la Salida:**
+-   Las "Recomendaciones Generales" DEBEN comenzar exactamente con "***RECOMENDACIONES GENERALES***" seguido de un salto de línea.
+-   Los "Signos de Alarma" DEBEN comenzar exactamente con "***SIGNOS DE ALARMA***" seguido de un salto de línea.
+-   TODO EL CONTENIDO DE AMBAS SECCIONES (RECOMENDACIONES Y SIGNOS DE ALARMA) DEBE ESTAR EN MAYÚSCULAS.
+-   Utiliza un lenguaje sencillo, empático y directo. La información debe estar en español.
+-   Puedes usar listas con viñetas (-) o párrafos numerados para mejorar la legibilidad después de los títulos.
+-   Asegúrate de que las recomendaciones y signos de alarma sean relevantes para la información diagnóstica proporcionada.
 
-**Diagnósticos Validados (Fuente Única de Información):**
 {{#if validatedDiagnoses.length}}
+**Información Principal (Diagnósticos Validados):**
 {{#each validatedDiagnoses}}
 - Código: {{{this.code}}}, Descripción: {{{this.description}}}
 {{/each}}
+{{#if manualDiagnosisOrAnalysis}}
+(También se proporcionó un texto manual, pero los diagnósticos validados tienen prioridad: {{{manualDiagnosisOrAnalysis}}})
+{{/if}}
+{{else if manualDiagnosisOrAnalysis}}
+**Información Principal (Diagnóstico/Análisis Manual):**
+{{{manualDiagnosisOrAnalysis}}}
 {{else}}
-No se proporcionaron diagnósticos validados.
+**Información Principal:** No se proporcionó información diagnóstica suficiente (ni diagnósticos validados ni texto manual).
 {{/if}}
 
-**Instrucciones para la Salida:**
--   Si no hay diagnósticos validados, la salida de "generalRecommendations" y "alarmSigns" debe reflejar la incapacidad de dar consejos específicos y la recomendación de consulta médica. Por ejemplo:
-    "generalRecommendations": "***RECOMENDACIONES GENERALES***\\nNO SE HAN PROPORCIONADO DIAGNÓSTICOS ESPECÍFICOS. ES FUNDAMENTAL CONSULTAR CON SU MÉDICO PARA RECIBIR INDICACIONES PERSONALIZADAS.",
+**Instrucciones Específicas de Salida si no hay información diagnóstica suficiente:**
+-   Si no hay diagnósticos validados ni texto manual, la salida de "generalRecommendations" y "alarmSigns" debe reflejar la incapacidad de dar consejos específicos. Ejemplo:
+    "generalRecommendations": "***RECOMENDACIONES GENERALES***\\nNO SE HA PROPORCIONADO INFORMACIÓN DIAGNÓSTICA ESPECÍFICA (DIAGNÓSTICOS VALIDADOS O TEXTO MANUAL). ES FUNDAMENTAL CONSULTAR CON SU MÉDICO PARA RECIBIR INDICACIONES PERSONALIZADAS.",
     "alarmSigns": "***SIGNOS DE ALARMA***\\nCONSULTE CON SU MÉDICO ANTE CUALQUIER SÍNTOMA NUEVO O EMPEORAMIENTO DE SU CONDICIÓN ACTUAL."
--   Asegúrate de que la sección de recomendaciones comience con "***RECOMENDACIONES GENERALES***\\n" y la de signos de alarma con "***SIGNOS DE ALARMA***\\n".
--   TODO EL TEXTO DE RECOMENDACIONES Y SIGNOS DE ALARMA DEBE ESTAR EN MAYÚSCULAS.
--   Puedes usar listas con viñetas (-) o párrafos numerados para mejorar la legibilidad después de los títulos.
--   Asegúrate de que las recomendaciones y signos de alarma sean relevantes para los diagnósticos proporcionados.
 
 Genera las recomendaciones y signos de alarma:
 `,

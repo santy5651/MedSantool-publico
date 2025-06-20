@@ -46,6 +46,7 @@ const initialPatientAdviceInput: PatientAdviceInputData = {
   clinicalAnalysis: null,
   textSummary: null,
   validatedDiagnoses: null,
+  manualDiagnosisOrAnalysis: null, // Added new field
 };
 
 const initialGeneratedPatientAdvice: PatientAdviceOutputState = {

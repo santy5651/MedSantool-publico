@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson } from 'lucide-react';
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState } from '@/types';
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData } from '@/types';
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import type { ChatMessageHistoryItem } from '@/ai/flows/medical-assistant-chat-flow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -62,10 +62,11 @@ const initialNursingSurveillanceState: NursingSurveillanceState = {
   monitorBleeding: false,
 };
 
-const initialPatientAdviceInput: PatientAdviceInputData = {
+const initialPatientAdviceInputData: PatientAdviceInputData = {
   clinicalAnalysis: null,
   textSummary: null,
   validatedDiagnoses: null,
+  manualDiagnosisOrAnalysis: null,
 };
 
 const initialGeneratedPatientAdvice: PatientAdviceOutputState = {
@@ -243,7 +244,16 @@ export function HistoryModule() {
           break;
         case 'PatientAdvice':
           if (inputData && typeof inputData === 'object') {
-            clinicalData.setPatientAdviceInput(inputData as PatientAdviceInputData);
+            // Ensure all fields of PatientAdviceInputData are potentially present
+            const loadedPatientAdviceInput: PatientAdviceInputData = {
+                clinicalAnalysis: (inputData as PatientAdviceInputData).clinicalAnalysis || null,
+                textSummary: (inputData as PatientAdviceInputData).textSummary || null,
+                validatedDiagnoses: (inputData as PatientAdviceInputData).validatedDiagnoses || null,
+                manualDiagnosisOrAnalysis: (inputData as PatientAdviceInputData).manualDiagnosisOrAnalysis || null,
+            };
+            clinicalData.setPatientAdviceInput(loadedPatientAdviceInput);
+          } else {
+             clinicalData.setPatientAdviceInput(initialPatientAdviceInputData);
           }
           if (outputData && (outputData.generalRecommendations || outputData.alarmSigns)) {
             clinicalData.setGeneratedPatientAdvice(outputData as PatientAdviceOutputState);
@@ -418,9 +428,11 @@ export function HistoryModule() {
   
   const renderFullInput = (entry: HistoryEntry) => {
      if (!entry.fullInput) return <p className="text-xs text-muted-foreground">No hay detalles de entrada.</p>;
+     
      if (typeof entry.fullInput === 'string' && (entry.fullInput.startsWith('Data URI for') || entry.fullInput === '')) {
         return <p className="text-xs text-muted-foreground">{entry.fullInput || "Entrada vacía"}</p>; 
      }
+
      if (typeof entry.fullInput === 'object') {
         if (entry.module === 'MedicalAssistantChat' && 'userInput' in entry.fullInput && 'chatHistory' in entry.fullInput) {
             const chatInput = entry.fullInput as {userInput: string, chatHistory: ChatMessageHistoryItem[]};
@@ -455,6 +467,19 @@ export function HistoryModule() {
                         </>
                     )}
                 </div>
+            );
+        }
+        if (entry.module === 'PatientAdvice') {
+            const adviceInput = entry.fullInput as PatientAdviceInputData;
+            return (
+                 <div className="space-y-1 text-xs p-2 bg-muted/30 rounded-md">
+                    {adviceInput.manualDiagnosisOrAnalysis && <p><strong>Dx/Análisis Manual:</strong> {adviceInput.manualDiagnosisOrAnalysis}</p>}
+                    {adviceInput.validatedDiagnoses && adviceInput.validatedDiagnoses.length > 0 && (
+                        <div><strong>Dx Validados:</strong> <ul className="list-disc pl-4">{adviceInput.validatedDiagnoses.map(dx => <li key={dx.code}>{dx.code}: {dx.description}</li>)}</ul></div>
+                    )}
+                    {adviceInput.clinicalAnalysis && <p><strong>Análisis Clínico IA:</strong> {adviceInput.clinicalAnalysis.substring(0,50)}...</p>}
+                    {adviceInput.textSummary && <p><strong>Resumen Texto:</strong> {adviceInput.textSummary.substring(0,50)}...</p>}
+                 </div>
             );
         }
         return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{JSON.stringify(entry.fullInput, null, 2)}</pre>;

@@ -80,7 +80,7 @@ export interface HistoryEntry {
   inputType: string;
   inputSummary: string;
   outputSummary: string;
-  fullInput?: string | Record<string, any> | DoseCalculatorInputState;
+  fullInput?: string | Record<string, any> | DoseCalculatorInputState | PatientAdviceInputData; // Updated PatientAdviceInputData
   fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState;
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
@@ -150,9 +150,10 @@ export interface TreatmentPlanOutputState {
 
 // --- Patient Advice Module Specific Types ---
 export interface PatientAdviceInputData {
-  clinicalAnalysis: string | null;
-  textSummary: string | null;
+  clinicalAnalysis: string | null; // Still kept for display in UI if available
+  textSummary: string | null; // Still kept for display in UI if available
   validatedDiagnoses: ValidatedDiagnosis[] | null;
+  manualDiagnosisOrAnalysis: string | null; // New field
 }
 
 export interface PatientAdviceOutputState {

@@ -1,9 +1,11 @@
 
+
 'use client';
 
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { ModuleCardWrapper } from '@/components/common/module-card-wrapper';
 import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
@@ -38,17 +40,28 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
       ?.filter(d => d.isValidated)
       .map(d => ({ code: d.code, description: d.description })) || [];
 
-    const newPatientAdviceInput: PatientAdviceInputData = {
-      clinicalAnalysis: generatedClinicalAnalysis || null,
-      textSummary: textAnalysisSummary || null,
-      validatedDiagnoses: validatedDiagnoses.length > 0 ? validatedDiagnoses : null,
-    };
-    setPatientAdviceInput(newPatientAdviceInput);
+    // Update only the data coming from other modules, preserve manual input
+    setPatientAdviceInput(prevInput => ({
+        ...prevInput,
+        clinicalAnalysis: generatedClinicalAnalysis || null,
+        textSummary: textAnalysisSummary || null,
+        validatedDiagnoses: validatedDiagnoses.length > 0 ? validatedDiagnoses : null,
+    }));
   }, [generatedClinicalAnalysis, textAnalysisSummary, diagnosisResults, setPatientAdviceInput]);
 
+  const handleManualInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPatientAdviceInput(prevInput => ({
+        ...prevInput,
+        manualDiagnosisOrAnalysis: event.target.value,
+    }));
+  };
+
   const handleGenerateAdvice = async () => {
-    if (!patientAdviceInput.clinicalAnalysis && !patientAdviceInput.textSummary && (!patientAdviceInput.validatedDiagnoses || patientAdviceInput.validatedDiagnoses.length === 0)) {
-      toast({ title: "Datos Insuficientes", description: "Se requiere al menos un análisis clínico, resumen de texto o diagnósticos validados.", variant: "destructive" });
+    const hasValidatedDx = patientAdviceInput.validatedDiagnoses && patientAdviceInput.validatedDiagnoses.length > 0;
+    const hasManualText = String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() !== '';
+
+    if (!hasValidatedDx && !hasManualText) {
+      toast({ title: "Datos Insuficientes", description: "Se requiere al menos un diagnóstico validado o un texto de diagnóstico/análisis manual.", variant: "destructive" });
       return;
     }
 
@@ -57,9 +70,10 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
     let aiOutput: GeneratePatientAdviceOutput | null = null;
 
     const inputForAI: GeneratePatientAdviceInput = {
-      clinicalAnalysis: patientAdviceInput.clinicalAnalysis || undefined,
-      textSummary: patientAdviceInput.textSummary || undefined,
+      clinicalAnalysis: patientAdviceInput.clinicalAnalysis || undefined, // Keep for schema, but prompt will ignore if others present
+      textSummary: patientAdviceInput.textSummary || undefined, // Keep for schema, but prompt will ignore if others present
       validatedDiagnoses: patientAdviceInput.validatedDiagnoses || undefined,
+      manualDiagnosisOrAnalysis: String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() || undefined,
     };
 
     try {
@@ -74,7 +88,7 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
         await addHistoryEntry({
           module: 'PatientAdvice',
           inputType: 'application/json',
-          inputSummary: `Dx Validados: ${patientAdviceInput.validatedDiagnoses?.length || 0}, Análisis: ${patientAdviceInput.clinicalAnalysis ? 'Sí' : 'No'}, Resumen: ${patientAdviceInput.textSummary ? 'Sí' : 'No'}`,
+          inputSummary: `Dx Validados: ${inputForAI.validatedDiagnoses?.length || 0}. Manual: ${inputForAI.manualDiagnosisOrAnalysis ? 'Sí' : 'No'}`,
           outputSummary: `Recomendaciones: ${getTextSummary(aiOutput.generalRecommendations, 30)}. Signos: ${getTextSummary(aiOutput.alarmSigns, 30)}`,
           fullInput: inputForAI,
           fullOutput: aiOutput,
@@ -91,7 +105,7 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
         await addHistoryEntry({
           module: 'PatientAdvice',
           inputType: 'application/json',
-          inputSummary: `Dx Validados: ${patientAdviceInput.validatedDiagnoses?.length || 0}`,
+          inputSummary: `Dx Validados: ${inputForAI.validatedDiagnoses?.length || 0}. Manual: ${inputForAI.manualDiagnosisOrAnalysis ? 'Sí' : 'No'}`,
           outputSummary: 'Error en la generación',
           fullInput: inputForAI,
           fullOutput: { error: errorMessage },
@@ -143,12 +157,13 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
         clinicalAnalysis: patientAdviceInput.clinicalAnalysis || undefined,
         textSummary: patientAdviceInput.textSummary || undefined,
         validatedDiagnoses: patientAdviceInput.validatedDiagnoses || undefined,
+        manualDiagnosisOrAnalysis: String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() || undefined,
       };
     
     await addHistoryEntry({
       module: 'PatientAdvice',
       inputType: 'application/json',
-      inputSummary: `Dx Validados: ${patientAdviceInput.validatedDiagnoses?.length || 0}, Análisis: ${!!patientAdviceInput.clinicalAnalysis}, Resumen: ${!!patientAdviceInput.textSummary}`,
+      inputSummary: `Dx Validados: ${inputForHistory.validatedDiagnoses?.length || 0}. Manual: ${inputForHistory.manualDiagnosisOrAnalysis ? 'Sí' : 'No'}`,
       outputSummary: outputSum,
       fullInput: inputForHistory,
       fullOutput: output,
@@ -157,34 +172,51 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
     });
   };
 
-  const canGenerate = patientAdviceInput.clinicalAnalysis || patientAdviceInput.textSummary || (patientAdviceInput.validatedDiagnoses && patientAdviceInput.validatedDiagnoses.length > 0);
+  const canGenerate = (patientAdviceInput.validatedDiagnoses && patientAdviceInput.validatedDiagnoses.length > 0) || String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() !== '';
 
   return (
     <ModuleCardWrapper
       ref={moduleRef}
       id={id}
       title="Recomendaciones y Signos de Alarma para Paciente"
-      description="Genera consejos y signos de alarma (en mayúsculas por defecto) basados en el análisis, resumen y diagnósticos validados. Los títulos se incluyen automáticamente."
+      description="Genera consejos basados en diagnósticos validados o un texto manual. Los títulos se incluyen automáticamente."
       icon={UserCheck}
       isLoading={isGeneratingPatientAdvice}
     >
       <div className="space-y-4">
-        <div className="space-y-2 p-3 border rounded-md bg-muted/30 text-sm">
-            <h4 className="font-semibold">Datos de Entrada para Generación:</h4>
-            <p><strong>Análisis Clínico (M4):</strong> {getTextSummary(patientAdviceInput.clinicalAnalysis, 70) || "No disponible"}</p>
-            <p><strong>Resumen de Texto (M3):</strong> {getTextSummary(patientAdviceInput.textSummary, 70) || "No disponible"}</p>
+        <div className="space-y-3 p-3 border rounded-md bg-muted/30">
+            <h4 className="text-sm font-semibold">Datos de Entrada para Generación:</h4>
             <div>
-              <strong>Dx. Validados (M5):</strong>
-              {patientAdviceInput.validatedDiagnoses && patientAdviceInput.validatedDiagnoses.length > 0 ? (
-                <ul className="list-disc pl-5">
-                  {patientAdviceInput.validatedDiagnoses.map(dx => (
-                    <li key={dx.code}>{dx.code} - {getTextSummary(dx.description, 50)}</li>
-                  ))}
-                </ul>
-              ) : (
-                " Ninguno seleccionado"
-              )}
+              <Label htmlFor="manualDiagnosisOrAnalysis" className="text-xs font-medium">Diagnóstico/Análisis Manual (Opcional):</Label>
+              <Textarea
+                id="manualDiagnosisOrAnalysis"
+                placeholder="Escriba aquí un diagnóstico o análisis corto si no hay diagnósticos validados..."
+                value={patientAdviceInput.manualDiagnosisOrAnalysis || ''}
+                onChange={handleManualInputChange}
+                rows={3}
+                className="text-sm bg-background"
+                disabled={isGeneratingPatientAdvice}
+              />
             </div>
+            <div className="text-xs">
+              <p><strong>Dx. Validados (M5):</strong>
+                {patientAdviceInput.validatedDiagnoses && patientAdviceInput.validatedDiagnoses.length > 0 ? (
+                  <ul className="list-disc pl-5">
+                    {patientAdviceInput.validatedDiagnoses.map(dx => (
+                      <li key={dx.code}>{dx.code} - {getTextSummary(dx.description, 50)}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  " Ninguno seleccionado"
+                )}
+              </p>
+            </div>
+             <p className="text-xs text-muted-foreground italic">
+                Nota: Los diagnósticos validados (si existen) tendrán prioridad. El texto manual se usará si no hay diagnósticos validados.
+            </p>
+            {/* Hidden for UI simplicity, but data still passed to context/AI flow if needed by future logic */}
+            {/* <p><strong>Análisis Clínico (M4):</strong> {getTextSummary(patientAdviceInput.clinicalAnalysis, 70) || "No disponible"}</p> */}
+            {/* <p><strong>Resumen de Texto (M3):</strong> {getTextSummary(patientAdviceInput.textSummary, 70) || "No disponible"}</p> */}
         </div>
 
         <div className="flex space-x-2">
