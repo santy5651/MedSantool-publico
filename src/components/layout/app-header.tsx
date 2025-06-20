@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { BrainCircuit, Settings, Moon, Sun, Monitor, Palette } from 'lucide-react';
-import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarSeparator, MenubarSub, MenubarSubTrigger, MenubarSubContent, MenubarRadioGroup, MenubarRadioItem } from "@/components/ui/menubar"; // Adjusted imports
+import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarSeparator, MenubarSub, MenubarSubTrigger, MenubarSubContent, MenubarRadioGroup, MenubarRadioItem, MenubarLabel } from "@/components/ui/menubar"; // Adjusted imports
 import { useView } from '@/contexts/view-context';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';

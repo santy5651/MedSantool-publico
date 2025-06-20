@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ModuleCardWrapper } from '@/components/common/module-card-wrapper';
 import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
@@ -41,6 +42,50 @@ const initialPaduaItems: Record<string, PaduaItem> = {
   obesity: { text: 'Obesidad (IMC >30 kg/m²)', points: 1, checked: false },
   hormoneTx: { text: 'Tratamiento hormonal en curso', points: 1, checked: false },
 };
+
+const surveillanceCategories: Array<{
+  title: string;
+  items: Array<{ key: keyof NursingSurveillanceState; label: string }>;
+}> = [
+  {
+    title: "Vigilancia Clínica",
+    items: [
+      { key: 'monitorWounds', label: 'Vigilar heridas' },
+      { key: 'monitorBleeding', label: 'Vigilar sangrado' },
+      { key: 'monitorPain', label: 'Vigilar dolor' },
+      { key: 'vigilarDiuresis', label: 'Vigilar diuresis' },
+    ],
+  },
+  {
+    title: "Vías y Dispositivos",
+    items: [
+      { key: 'cuidadosCateterVenoso', label: 'Cuidados de catéter venoso' },
+      { key: 'cuidadosSondaVesical', label: 'Cuidados de sonda vesical' },
+      { key: 'cuidadosDrenajesQuirurgicos', label: 'Cuidados de drenajes quirúrgicos' },
+      { key: 'cuidadosTraqueostomia', label: 'Cuidados de traqueostomía' },
+    ],
+  },
+  {
+    title: "Especiales",
+    items: [
+      { key: 'controlGlicemicoTurno', label: 'Control glicémico por turno' },
+      { key: 'controlGlicemicoAyunas', label: 'Control glicémico en ayunas' },
+      { key: 'thermalCurve', label: 'Curva térmica' },
+      { key: 'hojaNeurologica', label: 'Hoja neurológica' },
+      { key: 'realizarCuraciones', label: 'Realizar curaciones y cuidados de heridas' },
+    ],
+  },
+  {
+    title: "Líquidos",
+    items: [
+      { key: 'restriccionHidrica800', label: 'Restricción hídrica a 800 cc/24 horas' },
+      { key: 'controlLiquidosAdminElim', label: 'Control de líquidos administrados y eliminados' },
+      { key: 'registroBalanceHidrico24h', label: 'Registro de balance hídrico de 24 horas' },
+      { key: 'calcularDiuresisHoraria', label: 'Calcular diuresis horaria' },
+      { key: 'pesoDiario', label: 'Peso diario' },
+    ],
+  },
+];
 
 
 export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
@@ -180,7 +225,7 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
 
   const handleClearSelection = () => {
     clearMedicalOrdersModule();
-    setPaduaItems(initialPaduaItems); // Reset Padua items too
+    setPaduaItems(initialPaduaItems); 
     toast({ title: "Campos Limpiados", description: "Se han limpiado todos los campos de órdenes médicas." });
   };
 
@@ -199,12 +244,12 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
     if (medicalOrderOutput.generatedOrderText) {
       const text = medicalOrderOutput.generatedOrderText;
       const lowercasedText = text.toLowerCase();
-      const lines = lowercasedText.split('\n');
+      const lines = lowercasedText.split('\\n');
       const sentenceCasedLines = lines.map(line => {
         if (line.trim().length === 0) return line; 
         return line.charAt(0).toUpperCase() + line.slice(1);
       });
-      setMedicalOrderOutput({ generatedOrderText: sentenceCasedLines.join('\n') });
+      setMedicalOrderOutput({ generatedOrderText: sentenceCasedLines.join('\\n') });
       toast({ title: "Texto Formateado", description: "Las órdenes médicas se han formateado a tipo frase." });
     }
   };
@@ -218,7 +263,7 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
 
   const handleCompactText = () => {
     if (medicalOrderOutput.generatedOrderText) {
-      const compactedText = medicalOrderOutput.generatedOrderText.replace(/\n{2,}/g, '\n').trim();
+      const compactedText = medicalOrderOutput.generatedOrderText.replace(/\\n{2,}/g, '\\n').trim();
       setMedicalOrderOutput({ generatedOrderText: compactedText });
       toast({ title: "Texto Compactado", description: "Se han normalizado los saltos de línea múltiples." });
     }
@@ -342,7 +387,6 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
             </div>
           )}
 
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
             <div>
                 <Label htmlFor="fallRisk">Riesgo de Caídas y Lesiones por Presión</Label>
@@ -405,24 +449,30 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
         
         <div>
           <Label>Vigilancia por Enfermería y Personal de Salud</Label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
-            {(Object.keys(medicalOrderInputs.nursingSurveillance) as Array<keyof MedicalOrderInputState['nursingSurveillance']>).map((key) => (
-              <div key={key} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`nursing-${key}`}
-                  checked={medicalOrderInputs.nursingSurveillance[key]}
-                  onCheckedChange={(checked) => handleNursingSurveillanceChange(key, !!checked)}
-                  disabled={isGeneratingMedicalOrder}
-                />
-                <Label htmlFor={`nursing-${key}`} className="text-sm font-normal capitalize">
-                  {key === 'thermalCurve' ? 'Curva térmica' :
-                   key === 'monitorPain' ? 'Vigilar dolor' :
-                   key === 'monitorWounds' ? 'Vigilar heridas' :
-                   key === 'monitorBleeding' ? 'Vigilar sangrado' : key}
-                </Label>
-              </div>
+          <Accordion type="multiple" className="w-full mt-1">
+            {surveillanceCategories.map((category) => (
+              <AccordionItem value={category.title} key={category.title}>
+                <AccordionTrigger>{category.title}</AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 pl-2">
+                    {category.items.map((item) => (
+                      <div key={item.key} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`nursing-${item.key}`}
+                          checked={medicalOrderInputs.nursingSurveillance[item.key]}
+                          onCheckedChange={(checked) => handleNursingSurveillanceChange(item.key, !!checked)}
+                          disabled={isGeneratingMedicalOrder}
+                        />
+                        <Label htmlFor={`nursing-${item.key}`} className="text-sm font-normal">
+                          {item.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
+          </Accordion>
         </div>
 
         <div>
@@ -495,4 +545,3 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
     </ModuleCardWrapper>
   );
 }
-

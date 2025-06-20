@@ -1,9 +1,9 @@
 
 'use client';
 
+import React, { useEffect, type ReactNode } from 'react'; // Added React import
 import { useView } from '@/contexts/view-context';
 import { cn } from '@/lib/utils';
-import type { ReactNode } from 'react';
 
 // This client component wrapper is needed to apply the dynamic class from useView to the body or a main wrapper
 // because RootLayout itself is a Server Component and cannot directly use client-side hooks.
@@ -18,7 +18,7 @@ export function ViewContextLayoutClient({ children }: { children: ReactNode }) {
   // return <>{children}</>;
   // However, modifying body class directly in a child component is not ideal for Next.js App Router.
   // It's better to wrap the content in a div that gets the class.
-  // For now, let's assume the class will be added to <html> by ThemeProvider or RootLayout can manage it.
+  // For now, let's assume the class will be applied to <html> by ThemeProvider or RootLayout can manage it.
   // For simplicity with globals.css targeting body.font-size-X, we use useEffect for now.
   // A more robust solution might involve CSS variables updated by this component.
 

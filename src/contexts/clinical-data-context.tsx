@@ -6,10 +6,24 @@ import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, Pd
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const initialNursingSurveillanceState: NursingSurveillanceState = {
-  thermalCurve: false,
-  monitorPain: false,
   monitorWounds: false,
   monitorBleeding: false,
+  monitorPain: false,
+  vigilarDiuresis: false,
+  cuidadosCateterVenoso: false,
+  cuidadosSondaVesical: false,
+  cuidadosDrenajesQuirurgicos: false,
+  cuidadosTraqueostomia: false,
+  controlGlicemicoTurno: false,
+  controlGlicemicoAyunas: false,
+  thermalCurve: false,
+  hojaNeurologica: false,
+  realizarCuraciones: false,
+  restriccionHidrica800: false,
+  controlLiquidosAdminElim: false,
+  registroBalanceHidrico24h: false,
+  calcularDiuresisHoraria: false,
+  pesoDiario: false,
 };
 
 const initialMedicalOrderInputs: MedicalOrderInputState = {
@@ -46,7 +60,7 @@ const initialPatientAdviceInput: PatientAdviceInputData = {
   clinicalAnalysis: null,
   textSummary: null,
   validatedDiagnoses: null,
-  manualDiagnosisOrAnalysis: null, // Added new field
+  manualDiagnosisOrAnalysis: null, 
 };
 
 const initialGeneratedPatientAdvice: PatientAdviceOutputState = {

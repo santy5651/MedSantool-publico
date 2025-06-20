@@ -22,10 +22,24 @@ const GenerateMedicalOrderInputSchema = z.object({
   fallRisk: z.string().default("RIESGO DE CAIDAS Y LESIONES POR PRESION SEGUN ESCALAS POR PERSONAL DE ENFERMERIA").describe('Indicación sobre riesgo de caídas y lesiones por presión.'),
   paduaScale: z.string().describe("Puntaje en la escala de Padua. Ejemplo: '3 puntos', 'NO APLICA'."),
   surveillanceNursing: z.object({
-    thermalCurve: z.boolean().describe("Vigilar curva térmica."),
-    monitorPain: z.boolean().describe("Vigilar dolor."),
     monitorWounds: z.boolean().describe("Vigilar heridas."),
     monitorBleeding: z.boolean().describe("Vigilar sangrado."),
+    monitorPain: z.boolean().describe("Vigilar dolor."),
+    vigilarDiuresis: z.boolean().describe("Vigilar diuresis."),
+    cuidadosCateterVenoso: z.boolean().describe("Cuidados de catéter venoso."),
+    cuidadosSondaVesical: z.boolean().describe("Cuidados de sonda vesical."),
+    cuidadosDrenajesQuirurgicos: z.boolean().describe("Cuidados de drenajes quirúrgicos."),
+    cuidadosTraqueostomia: z.boolean().describe("Cuidados de traqueostomía."),
+    controlGlicemicoTurno: z.boolean().describe("Control glicémico por turno."),
+    controlGlicemicoAyunas: z.boolean().describe("Control glicémico en ayunas."),
+    thermalCurve: z.boolean().describe("Curva térmica."),
+    hojaNeurologica: z.boolean().describe("Hoja neurológica."),
+    realizarCuraciones: z.boolean().describe("Realizar curaciones y cuidados de heridas."),
+    restriccionHidrica800: z.boolean().describe("Restricción hídrica a 800 cc/24 horas."),
+    controlLiquidosAdminElim: z.boolean().describe("Control de líquidos administrados y eliminados."),
+    registroBalanceHidrico24h: z.boolean().describe("Registro de balance hídrico de 24 horas."),
+    calcularDiuresisHoraria: z.boolean().describe("Calcular diuresis horaria."),
+    pesoDiario: z.boolean().describe("Peso diario."),
   }).describe('Indicaciones de vigilancia por enfermería.'),
   transferConditions: z.enum(['Grupo 1: Camillero o auxiliar', 'Grupo 2: Médico general', 'Grupo 3: Médico general por paciente intubado', 'NO APLICA']).describe('Condiciones de traslado del paciente.'),
   specialConsiderations: z.string().optional().describe("Notas o consideraciones especiales adicionales."),
@@ -53,7 +67,7 @@ export async function generateMedicalOrder(
 
 const prompt = ai.definePrompt({
   name: 'generateMedicalOrderPrompt',
-  input: {schema: PromptInputSchema}, // Use the extended schema for the prompt
+  input: {schema: PromptInputSchema}, 
   output: {schema: GenerateMedicalOrderOutputSchema},
   prompt: `Eres un asistente médico experto en la redacción de órdenes médicas hospitalarias.
 Tu tarea es generar un texto de orden médica profesional, claro y completo basado en la información proporcionada.
@@ -92,6 +106,20 @@ Avisar cambios
 {{#if surveillanceNursing.monitorPain}}- Vigilar dolor{{/if}}
 {{#if surveillanceNursing.monitorWounds}}- Vigilar heridas{{/if}}
 {{#if surveillanceNursing.monitorBleeding}}- Vigilar sangrado{{/if}}
+{{#if surveillanceNursing.vigilarDiuresis}}- Vigilar diuresis y características de la orina{{/if}}
+{{#if surveillanceNursing.cuidadosCateterVenoso}}- Cuidados de catéter venoso central/periférico según protocolo institucional{{/if}}
+{{#if surveillanceNursing.cuidadosSondaVesical}}- Cuidados de sonda vesical según protocolo institucional y vigilar diuresis horaria si indicado{{/if}}
+{{#if surveillanceNursing.cuidadosDrenajesQuirurgicos}}- Cuidados de drenajes quirúrgicos, cuantificar y describir débito{{/if}}
+{{#if surveillanceNursing.cuidadosTraqueostomia}}- Cuidados de traqueostomía según protocolo institucional{{/if}}
+{{#if surveillanceNursing.controlGlicemicoTurno}}- Glucometría por turno{{/if}}
+{{#if surveillanceNursing.controlGlicemicoAyunas}}- Glucometría en ayunas{{/if}}
+{{#if surveillanceNursing.hojaNeurologica}}- Diligenciar hoja neurológica según pauta (ej. cada hora, cada 2 horas){{/if}}
+{{#if surveillanceNursing.realizarCuraciones}}- Realizar curaciones y cuidados de heridas según necesidad e indicación médica{{/if}}
+{{#if surveillanceNursing.restriccionHidrica800}}- Restricción hídrica a 800 cc en 24 horas (distribuir por turno){{/if}}
+{{#if surveillanceNursing.controlLiquidosAdminElim}}- Control estricto de líquidos administrados y eliminados por turno{{/if}}
+{{#if surveillanceNursing.registroBalanceHidrico24h}}- Registro de balance hídrico cada 24 horas{{/if}}
+{{#if surveillanceNursing.calcularDiuresisHoraria}}- Calcular gasto urinario horario{{/if}}
+{{#if surveillanceNursing.pesoDiario}}- Peso diario en ayunas con báscula calibrada{{/if}}
 {{#unless requiresSpecialNursingSurveillance}}NO REQUIERE VIGILANCIA ESPECIAL POR ENFERMERÍA{{/unless}}
 CONSIDERACIONES ESPECIALES:
 {{#if specialConsiderations}}{{{specialConsiderations}}}{{else}}NO HAY CONSIDERACIONES ESPECIALES{{/if}}
@@ -104,7 +132,7 @@ CONDICIONES DE TRASLADO: {{{transferConditions}}}
 const generateMedicalOrderFlow = ai.defineFlow(
   {
     name: 'generateMedicalOrderFlow',
-    inputSchema: GenerateMedicalOrderInputSchema, // External flow input remains the same
+    inputSchema: GenerateMedicalOrderInputSchema, 
     outputSchema: GenerateMedicalOrderOutputSchema,
   },
   async (input) => {
@@ -112,10 +140,25 @@ const generateMedicalOrderFlow = ai.defineFlow(
     const promptData: PromptInput = {
       ...input,
       isHospitalizacionOrder: input.orderType === "HOSPITALIZACIÓN",
-      requiresSpecialNursingSurveillance: input.surveillanceNursing.thermalCurve || 
-                                          input.surveillanceNursing.monitorPain || 
-                                          input.surveillanceNursing.monitorWounds || 
-                                          input.surveillanceNursing.monitorBleeding,
+      requiresSpecialNursingSurveillance: 
+        input.surveillanceNursing.thermalCurve || 
+        input.surveillanceNursing.monitorPain || 
+        input.surveillanceNursing.monitorWounds || 
+        input.surveillanceNursing.monitorBleeding ||
+        input.surveillanceNursing.vigilarDiuresis ||
+        input.surveillanceNursing.cuidadosCateterVenoso ||
+        input.surveillanceNursing.cuidadosSondaVesical ||
+        input.surveillanceNursing.cuidadosDrenajesQuirurgicos ||
+        input.surveillanceNursing.cuidadosTraqueostomia ||
+        input.surveillanceNursing.controlGlicemicoTurno ||
+        input.surveillanceNursing.controlGlicemicoAyunas ||
+        input.surveillanceNursing.hojaNeurologica ||
+        input.surveillanceNursing.realizarCuraciones ||
+        input.surveillanceNursing.restriccionHidrica800 ||
+        input.surveillanceNursing.controlLiquidosAdminElim ||
+        input.surveillanceNursing.registroBalanceHidrico24h ||
+        input.surveillanceNursing.calcularDiuresisHoraria ||
+        input.surveillanceNursing.pesoDiario,
     };
     
     const {output} = await prompt(promptData);

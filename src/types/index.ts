@@ -105,10 +105,31 @@ export type MedicalOrderType = "OBSERVACIÓN" | "HOSPITALIZACIÓN" | "EGRESO";
 export type TransferConditionType = "Grupo 1: Camillero o auxiliar" | "Grupo 2: Médico general" | "Grupo 3: Médico general por paciente intubado" | "NO APLICA";
 
 export interface NursingSurveillanceState {
-  thermalCurve: boolean;
-  monitorPain: boolean;
-  monitorWounds: boolean;
-  monitorBleeding: boolean;
+  // Vigilancia Clínica
+  monitorWounds: boolean; // Vigilar heridas
+  monitorBleeding: boolean; // Vigilar sangrado
+  monitorPain: boolean; // Vigilar dolor
+  vigilarDiuresis: boolean; // Vigilar diuresis
+  
+  // Vías y Dispositivos
+  cuidadosCateterVenoso: boolean; // Cuidados de catéter venoso
+  cuidadosSondaVesical: boolean; // Cuidados de sonda vesical
+  cuidadosDrenajesQuirurgicos: boolean; // Cuidados de drenajes quirúrgicos
+  cuidadosTraqueostomia: boolean; // Cuidados de traqueostomía
+  
+  // Especiales
+  controlGlicemicoTurno: boolean; // Control glicémico por turno
+  controlGlicemicoAyunas: boolean; // Control glicémico en ayunas
+  thermalCurve: boolean; // Curva térmica (existing)
+  hojaNeurologica: boolean; // Hoja neurológica
+  realizarCuraciones: boolean; // Realizar curaciones y cuidados de heridas
+  
+  // Líquidos
+  restriccionHidrica800: boolean; // Restricción hídrica a 800 cc/24 horas
+  controlLiquidosAdminElim: boolean; // Control de líquidos administrados y eliminados
+  registroBalanceHidrico24h: boolean; // Registro de balance hídrico de 24 horas
+  calcularDiuresisHoraria: boolean; // Calcular diuresis horaria
+  pesoDiario: boolean; // Peso diario
 }
 
 export interface MedicalOrderInputState {
@@ -151,10 +172,10 @@ export interface TreatmentPlanOutputState {
 
 // --- Patient Advice Module Specific Types ---
 export interface PatientAdviceInputData {
-  clinicalAnalysis: string | null; // Still kept for display in UI if available
-  textSummary: string | null; // Still kept for display in UI if available
+  clinicalAnalysis: string | null; 
+  textSummary: string | null; 
   validatedDiagnoses: ValidatedDiagnosis[] | null;
-  manualDiagnosisOrAnalysis: string | null; // New field
+  manualDiagnosisOrAnalysis: string | null;
 }
 
 export interface PatientAdviceOutputState {
