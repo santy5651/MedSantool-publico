@@ -42,37 +42,23 @@ const prompt = ai.definePrompt({
   input: {schema: GenerateDischargeSummaryInputSchema},
   output: {schema: GenerateDischargeSummaryOutputSchema},
   prompt: `Eres un asistente médico experto en la redacción de resúmenes de egreso hospitalario.
-Tu tarea es generar un documento de SALIDA estructurado basado en la información proporcionada.
-Aplica las siguientes reglas específicas:
+Tu tarea es generar un documento de SALIDA estructurado.
+La estructura base y la información inicial (o valores por defecto si no se proporcionó información específica del campo) se muestran a continuación.
+Debes seguir esta estructura EXACTA. Además, aplica las siguientes reglas específicas al contenido de cada sección según la información ya presente en la plantilla siguiente:
 
 1.  **Formato General:** Utiliza los encabezados exactos proporcionados (Ej: "*** FORMULA MEDICA ***").
-2.  **Fórmula Médica:**
-    *   Si se proporciona texto, revisa y corrige errores ortográficos.
-    *   Reorganiza cada medicamento para que siga el formato: "NOMBRE DEL MEDICAMENTO, PRESENTACIÓN Y CONCENTRACIÓN, DOSIS/INSTRUCCIÓN, VÍA, FRECUENCIA, DURACIÓN (si aplica)".
-    *   Lista cada medicamento en una nueva línea.
-    *   Si no se proporciona, indica "NO SE FORMULA MEDICAMENTOS AL EGRESO".
-3.  **Conciliación Medicamentosa:**
-    *   Similar a la Fórmula Médica, revisa, corrige y formatea.
-    *   Si no se proporciona, indica "NO TIENE MEDICAMENTOS DE CONCILIACIÓN".
-4.  **Laboratorios de Control Ambulatorios:**
-    *   Si el campo está vacío o no se proporciona, usa el texto por defecto: "NO SE ENVIA LABORATORIOS DE CONTROL".
-    *   Si se proporciona texto, úsalo tal cual después de corregir ortografía.
-5.  **Próximo Control Médico:**
-    *   Usa el texto proporcionado, corrigiendo ortografía.
-    *   Si no se proporciona, indica "CONTROL SEGÚN INDICACIONES DE SU EPS".
-    *   Después de esta sección, SIEMPRE incluye la siguiente frase en una nueva línea: "ASISTIR A PROGRAMAS DE PROMOCION Y PREVENCION EN SU ENTIDAD DE PRIMER NIVEL EN CONSULTA EXTERNA, SEGUN PROGRAMAS DISPONIBLES Y BRINDADOS POR SU EPS."
-6.  **Trámites Correspondientes:**
-    *   Usa el texto proporcionado. Modifícalo para que siempre inicie con "EPS CORRESPONDIENTE: ". Ejemplo: "EPS CORRESPONDIENTE: NUEVA EPS SUBSIDIADO".
-    *   Si no se proporciona, indica "TRÁMITES ADMINISTRATIVOS SEGÚN SU EPS".
-7.  **Incapacidad:**
-    *   Incluye esta sección y su contenido SOLO SI se proporciona texto en el campo 'incapacidad'. Si no hay texto, OMITE toda la sección "*** INCAPACIDAD ***".
-8.  **Signos de Alarma, Indicaciones sobre la Dieta, Cuidados Generales, Recomendaciones Generales:**
-    *   Usa el texto proporcionado para cada uno. Si un campo está vacío, indica "NO SE PROPORCIONAN INDICACIONES ESPECÍFICAS." para esa sección particular. Estas secciones deben mantener el texto en MAYÚSCULAS si así viene del input.
-9.  **Condiciones Generales de Salida:**
-    *   Revisa y corrige errores de ortografía. Mejora ligeramente la redacción para asegurar claridad y profesionalismo.
-    *   Si no se proporciona, indica "PACIENTE EN CONDICIONES GENERALES ESTABLES, ALERTA, CONSCIENTE, ORIENTADO, HIDRATADO, CON ADECUADA CLASE FUNCIONAL PARA EGRESO."
+2.  **Fórmula Médica:** Si la plantilla muestra medicamentos en esta sección, revisa y corrige errores ortográficos. Reorganiza cada medicamento para que siga el formato: "NOMBRE DEL MEDICAMENTO, PRESENTACIÓN Y CONCENTRACIÓN, DOSIS/INSTRUCCIÓN, VÍA, FRECUENCIA, DURACIÓN (si aplica)". Lista cada medicamento en una nueva línea. Si la plantilla indica "NO SE FORMULA MEDICAMENTOS AL EGRESO", mantenlo así.
+3.  **Conciliación Medicamentosa:** Similar a la Fórmula Médica. Si la plantilla indica "NO TIENE MEDICAMENTOS DE CONCILIACIÓN", mantenlo así.
+4.  **Laboratorios de Control Ambulatorios:** Si la plantilla muestra laboratorios específicos, úsalos después de corregir ortografía. Si indica "NO SE ENVIA LABORATORIOS DE CONTROL", mantenlo.
+5.  **Próximo Control Médico:** Si la plantilla muestra un control específico, úsalo corrigiendo ortografía. Si indica "CONTROL SEGÚN INDICACIONES DE SU EPS", mantenlo. Después de esta sección, SIEMPRE incluye la siguiente frase en una nueva línea: "ASISTIR A PROGRAMAS DE PROMOCION Y PREVENCION EN SU ENTIDAD DE PRIMER NIVEL EN CONSULTA EXTERNA, SEGUN PROGRAMAS DISPONIBLES Y BRINDADOS POR SU EPS."
+6.  **Incapacidad:** Si la sección "*** INCAPACIDAD ***" y su contenido están presentes en la plantilla, inclúyelos. Si la sección está ausente en la plantilla (porque no se proporcionó incapacidad), no la agregues.
+7.  **Signos de Alarma, Indicaciones sobre la Dieta, Cuidados Generales, Recomendaciones Generales:** Si la plantilla muestra contenido para estas secciones, úsalo. Estos deben estar en MAYÚSCULAS. Si la plantilla indica "NO SE PROPORCIONAN INDICACIONES ESPECÍFICAS." para alguna de estas secciones, mantenlo así para esa sección.
+8.  **Condiciones Generales de Salida:** Si la plantilla muestra condiciones específicas, revísalas, corrige errores de ortografía y mejora ligeramente la redacción para asegurar claridad y profesionalismo. Si la plantilla indica "PACIENTE EN CONDICIONES GENERALES ESTABLES, ALERTA, CONSCIENTE, ORIENTADO, HIDRATADO, CON ADECUADA CLASE FUNCIONAL PARA EGRESO.", mantenlo.
+9.  **Trámites Correspondientes:** Si la plantilla muestra "EPS CORRESPONDIENTE: [información EPS]", úsalo. Si indica "EPS CORRESPONDIENTE: PENDIENTE POR DEFINIR/NO APLICA", mantenlo así.
 
-**Estructura de Salida EXACTA (incluyendo los asteriscos y saltos de línea como se muestran):**
+Asegúrate de que la salida final sea un único string para el campo 'generatedSummary', que contenga todo el resumen de egreso formateado como se describe y con las correcciones aplicadas.
+
+**Esta es la estructura base y la información inicial para el resumen de egreso (revisa y aplica correcciones según las reglas anteriores):**
 
 ****SALIDA****
 
@@ -111,8 +97,6 @@ ASISTIR A PROGRAMAS DE PROMOCION Y PREVENCION EN SU ENTIDAD DE PRIMER NIVEL EN C
 
 *** TRAMITES CORRESPONDIENTES ***
 EPS CORRESPONDIENTE: {{#if tramites}}{{{tramites}}}{{else}}PENDIENTE POR DEFINIR/NO APLICA{{/if}}
-
-Genera el resumen de egreso:
 `,
 });
 
@@ -123,12 +107,32 @@ const generateDischargeSummaryFlow = ai.defineFlow(
     outputSchema: GenerateDischargeSummaryOutputSchema,
   },
   async (input) => {
-    // Limpieza y preparación de datos antes de enviar al prompt
-    const processedInput = { ...input };
-    if (processedInput.laboratoriosControl && processedInput.laboratoriosControl.trim() === "") {
-        processedInput.laboratoriosControl = undefined; // Para que el prompt use el default
+    const processedInput: GenerateDischargeSummaryInput = {};
+    for (const key in input) {
+      const typedKey = key as keyof GenerateDischargeSummaryInput;
+      if (typeof input[typedKey] === 'string') {
+        const trimmedValue = (input[typedKey] as string).trim();
+        if (trimmedValue === "" && typedKey !== 'laboratoriosControl') { // laboratoriosControl tiene su propio default si es vacío
+          processedInput[typedKey] = undefined;
+        } else if (trimmedValue === "" && typedKey === 'laboratoriosControl') {
+          processedInput[typedKey] = undefined; // Para que use el default de Handlebars "NO SE ENVIA LABORATORIOS DE CONTROL"
+        }
+        else {
+          processedInput[typedKey] = trimmedValue;
+        }
+      } else if (input[typedKey] !== null && input[typedKey] !== undefined) {
+        processedInput[typedKey] = input[typedKey];
+      }
     }
-    // Otros pre-procesamientos si son necesarios
+    
+    // Asegurar que los campos que deben ser mayúsculas lo sean si tienen contenido
+    const fieldsToUppercase: Array<keyof GenerateDischargeSummaryInput> = ['signosAlarma', 'indicacionesDieta', 'cuidadosGenerales', 'recomendacionesGenerales'];
+    fieldsToUppercase.forEach(field => {
+        if (processedInput[field] && typeof processedInput[field] === 'string') {
+            processedInput[field] = (processedInput[field] as string).toUpperCase();
+        }
+    });
+
 
     const {output} = await prompt(processedInput);
     return output!;
