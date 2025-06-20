@@ -64,12 +64,6 @@ Tu tarea es generar:
 -   Puedes usar listas con viñetas (-) o párrafos numerados para mejorar la legibilidad después de los títulos.
 -   Asegúrate de que las recomendaciones, indicaciones de dieta, cuidados y signos de alarma sean relevantes para la información diagnóstica proporcionada.
 
-**Instrucciones Específicas para "Signos de Alarma":**
--   Deben ser **específicos** para la(s) condición(es) o diagnóstico(s) proporcionados en la "Información Principal".
--   Indica situaciones que requieran atención médica **urgente** o una reevaluación pronta.
--   Evita listas de síntomas excesivamente genéricos que no estén directamente relacionados con los diagnósticos o la situación clínica descrita.
--   Si no puedes generar signos de alarma específicos y relevantes basados en la información proporcionada, utiliza el texto por defecto indicado más abajo para cuando no hay información diagnóstica suficiente.
-
 {{#if validatedDiagnoses.length}}
 **Información Principal (Diagnósticos Validados):**
 {{#each validatedDiagnoses}}
@@ -106,4 +100,3 @@ const generatePatientAdviceFlow = ai.defineFlow(
     return output!;
   }
 );
-
