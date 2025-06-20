@@ -101,29 +101,29 @@ SEGUIMIENTO POR ESPECIALIDAD: {{{specialtyFollowUp}}}
 {{{fallRisk}}}
 ESCALA DE PADUA: {{{paduaScale}}}
 Vigilar signos vitales
-Avisar cambios
-{{#if surveillanceNursing.thermalCurve}}- Curva térmica{{/if}}
-{{#if surveillanceNursing.monitorPain}}- Vigilar dolor{{/if}}
-{{#if surveillanceNursing.monitorWounds}}- Vigilar heridas{{/if}}
-{{#if surveillanceNursing.monitorBleeding}}- Vigilar sangrado{{/if}}
-{{#if surveillanceNursing.vigilarDiuresis}}- Vigilar diuresis y características de la orina{{/if}}
-{{#if surveillanceNursing.cuidadosCateterVenoso}}- Cuidados de catéter venoso central/periférico según protocolo institucional{{/if}}
-{{#if surveillanceNursing.cuidadosSondaVesical}}- Cuidados de sonda vesical según protocolo institucional y vigilar diuresis horaria si indicado{{/if}}
-{{#if surveillanceNursing.cuidadosDrenajesQuirurgicos}}- Cuidados de drenajes quirúrgicos, cuantificar y describir débito{{/if}}
-{{#if surveillanceNursing.cuidadosTraqueostomia}}- Cuidados de traqueostomía según protocolo institucional{{/if}}
-{{#if surveillanceNursing.controlGlicemicoTurno}}- Glucometría por turno{{/if}}
-{{#if surveillanceNursing.controlGlicemicoAyunas}}- Glucometría en ayunas{{/if}}
-{{#if surveillanceNursing.hojaNeurologica}}- Diligenciar hoja neurológica según pauta (ej. cada hora, cada 2 horas){{/if}}
-{{#if surveillanceNursing.realizarCuraciones}}- Realizar curaciones y cuidados de heridas según necesidad e indicación médica{{/if}}
-{{#if surveillanceNursing.restriccionHidrica800}}- Restricción hídrica a 800 cc en 24 horas (distribuir por turno){{/if}}
-{{#if surveillanceNursing.controlLiquidosAdminElim}}- Control estricto de líquidos administrados y eliminados por turno{{/if}}
-{{#if surveillanceNursing.registroBalanceHidrico24h}}- Registro de balance hídrico cada 24 horas{{/if}}
-{{#if surveillanceNursing.calcularDiuresisHoraria}}- Calcular gasto urinario horario{{/if}}
-{{#if surveillanceNursing.pesoDiario}}- Peso diario en ayunas con báscula calibrada{{/if}}
-{{#unless requiresSpecialNursingSurveillance}}NO REQUIERE VIGILANCIA ESPECIAL POR ENFERMERÍA{{/unless}}
-CONSIDERACIONES ESPECIALES:
+Avisar cambios{{#if requiresSpecialNursingSurveillance}}
+{{#if surveillanceNursing.thermalCurve}}\n- Curva térmica{{/if}}
+{{#if surveillanceNursing.monitorPain}}\n- Vigilar dolor{{/if}}
+{{#if surveillanceNursing.monitorWounds}}\n- Vigilar heridas{{/if}}
+{{#if surveillanceNursing.monitorBleeding}}\n- Vigilar sangrado{{/if}}
+{{#if surveillanceNursing.vigilarDiuresis}}\n- Vigilar diuresis y características de la orina{{/if}}
+{{#if surveillanceNursing.cuidadosCateterVenoso}}\n- Cuidados de catéter venoso central/periférico según protocolo institucional{{/if}}
+{{#if surveillanceNursing.cuidadosSondaVesical}}\n- Cuidados de sonda vesical según protocolo institucional y vigilar diuresis horaria si indicado{{/if}}
+{{#if surveillanceNursing.cuidadosDrenajesQuirurgicos}}\n- Cuidados de drenajes quirúrgicos, cuantificar y describir débito{{/if}}
+{{#if surveillanceNursing.cuidadosTraqueostomia}}\n- Cuidados de traqueostomía según protocolo institucional{{/if}}
+{{#if surveillanceNursing.controlGlicemicoTurno}}\n- Glucometría por turno{{/if}}
+{{#if surveillanceNursing.controlGlicemicoAyunas}}\n- Glucometría en ayunas{{/if}}
+{{#if surveillanceNursing.hojaNeurologica}}\n- Diligenciar hoja neurológica según pauta (ej. cada hora, cada 2 horas){{/if}}
+{{#if surveillanceNursing.realizarCuraciones}}\n- Realizar curaciones y cuidados de heridas según necesidad e indicación médica{{/if}}
+{{#if surveillanceNursing.restriccionHidrica800}}\n- Restricción hídrica a 800 cc en 24 horas (distribuir por turno){{/if}}
+{{#if surveillanceNursing.controlLiquidosAdminElim}}\n- Control estricto de líquidos administrados y eliminados por turno{{/if}}
+{{#if surveillanceNursing.registroBalanceHidrico24h}}\n- Registro de balance hídrico cada 24 horas{{/if}}
+{{#if surveillanceNursing.calcularDiuresisHoraria}}\n- Calcular gasto urinario horario{{/if}}
+{{#if surveillanceNursing.pesoDiario}}\n- Peso diario en ayunas con báscula calibrada{{/if}}
+{{/if}}
+\nCONSIDERACIONES ESPECIALES:
 {{#if specialConsiderations}}{{{specialConsiderations}}}{{else}}NO HAY CONSIDERACIONES ESPECIALES{{/if}}
-CONDICIONES DE TRASLADO: {{{transferConditions}}}
+\nCONDICIONES DE TRASLADO: {{{transferConditions}}}
 
 **IMPORTANTE: TODO EL TEXTO DE SALIDA DEBE ESTAR EN LETRAS MAYÚSCULAS.**
 `,
