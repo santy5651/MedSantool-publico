@@ -52,7 +52,7 @@ Tu tarea es generar:
 **Prioridad de Información:**
 1.  Si se proporcionan "Diagnósticos Validados", úsalos como la fuente principal de información.
 2.  Si NO hay "Diagnósticos Validados" PERO se proporciona "Diagnóstico/Análisis Manual", usa esa información como fuente principal.
-3.  Si no se proporciona ninguna de las anteriores, indica que no se puede generar consejo específico sin información diagnóstica y recomienda consultar a un profesional médico.
+3.  Si no se proporciona ninguna de las anteriores, indica que no se puede generar consejo específico sin información diagnóstica y recomienda consultar a un profesional médico, utilizando los textos por defecto especificados más abajo.
 
 **Instrucciones para la Salida:**
 -   Las "Recomendaciones Generales" DEBEN comenzar exactamente con "***RECOMENDACIONES GENERALES***" seguido de un salto de línea.
@@ -63,6 +63,12 @@ Tu tarea es generar:
 -   Utiliza un lenguaje sencillo, empático y directo. La información debe estar en español.
 -   Puedes usar listas con viñetas (-) o párrafos numerados para mejorar la legibilidad después de los títulos.
 -   Asegúrate de que las recomendaciones, indicaciones de dieta, cuidados y signos de alarma sean relevantes para la información diagnóstica proporcionada.
+
+**Instrucciones Específicas para "Signos de Alarma":**
+-   Deben ser **específicos** para la(s) condición(es) o diagnóstico(s) proporcionados en la "Información Principal".
+-   Indica situaciones que requieran atención médica **urgente** o una reevaluación pronta.
+-   Evita listas de síntomas excesivamente genéricos que no estén directamente relacionados con los diagnósticos o la situación clínica descrita.
+-   Si no puedes generar signos de alarma específicos y relevantes basados en la información proporcionada, utiliza el texto por defecto indicado más abajo para cuando no hay información diagnóstica suficiente.
 
 {{#if validatedDiagnoses.length}}
 **Información Principal (Diagnósticos Validados):**
@@ -79,12 +85,11 @@ Tu tarea es generar:
 **Información Principal:** No se proporcionó información diagnóstica suficiente (ni diagnósticos validados ni texto manual).
 {{/if}}
 
-**Instrucciones Específicas de Salida si no hay información diagnóstica suficiente:**
--   Si no hay diagnósticos validados ni texto manual, la salida de las cuatro secciones debe reflejar la incapacidad de dar consejos específicos, pero manteniendo los títulos con sus iconos. Ejemplo:
-    "generalRecommendations": "***RECOMENDACIONES GENERALES***\\nNO SE HA PROPORCIONADO INFORMACIÓN DIAGNÓSTICA ESPECÍFICA (DIAGNÓSTICOS VALIDADOS O TEXTO MANUAL). ES FUNDAMENTAL CONSULTAR CON SU MÉDICO PARA RECIBIR INDICACIONES PERSONALIZADAS.",
-    "dietaryIndications": "🍽️ ***INDICACIONES SOBRE LA DIETA***\\nNO SE PUEDEN DAR INDICACIONES DIETÉTICAS ESPECÍFICAS SIN INFORMACIÓN DIAGNÓSTICA. CONSULTE A SU MÉDICO O NUTRICIONISTA.",
-    "generalCare": "⚕️ ***CUIDADOS GENERALES***\\nES IMPORTANTE SEGUIR LAS INDICACIONES GENERALES DE SU MÉDICO Y MANTENER UN ESTILO DE VIDA SALUDABLE. PARA CUIDADOS ESPECÍFICOS, CONSULTE A SU MÉDICO.",
-    "alarmSigns": "⚠️ ***SIGNOS DE ALARMA***\\nCONSULTE CON SU MÉDICO ANTE CUALQUIER SÍNTOMA NUEVO O EMPEORAMIENTO DE SU CONDICIÓN ACTUAL."
+**Instrucciones Específicas de Salida si no hay información diagnóstica suficiente (usar estos textos exactos):**
+-   "generalRecommendations": "***RECOMENDACIONES GENERALES***\\nNO SE HA PROPORCIONADO INFORMACIÓN DIAGNÓSTICA ESPECÍFICA (DIAGNÓSTICOS VALIDADOS O TEXTO MANUAL). ES FUNDAMENTAL CONSULTAR CON SU MÉDICO PARA RECIBIR INDICACIONES PERSONALIZADAS."
+-   "dietaryIndications": "🍽️ ***INDICACIONES SOBRE LA DIETA***\\nNO SE PUEDEN DAR INDICACIONES DIETÉTICAS ESPECÍFICAS SIN INFORMACIÓN DIAGNÓSTICA. CONSULTE A SU MÉDICO O NUTRICIONISTA."
+-   "generalCare": "⚕️ ***CUIDADOS GENERALES***\\nES IMPORTANTE SEGUIR LAS INDICACIONES GENERALES DE SU MÉDICO Y MANTENER UN ESTILO DE VIDA SALUDABLE. PARA CUIDADOS ESPECÍFICOS, CONSULTE A SU MÉDICO."
+-   "alarmSigns": "⚠️ ***SIGNOS DE ALARMA***\\nCONSULTE CON SU MÉDICO ANTE CUALQUIER SÍNTOMA NUEVO O EMPEORAMIENTO DE SU CONDICIÓN ACTUAL."
 
 Genera las recomendaciones, indicaciones de dieta, cuidados generales y signos de alarma:
 `,
@@ -101,3 +106,4 @@ const generatePatientAdviceFlow = ai.defineFlow(
     return output!;
   }
 );
+
