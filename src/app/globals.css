@@ -89,13 +89,13 @@
     @apply bg-background text-foreground;
   }
 
-  body.font-size-small {
+  html.font-size-small {
     font-size: 0.875rem; /* 14px if base is 16px */
   }
-  body.font-size-normal {
+  html.font-size-normal {
     font-size: 1rem;    /* 16px */
   }
-  body.font-size-large {
+  html.font-size-large {
     font-size: 1.125rem; /* 18px */
   }
 }
