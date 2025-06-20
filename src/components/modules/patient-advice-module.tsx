@@ -1,10 +1,12 @@
 
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { ModuleCardWrapper } from '@/components/common/module-card-wrapper';
 import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
@@ -22,8 +24,9 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
   const {
     generatedClinicalAnalysis,
     textAnalysisSummary,
-    diagnosisResults,
-    patientAdviceInput, setPatientAdviceInput,
+    diagnosisResults, // Usaremos esto para obtener los diagnósticos validados disponibles
+    patientAdviceInput, // Solo para manualDiagnosisOrAnalysis y para establecer el contexto antes de guardar
+    setPatientAdviceInput,
     generatedPatientAdvice, setGeneratedPatientAdvice,
     isGeneratingPatientAdvice, setIsGeneratingPatientAdvice,
     patientAdviceError, setPatientAdviceError,
@@ -34,18 +37,35 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const validatedDiagnoses: ValidatedDiagnosis[] = diagnosisResults
+  const [selectedDiagnoses, setSelectedDiagnoses] = useState<ValidatedDiagnosis[]>([]);
+
+  // Deriva los diagnósticos validados disponibles desde el contexto
+  const availableValidatedDiagnoses: ValidatedDiagnosis[] = useMemo(() => {
+    return diagnosisResults
       ?.filter(d => d.isValidated)
       .map(d => ({ code: d.code, description: d.description })) || [];
+  }, [diagnosisResults]);
 
+  // Efecto para actualizar `patientAdviceInput` en el contexto con `clinicalAnalysis` y `textSummary`
+  // `manualDiagnosisOrAnalysis` se mantiene desde el input directo.
+  // `validatedDiagnoses` en el contexto se actualizará al momento de generar/guardar.
+  useEffect(() => {
     setPatientAdviceInput(prevInput => ({
-        ...prevInput, // Preserve manualDiagnosisOrAnalysis
+        ...prevInput, // Mantiene manualDiagnosisOrAnalysis
         clinicalAnalysis: generatedClinicalAnalysis || null,
         textSummary: textAnalysisSummary || null,
-        validatedDiagnoses: validatedDiagnoses.length > 0 ? validatedDiagnoses : null,
+        // validatedDiagnoses se omite aquí, se llenará con los seleccionados al generar/guardar
     }));
-  }, [generatedClinicalAnalysis, textAnalysisSummary, diagnosisResults, setPatientAdviceInput]);
+  }, [generatedClinicalAnalysis, textAnalysisSummary, setPatientAdviceInput]);
+
+  // Efecto para limpiar selectedDiagnoses si los disponibles cambian (ej. desvalidación en M5)
+  useEffect(() => {
+    setSelectedDiagnoses(prevSelected =>
+        prevSelected.filter(selDx =>
+            availableValidatedDiagnoses.some(availDx => availDx.code === selDx.code)
+        )
+    );
+  }, [availableValidatedDiagnoses]);
 
   const handleManualInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPatientAdviceInput(prevInput => ({
@@ -54,12 +74,21 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
     }));
   };
 
+  const handleCheckboxChange = (diagnosis: ValidatedDiagnosis, checked: boolean) => {
+    setSelectedDiagnoses(prevSelected => {
+        const newSelected = checked
+            ? [...prevSelected, diagnosis]
+            : prevSelected.filter(d => d.code !== diagnosis.code);
+        return newSelected;
+    });
+  };
+
   const handleGenerateAdvice = async () => {
-    const hasValidatedDx = patientAdviceInput.validatedDiagnoses && patientAdviceInput.validatedDiagnoses.length > 0;
+    const hasSelectedDx = selectedDiagnoses.length > 0;
     const hasManualText = String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() !== '';
 
-    if (!hasValidatedDx && !hasManualText) {
-      toast({ title: "Datos Insuficientes", description: "Se requiere al menos un diagnóstico validado o un texto de diagnóstico/análisis manual.", variant: "destructive" });
+    if (!hasSelectedDx && !hasManualText) {
+      toast({ title: "Datos Insuficientes", description: "Se requiere al menos un diagnóstico seleccionado o un texto de diagnóstico/análisis manual.", variant: "destructive" });
       return;
     }
 
@@ -68,11 +97,18 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
     let aiOutput: GeneratePatientAdviceOutput | null = null;
 
     const inputForAI: GeneratePatientAdviceInput = {
-      clinicalAnalysis: patientAdviceInput.clinicalAnalysis || undefined, // Pass as undefined if null for Zod optional
-      textSummary: patientAdviceInput.textSummary || undefined, // Pass as undefined if null for Zod optional
-      validatedDiagnoses: patientAdviceInput.validatedDiagnoses || undefined,
-      manualDiagnosisOrAnalysis: String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() || undefined,
+      clinicalAnalysis: generatedClinicalAnalysis || undefined,
+      textSummary: textAnalysisSummary || undefined,
+      validatedDiagnoses: hasSelectedDx ? selectedDiagnoses : undefined,
+      manualDiagnosisOrAnalysis: hasManualText ? String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() : undefined,
     };
+    
+    // Actualizar el input del contexto para reflejar lo que se usará para la IA (para el historial)
+    setPatientAdviceInput(prev => ({
+        ...prev,
+        validatedDiagnoses: hasSelectedDx ? selectedDiagnoses : null,
+        // clinicalAnalysis y textSummary ya están actualizados por su propio useEffect
+    }));
 
     try {
       aiOutput = await generatePatientAdvice(inputForAI);
@@ -88,8 +124,8 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
         await addHistoryEntry({
           module: 'PatientAdvice',
           inputType: 'application/json',
-          inputSummary: `Dx Validados: ${inputForAI.validatedDiagnoses?.length || 0}. Manual: ${inputForAI.manualDiagnosisOrAnalysis ? 'Sí' : 'No'}`,
-          outputSummary: `Rec: ${getTextSummary(aiOutput.generalRecommendations, 20)}. Signos: ${getTextSummary(aiOutput.alarmSigns, 20)}. Dieta: ${getTextSummary(aiOutput.dietaryIndications, 20)}. Cuidados: ${getTextSummary(aiOutput.generalCare, 20)}`,
+          inputSummary: `Dx Seleccionados: ${selectedDiagnoses.length || 0}. Manual: ${inputForAI.manualDiagnosisOrAnalysis ? 'Sí' : 'No'}`,
+          outputSummary: `Rec: ${getTextSummary(aiOutput.generalRecommendations, 20)}. Dieta: ${getTextSummary(aiOutput.dietaryIndications, 20)}. Cuid: ${getTextSummary(aiOutput.generalCare, 20)}. Alarm: ${getTextSummary(aiOutput.alarmSigns, 20)}`,
           fullInput: inputForAI,
           fullOutput: aiOutput,
           status: 'completed',
@@ -105,7 +141,7 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
         await addHistoryEntry({
           module: 'PatientAdvice',
           inputType: 'application/json',
-          inputSummary: `Dx Validados: ${inputForAI.validatedDiagnoses?.length || 0}. Manual: ${inputForAI.manualDiagnosisOrAnalysis ? 'Sí' : 'No'}`,
+          inputSummary: `Dx Seleccionados: ${selectedDiagnoses.length || 0}. Manual: ${inputForAI.manualDiagnosisOrAnalysis ? 'Sí' : 'No'}`,
           outputSummary: 'Error en la generación',
           fullInput: inputForAI,
           fullOutput: { error: errorMessage },
@@ -119,8 +155,9 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
   };
 
   const handleClearModule = () => {
-    clearPatientAdviceModule();
-    toast({ title: "Módulo Limpiado", description: "Se han limpiado todos los consejos generados." });
+    clearPatientAdviceModule(); // Esto limpiará también el patientAdviceInput en el contexto
+    setSelectedDiagnoses([]);   // Limpiar la selección local
+    toast({ title: "Módulo Limpiado", description: "Se han limpiado todos los consejos generados y selecciones." });
   };
   
   const handleOutputChange = (field: keyof PatientAdviceOutputState, value: string | null) => {
@@ -176,17 +213,23 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
         ? 'Error en la generación' 
         : `Rec: ${getTextSummary(generatedPatientAdvice.generalRecommendations, 20)}. Dieta: ${getTextSummary(generatedPatientAdvice.dietaryIndications, 20)}. Cuid: ${getTextSummary(generatedPatientAdvice.generalCare, 20)}. Alarm: ${getTextSummary(generatedPatientAdvice.alarmSigns, 20)}`;
 
+    // Construir inputForAI con los datos actuales para el historial
     const inputForHistory: GeneratePatientAdviceInput = {
-        clinicalAnalysis: patientAdviceInput.clinicalAnalysis || undefined,
-        textSummary: patientAdviceInput.textSummary || undefined,
-        validatedDiagnoses: patientAdviceInput.validatedDiagnoses || undefined,
+        clinicalAnalysis: generatedClinicalAnalysis || undefined,
+        textSummary: textAnalysisSummary || undefined,
+        validatedDiagnoses: selectedDiagnoses.length > 0 ? selectedDiagnoses : undefined,
         manualDiagnosisOrAnalysis: String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() || undefined,
-      };
+    };
+     // Actualizar el input del contexto para que el historial sea consistente con lo que se guardaría si se generara
+    setPatientAdviceInput(prev => ({
+        ...prev,
+        validatedDiagnoses: selectedDiagnoses.length > 0 ? selectedDiagnoses : null,
+    }));
     
     await addHistoryEntry({
       module: 'PatientAdvice',
       inputType: 'application/json',
-      inputSummary: `Dx Validados: ${inputForHistory.validatedDiagnoses?.length || 0}. Manual: ${inputForHistory.manualDiagnosisOrAnalysis ? 'Sí' : 'No'}`,
+      inputSummary: `Dx Seleccionados: ${selectedDiagnoses.length || 0}. Manual: ${inputForHistory.manualDiagnosisOrAnalysis ? 'Sí' : 'No'}`,
       outputSummary: outputSum,
       fullInput: inputForHistory,
       fullOutput: output,
@@ -195,7 +238,7 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
     });
   };
 
-  const canGenerate = (patientAdviceInput.validatedDiagnoses && patientAdviceInput.validatedDiagnoses.length > 0) || String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() !== '';
+  const canGenerate = (selectedDiagnoses.length > 0) || String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() !== '';
   const hasAnyAdvice = generatedPatientAdvice.generalRecommendations || generatedPatientAdvice.dietaryIndications || generatedPatientAdvice.generalCare || generatedPatientAdvice.alarmSigns;
 
   return (
@@ -203,18 +246,42 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
       ref={moduleRef}
       id={id}
       title="Recomendaciones y Consejos para Paciente"
-      description="Genera recomendaciones, signos de alarma, indicaciones de dieta y cuidados generales basados en diagnósticos validados o un texto manual."
+      description="Genere recomendaciones, signos de alarma, indicaciones de dieta y cuidados generales basados en diagnósticos validados o un texto manual."
       icon={UserCheck}
       isLoading={isGeneratingPatientAdvice}
     >
       <div className="space-y-4">
         <div className="space-y-3 p-3 border rounded-md bg-muted/30">
             <h4 className="text-sm font-semibold">Datos de Entrada para Generación:</h4>
+            
+            {availableValidatedDiagnoses.length > 0 ? (
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Seleccionar Diagnósticos Validados (del Módulo 5):</Label>
+                <ScrollArea className="h-32 rounded-md border p-2 bg-background">
+                  {availableValidatedDiagnoses.map((diag) => (
+                    <div key={diag.code} className="flex items-center space-x-2 mb-1">
+                      <Checkbox
+                        id={`diag-advice-${diag.code}`}
+                        checked={selectedDiagnoses.some(s => s.code === diag.code)}
+                        onCheckedChange={(checked) => handleCheckboxChange(diag, !!checked)}
+                        disabled={isGeneratingPatientAdvice}
+                      />
+                      <Label htmlFor={`diag-advice-${diag.code}`} className="text-xs font-normal cursor-pointer flex-grow">
+                        {diag.code} - {getTextSummary(diag.description, 60)}
+                      </Label>
+                    </div>
+                  ))}
+                </ScrollArea>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No hay diagnósticos validados disponibles del Módulo 5 para seleccionar.</p>
+            )}
+
             <div>
               <Label htmlFor="manualDiagnosisOrAnalysis" className="text-xs font-medium">Diagnóstico/Análisis Manual (Opcional):</Label>
               <Textarea
                 id="manualDiagnosisOrAnalysis"
-                placeholder="Escriba aquí un diagnóstico o análisis corto si no hay diagnósticos validados..."
+                placeholder="Escriba aquí un diagnóstico o análisis corto si no hay diagnósticos seleccionados o para complementar..."
                 value={patientAdviceInput.manualDiagnosisOrAnalysis || ''}
                 onChange={handleManualInputChange}
                 rows={3}
@@ -222,21 +289,8 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
                 disabled={isGeneratingPatientAdvice}
               />
             </div>
-            <div className="text-xs">
-              <p><strong>Dx. Validados (M5):</strong>
-                {patientAdviceInput.validatedDiagnoses && patientAdviceInput.validatedDiagnoses.length > 0 ? (
-                  <ul className="list-disc pl-5">
-                    {patientAdviceInput.validatedDiagnoses.map(dx => (
-                      <li key={dx.code}>{dx.code} - {getTextSummary(dx.description, 50)}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  " Ninguno seleccionado"
-                )}
-              </p>
-            </div>
              <p className="text-xs text-muted-foreground italic">
-                Nota: Los diagnósticos validados (si existen) tendrán prioridad. El texto manual se usará si no hay diagnósticos validados.
+                Nota: Los diagnósticos seleccionados (si los hay) y/o el texto manual se usarán para generar los consejos.
             </p>
         </div>
 
@@ -385,3 +439,5 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
     </ModuleCardWrapper>
   );
 }
+
+    
