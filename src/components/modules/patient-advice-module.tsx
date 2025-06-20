@@ -11,7 +11,7 @@ import { useHistoryStore } from '@/hooks/use-history-store';
 import { generatePatientAdvice, type GeneratePatientAdviceOutput, type GeneratePatientAdviceInput } from '@/ai/flows/generate-patient-advice';
 import type { PatientAdviceInputData, ValidatedDiagnosis, PatientAdviceOutputState } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { UserCheck, Eraser, Save, Copy, AlertTriangle, Utensils, ShieldPlus } from 'lucide-react';
+import { UserCheck, Eraser, Save, Copy, AlertTriangle, Utensils, ShieldPlus, CopyPlus } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 
 interface PatientAdviceModuleProps {
@@ -40,7 +40,7 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
       .map(d => ({ code: d.code, description: d.description })) || [];
 
     setPatientAdviceInput(prevInput => ({
-        ...prevInput,
+        ...prevInput, // Preserve manualDiagnosisOrAnalysis
         clinicalAnalysis: generatedClinicalAnalysis || null,
         textSummary: textAnalysisSummary || null,
         validatedDiagnoses: validatedDiagnoses.length > 0 ? validatedDiagnoses : null,
@@ -68,8 +68,8 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
     let aiOutput: GeneratePatientAdviceOutput | null = null;
 
     const inputForAI: GeneratePatientAdviceInput = {
-      clinicalAnalysis: patientAdviceInput.clinicalAnalysis || undefined,
-      textSummary: patientAdviceInput.textSummary || undefined,
+      clinicalAnalysis: patientAdviceInput.clinicalAnalysis || undefined, // Pass as undefined if null for Zod optional
+      textSummary: patientAdviceInput.textSummary || undefined, // Pass as undefined if null for Zod optional
       validatedDiagnoses: patientAdviceInput.validatedDiagnoses || undefined,
       manualDiagnosisOrAnalysis: String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() || undefined,
     };
@@ -128,13 +128,40 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
   };
 
   const handleCopyToClipboard = (text: string | null, type: string) => {
-    if (text) {
+    if (text && text.trim() !== '') {
       navigator.clipboard.writeText(text)
         .then(() => toast({ title: `${type} Copiados`, description: `Los ${type.toLowerCase()} han sido copiados.` }))
         .catch(() => toast({ title: "Error al Copiar", variant: "destructive" }));
     } else {
       toast({ title: `Nada que Copiar`, description: `No hay ${type.toLowerCase()} generados para copiar.` });
     }
+  };
+
+  const handleCopyAllAdvice = () => {
+    const {
+      generalRecommendations,
+      dietaryIndications,
+      generalCare,
+      alarmSigns,
+    } = generatedPatientAdvice;
+
+    const parts = [
+      generalRecommendations,
+      dietaryIndications,
+      generalCare,
+      alarmSigns,
+    ].filter(part => part && part.trim() !== ''); 
+
+    if (parts.length === 0) {
+      toast({ title: "Nada que Copiar", description: "No hay consejos generados para copiar.", variant: "default" });
+      return;
+    }
+
+    const allAdviceText = parts.join('\n\n'); 
+
+    navigator.clipboard.writeText(allAdviceText)
+      .then(() => toast({ title: "Todos los Consejos Copiados", description: "Se ha copiado el contenido de todas las secciones." }))
+      .catch(() => toast({ title: "Error al Copiar Todo", variant: "destructive" }));
   };
   
   const handleSaveManually = async () => {
@@ -147,7 +174,7 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
     const output = patientAdviceError ? { error: patientAdviceError } : generatedPatientAdvice;
     const outputSum = patientAdviceError 
         ? 'Error en la generación' 
-        : `Rec: ${getTextSummary(generatedPatientAdvice.generalRecommendations, 20)}. Signos: ${getTextSummary(generatedPatientAdvice.alarmSigns, 20)}. Dieta: ${getTextSummary(generatedPatientAdvice.dietaryIndications, 20)}. Cuidados: ${getTextSummary(generatedPatientAdvice.generalCare, 20)}`;
+        : `Rec: ${getTextSummary(generatedPatientAdvice.generalRecommendations, 20)}. Dieta: ${getTextSummary(generatedPatientAdvice.dietaryIndications, 20)}. Cuid: ${getTextSummary(generatedPatientAdvice.generalCare, 20)}. Alarm: ${getTextSummary(generatedPatientAdvice.alarmSigns, 20)}`;
 
     const inputForHistory: GeneratePatientAdviceInput = {
         clinicalAnalysis: patientAdviceInput.clinicalAnalysis || undefined,
@@ -169,6 +196,7 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
   };
 
   const canGenerate = (patientAdviceInput.validatedDiagnoses && patientAdviceInput.validatedDiagnoses.length > 0) || String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() !== '';
+  const hasAnyAdvice = generatedPatientAdvice.generalRecommendations || generatedPatientAdvice.dietaryIndications || generatedPatientAdvice.generalCare || generatedPatientAdvice.alarmSigns;
 
   return (
     <ModuleCardWrapper
@@ -331,6 +359,15 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
                       Copiar
                     </Button>
                 </div>
+              </div>
+            )}
+            
+            {hasAnyAdvice && (
+              <div className="mt-6 pt-4 border-t">
+                <Button onClick={handleCopyAllAdvice} variant="secondary" className="w-full" disabled={isGeneratingPatientAdvice}>
+                    <CopyPlus className="mr-2 h-4 w-4" />
+                    Copiar Todos los Consejos
+                </Button>
               </div>
             )}
           </div>
