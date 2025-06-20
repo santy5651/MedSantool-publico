@@ -93,9 +93,9 @@ Avisar cambios
 {{#if surveillanceNursing.monitorWounds}}- Vigilar heridas{{/if}}
 {{#if surveillanceNursing.monitorBleeding}}- Vigilar sangrado{{/if}}
 {{#unless requiresSpecialNursingSurveillance}}NO REQUIERE VIGILANCIA ESPECIAL POR ENFERMERÍA{{/unless}}
-CONDICIONES DE TRASLADO: {{{transferConditions}}}
 CONSIDERACIONES ESPECIALES:
 {{#if specialConsiderations}}{{{specialConsiderations}}}{{else}}NO HAY CONSIDERACIONES ESPECIALES{{/if}}
+CONDICIONES DE TRASLADO: {{{transferConditions}}}
 
 **IMPORTANTE: TODO EL TEXTO DE SALIDA DEBE ESTAR EN LETRAS MAYÚSCULAS.**
 `,

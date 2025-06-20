@@ -2,25 +2,46 @@
 // src/components/modules/medical-orders-module.tsx
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { ModuleCardWrapper } from '@/components/common/module-card-wrapper';
 import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
 import { generateMedicalOrder, type GenerateMedicalOrderInput, type GenerateMedicalOrderOutput } from '@/ai/flows/generate-medical-order';
 import { useToast } from '@/hooks/use-toast';
-import { FileEdit, Eraser, Save, ClipboardCopy, WrapText, Baseline, ALargeSmall } from 'lucide-react';
-import type { MedicalOrderType, TransferConditionType, MedicalOrderInputState } from '@/types';
+import { FileEdit, Eraser, Save, ClipboardCopy, WrapText, Baseline, ALargeSmall, Calculator } from 'lucide-react';
+import type { MedicalOrderType, TransferConditionType, MedicalOrderInputState, NursingSurveillanceState } from '@/types';
 import { getTextSummary } from '@/lib/utils';
 
 interface MedicalOrdersModuleProps {
   id?: string;
 }
+
+interface PaduaItem {
+  text: string;
+  points: number;
+  checked: boolean;
+}
+
+const initialPaduaItems: Record<string, PaduaItem> = {
+  mobility: { text: 'Movilidad reducida (Reposo en cama con/sin asistencia al baño ≥3 días)', points: 3, checked: false },
+  cancer: { text: 'Cáncer activo (Presente o diagnosticado en los últimos 6 meses, excluyendo cáncer de piel no melanoma)', points: 3, checked: false },
+  thrombophilia: { text: 'Trombofilia conocida (Antecedente personal o familiar, o positividad para factor V Leiden, protrombina 20210A, deficiencia de antitrombina, proteína C o S)', points: 3, checked: false },
+  traumaSurgery: { text: 'Trauma o cirugía reciente (<1 mes)', points: 2, checked: false },
+  age: { text: 'Edad >70 años', points: 1, checked: false },
+  heartFailure: { text: 'Insuficiencia cardíaca o respiratoria', points: 1, checked: false },
+  miStroke: { text: 'Infarto agudo de miocardio o ACV isquémico', points: 1, checked: false },
+  infectionRheum: { text: 'Infección aguda y/o enfermedad reumatológica', points: 1, checked: false },
+  obesity: { text: 'Obesidad (IMC >30 kg/m²)', points: 1, checked: false },
+  hormoneTx: { text: 'Tratamiento hormonal en curso', points: 1, checked: false },
+};
+
 
 export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
   const {
@@ -35,6 +56,34 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
   const outputTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const [showPaduaCalculator, setShowPaduaCalculator] = useState(false);
+  const [paduaItems, setPaduaItems] = useState<Record<string, PaduaItem>>(initialPaduaItems);
+  const [currentPaduaScore, setCurrentPaduaScore] = useState(0);
+
+
+  useEffect(() => {
+    const score = Object.values(paduaItems).reduce((acc, item) => acc + (item.checked ? item.points : 0), 0);
+    setCurrentPaduaScore(score);
+  }, [paduaItems]);
+
+  const handlePaduaItemChange = (key: string) => {
+    setPaduaItems(prev => ({
+      ...prev,
+      [key]: { ...prev[key], checked: !prev[key].checked }
+    }));
+  };
+
+  const getPaduaRiskInterpretation = (score: number): string => {
+    if (score < 4) return `Bajo riesgo (Puntaje: ${score})`;
+    return `Alto riesgo (Puntaje: ${score})`;
+  };
+  
+  const handleApplyPaduaScore = () => {
+    handleInputChange('paduaScale', `${currentPaduaScore} puntos (${getPaduaRiskInterpretation(currentPaduaScore).split('(')[0].trim()})`);
+    setShowPaduaCalculator(false);
+     toast({ title: "Puntaje Aplicado", description: `Escala de Padua actualizada a ${currentPaduaScore} puntos.` });
+  };
 
   const handleInputChange = (field: keyof MedicalOrderInputState, value: any) => {
     setMedicalOrderInputs(prev => ({ ...prev, [field]: value }));
@@ -131,6 +180,7 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
 
   const handleClearSelection = () => {
     clearMedicalOrdersModule();
+    setPaduaItems(initialPaduaItems); // Reset Padua items too
     toast({ title: "Campos Limpiados", description: "Se han limpiado todos los campos de órdenes médicas." });
   };
 
@@ -293,14 +343,63 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
           )}
 
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
             <div>
                 <Label htmlFor="fallRisk">Riesgo de Caídas y Lesiones por Presión</Label>
                 <Input id="fallRisk" value={medicalOrderInputs.fallRisk} onChange={(e) => handleInputChange('fallRisk', e.target.value)} disabled={isGeneratingMedicalOrder}/>
             </div>
-            <div>
+            <div className="flex flex-col">
                 <Label htmlFor="paduaScale">Escala de Padua</Label>
-                <Input id="paduaScale" value={medicalOrderInputs.paduaScale} onChange={(e) => handleInputChange('paduaScale', e.target.value)} placeholder="Ej: 3 puntos" disabled={isGeneratingMedicalOrder}/>
+                <div className="flex items-center gap-2">
+                  <Input 
+                    id="paduaScale" 
+                    value={medicalOrderInputs.paduaScale} 
+                    onChange={(e) => handleInputChange('paduaScale', e.target.value)} 
+                    placeholder="Ej: 3 puntos" 
+                    disabled={isGeneratingMedicalOrder}
+                    className="flex-grow"
+                  />
+                  <Dialog open={showPaduaCalculator} onOpenChange={setShowPaduaCalculator}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" title="Calculadora Escala de Padua" disabled={isGeneratingMedicalOrder}>
+                        <Calculator className="h-5 w-5" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Calculadora de Escala de Padua</DialogTitle>
+                        <DialogDescription>
+                          Seleccione los factores de riesgo presentes para calcular el puntaje.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-2 py-2 max-h-[60vh] overflow-y-auto pr-2">
+                        {Object.entries(paduaItems).map(([key, item]) => (
+                          <div key={key} className="flex items-center space-x-2 p-2 border rounded-md">
+                            <Checkbox
+                              id={`padua-${key}`}
+                              checked={item.checked}
+                              onCheckedChange={() => handlePaduaItemChange(key)}
+                            />
+                            <Label htmlFor={`padua-${key}`} className="text-sm font-normal flex-grow">
+                              {item.text} <span className="font-semibold">({item.points} pts)</span>
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                       <div className="mt-2 p-2 border-t text-sm">
+                        <strong>Puntaje Total:</strong> {currentPaduaScore}
+                        <br />
+                        <strong>Interpretación:</strong> {getPaduaRiskInterpretation(currentPaduaScore)}
+                      </div>
+                      <DialogFooter className="sm:justify-between">
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline">Cerrar</Button>
+                        </DialogClose>
+                        <Button type="button" onClick={handleApplyPaduaScore}>Aplicar Puntaje</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
             </div>
         </div>
         
@@ -327,6 +426,11 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
         </div>
 
         <div>
+          <Label htmlFor="specialConsiderations">Consideraciones Especiales</Label>
+          <Textarea id="specialConsiderations" value={medicalOrderInputs.specialConsiderations} onChange={(e) => handleInputChange('specialConsiderations', e.target.value)} rows={3} placeholder="Notas adicionales..." disabled={isGeneratingMedicalOrder}/>
+        </div>
+
+        <div>
             <Label htmlFor="transferConditions">Condiciones de Traslado</Label>
             <Select value={medicalOrderInputs.transferConditions} onValueChange={(value) => handleInputChange('transferConditions', value as TransferConditionType)} disabled={isGeneratingMedicalOrder}>
               <SelectTrigger id="transferConditions"><SelectValue placeholder="Seleccione condiciones..." /></SelectTrigger>
@@ -334,11 +438,6 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
                 {transferConditionOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
               </SelectContent>
             </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="specialConsiderations">Consideraciones Especiales</Label>
-          <Textarea id="specialConsiderations" value={medicalOrderInputs.specialConsiderations} onChange={(e) => handleInputChange('specialConsiderations', e.target.value)} rows={3} placeholder="Notas adicionales..." disabled={isGeneratingMedicalOrder}/>
         </div>
 
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -396,3 +495,4 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
     </ModuleCardWrapper>
   );
 }
+
