@@ -44,28 +44,16 @@ const prompt = ai.definePrompt({
     -   Si detectas gases arteriales, usa el formato: "- GASES ARTERIALES: pH, PCO2, PO2, HCO3, LACT, PAFI".
     -   El resultado debe ser un texto continuo, claro y conciso, ideal para una entrega de turno rápida.
     -   **Ejemplo de formato de salida para "PARA ENTREGA DE TURNO":**
-        "Hemograma: Hb, Hto, Leu, Lin #, Neu #, Neu %, Plt. (Si hay anemia, se agregara, al lado de Hto los siguientes: VCM, HCM, ADE/RDW) - BUN, CREA - TGO, TGP, GGT, FA, BT, BD, BI, Alb - TPT, TP, INR - NA, K, CL, CA, MG - TSH, T3, T4, T3L, T4L, CORTISOL AM, CORTISOL PM - GASES ARTERIALES: pH, PCO2, PO2, HCO3, LACT, PAFI - Uroanálisis: BACT, HB, ERI, ESTERASA, NITRITOS, MOCO, CEL EPIT."
+        "Hemograma: Hb, Hto, Leu, Lin #, Neu #, Neu %, Plt. (Si hay anemia, se agregara, al lado de Hto los siguientes: VCM, HCM, ADE/RDW) - PCT, PCR - BUN, CREA - TGO, TGP, GGT, FA, BT, BD, BI, Alb, AMIL, LIPAS - TPT, TP, INR - NA, K, CL, CA, MG - TSH, T3, T4, T3L, T4L, CORTISOL AM, CORTISOL PM - GASES ARTERIALES: pH, PCO2, PO2, HCO3, LACT, PAFI - Uroanálisis: BACT, HB, ERI, ESTERASA, NITRITOS, MOCO, CEL EPIT."
 
 2.  **Formato 2: "PARA REPORTE EN SISTEMA" (sin abreviaturas):**
-    -   Genera un listado de los paraclínicos con sus nombres completos y valores.
-    -   Agrupa los exámenes por categoría, usando los nombres completos de las categorías (Ej: Hemograma Completo, Función Renal, Perfil Hepático).
-    -   Cada examen debe estar en una nueva línea con su nombre completo.
-    -   **Ejemplo de formato de salida para "PARA REPORTE EN SISTEMA":**
-        "**Hemograma Completo:**
-        - Hemoglobina
-        - Hematocrito
-        - Leucocitos Totales
-        - Conteo Absoluto de Linfocitos
-        - Conteo Absoluto de Neutrófilos
-        - Porcentaje de Neutrófilos
-        - Plaquetas
-        - Volumen Corpuscular Medio (si aplica)
-        - Hemoglobina Corpuscular Media (si aplica)
-        - Ancho de Distribución Eritrocitaria (si aplica)
-        **Función Renal:**
-        - Nitrógeno Ureico en Sangre (BUN)
-        - Creatinina
-        ... y así sucesivamente con todos los demás paraclínicos identificados."
+    -   Genera un reporte de los paraclínicos con sus nombres completos y valores, agrupados por categoría.
+    -   Cada categoría debe comenzar en una **nueva línea**, con el nombre de la categoría en negrita (usando asteriscos, ej: \`**Hemograma Completo**\`).
+    -   Todos los resultados dentro de una misma categoría deben ir en la **misma línea** que el título de la categoría, separados por comas.
+    -   **Ejemplo de formato de salida para "PARA REPORTE EN SISTEMA" (asegúrate de que cada categoría empiece en una línea nueva):**
+        **Hemograma Completo:** Hemoglobina 15.70, Hematocrito 47.50, Leucocitos 18.58, Linfocitos # 0.30, Neutrófilos # 17.42, Neutrófilos % 93.8, Plaquetas 283.00, Volumen Corpuscular Medio 80.30, Hemoglobina Corpuscular Media 26.70, Ancho de Distribución Eritrocitaria 13.90
+        **Química Sanguínea:** Glicemia 111, Nitrógeno Ureico: 8.0, Creatinina en Suero: 0.70
+        **Electrolitos:** Sodio 127, Potasio: 2.6, Cloro: 86, Calcio: 9.4
 
 Genera ambos reportes según el esquema de salida proporcionado.
 `,
