@@ -1,11 +1,5 @@
 
-
-
-
-
-
-
-export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'InterrogationQuestions' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator' | 'DischargeSummary';
+export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'InterrogationQuestions' | 'PhysicalExam' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator' | 'DischargeSummary';
 
 export type ActiveView = 'analysis' | 'other' | 'all';
 export type FontSize = 'small' | 'normal' | 'large';
@@ -125,7 +119,7 @@ export interface HistoryEntry {
   inputSummary: string;
   outputSummary: string;
   fullInput?: string | Record<string, any> | DoseCalculatorInputState | PatientAdviceInputData | DischargeSummaryInputState;
-  fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { improvedText: string } | ClinicalAnalysisOutputState | { questions: InterrogationQuestion[] } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState | DischargeSummaryOutputState;
+  fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { improvedText: string } | ClinicalAnalysisOutputState | { questions: InterrogationQuestion[] } | { physicalExamText: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState | DischargeSummaryOutputState;
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
 }
@@ -170,7 +164,7 @@ export interface NursingSurveillanceState {
   // Líquidos
   restriccionHidrica800: boolean; // Restricción hídrica a 800 cc/24 horas
   controlLiquidosAdminElim: boolean; // Control de líquidos administrados y eliminados
-  registroBalanceHidrico24h: boolean; // Registro de balance hídrico de 24 horas
+  registroBalanceHidrico24h: boolean; // Registro de balance hídrico cada 24 horas
   calcularDiuresisHoraria: boolean; // Calcular diuresis horaria
   pesoDiario: boolean; // Peso diario
 }
@@ -277,6 +271,12 @@ export interface ClinicalDataContextState {
   isGeneratingInterrogationQuestions: boolean;
   interrogationQuestionsError: string | null;
 
+  // Physical Exam
+  physicalExamInput: string | null;
+  generatedPhysicalExam: string | null;
+  isGeneratingPhysicalExam: boolean;
+  physicalExamError: string | null;
+
   // Clinical Analysis
   clinicalAnalysisInput: string | null; 
   generatedClinicalAnalysis: ClinicalAnalysisOutputState;
@@ -353,6 +353,11 @@ export interface ClinicalDataContextActions {
   setIsGeneratingInterrogationQuestions: (loading: boolean) => void;
   setInterrogationQuestionsError: (error: string | null) => void;
 
+  setPhysicalExamInput: (input: string | null) => void;
+  setGeneratedPhysicalExam: (exam: string | null) => void;
+  setIsGeneratingPhysicalExam: (loading: boolean) => void;
+  setPhysicalExamError: (error: string | null) => void;
+
   setClinicalAnalysisInput: (input: string | null) => void;
   setGeneratedClinicalAnalysis: (analysis: ClinicalAnalysisOutputState) => void;
   setIsGeneratingClinicalAnalysis: (loading: boolean) => void;
@@ -405,6 +410,7 @@ export interface ClinicalDataContextActions {
   clearPdfModule: () => void;
   clearTextModule: () => void;
   clearInterrogationQuestionsModule: () => void;
+  clearPhysicalExamModule: () => void;
   clearClinicalAnalysisModule: () => void;
   clearDiagnosisModule: () => void;
   clearMedicalOrdersModule: () => void;
@@ -427,4 +433,3 @@ export interface ViewContextType {
   fontSize: FontSize;
   setFontSize: (size: FontSize) => void;
 }
-    

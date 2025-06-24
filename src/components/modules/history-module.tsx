@@ -1,8 +1,4 @@
 
-
-
-
-
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -18,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson, Utensils, ShieldPlus, FileOutput, HelpCircle } from 'lucide-react';
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson, Utensils, ShieldPlus, FileOutput, HelpCircle, Stethoscope } from 'lucide-react';
 import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion, ClinicalAnalysisOutputState } from '@/types';
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import type { ChatMessageHistoryItem } from '@/ai/flows/medical-assistant-chat-flow';
@@ -32,6 +28,7 @@ const moduleIcons: Record<ModuleType, LucideIcon> = {
   PdfExtraction: FileText,
   TextAnalysis: MessageSquareText,
   InterrogationQuestions: HelpCircle,
+  PhysicalExam: Stethoscope,
   ClinicalAnalysis: Brain, 
   DiagnosisSupport: Lightbulb,
   MedicalOrders: FileEdit,
@@ -239,6 +236,13 @@ export function HistoryModule() {
             clinicalData.setGeneratedInterrogationQuestions(outputData.questions);
           }
           clinicalData.setInterrogationQuestionsError(outputData?.error || null);
+          break;
+        case 'PhysicalExam':
+          clinicalData.setPhysicalExamInput(inputData as string || null);
+          if (outputData && outputData.physicalExamText) {
+            clinicalData.setGeneratedPhysicalExam(outputData.physicalExamText);
+          }
+          clinicalData.setPhysicalExamError(outputData?.error || null);
           break;
         case 'ClinicalAnalysis':
           clinicalData.setClinicalAnalysisInput(inputData as string || null);
@@ -469,6 +473,11 @@ export function HistoryModule() {
                 </ul>
               );
             }
+          }
+          break;
+        case 'PhysicalExam':
+          if (typeof output === 'object' && output !== null && 'physicalExamText' in output) {
+            return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {physicalExamText: string}).physicalExamText}</pre>;
           }
           break;
         case 'TreatmentPlanSuggestion':
@@ -774,5 +783,3 @@ declare module "@/components/ui/button" {
     size?: "default" | "sm" | "lg" | "icon" | "xs";
   }
 }
-
-    

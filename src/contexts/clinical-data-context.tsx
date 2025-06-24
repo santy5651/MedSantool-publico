@@ -1,9 +1,4 @@
 
-
-
-
-
-
 'use client';
 
 import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion, ClinicalAnalysisOutputState } from '@/types';
@@ -157,6 +152,11 @@ const initialState: ClinicalDataContextState = {
   isGeneratingInterrogationQuestions: false,
   interrogationQuestionsError: null,
 
+  physicalExamInput: null,
+  generatedPhysicalExam: null,
+  isGeneratingPhysicalExam: false,
+  physicalExamError: null,
+
   clinicalAnalysisInput: null,
   generatedClinicalAnalysis: initialClinicalAnalysisOutput,
   isGeneratingClinicalAnalysis: false,
@@ -222,7 +222,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setState(s => ({ ...s, clinicalNotesInput: typeof notes === 'function' ? notes(s.clinicalNotesInput) : notes }));
   }, []);
   const setTextAnalysisSummary = useCallback((summary: string | null) => {
-    setState(s => ({ ...s, textAnalysisSummary: summary, clinicalAnalysisInput: summary, interrogationQuestionsInput: summary }));
+    setState(s => ({ ...s, textAnalysisSummary: summary, clinicalAnalysisInput: summary, interrogationQuestionsInput: summary, physicalExamInput: summary }));
   }, []);
   const setIsTextAnalyzing = useCallback((loading: boolean) => setState(s => ({ ...s, isTextAnalyzing: loading })), []);
   const setTextAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, textAnalysisError: error })), []);
@@ -231,6 +231,11 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setGeneratedInterrogationQuestions = useCallback((questions: InterrogationQuestion[] | null) => setState(s => ({ ...s, generatedInterrogationQuestions: questions })), []);
   const setIsGeneratingInterrogationQuestions = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingInterrogationQuestions: loading })), []);
   const setInterrogationQuestionsError = useCallback((error: string | null) => setState(s => ({ ...s, interrogationQuestionsError: error })), []);
+
+  const setPhysicalExamInput = useCallback((input: string | null) => setState(s => ({ ...s, physicalExamInput: input })), []);
+  const setGeneratedPhysicalExam = useCallback((exam: string | null) => setState(s => ({ ...s, generatedPhysicalExam: exam })), []);
+  const setIsGeneratingPhysicalExam = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingPhysicalExam: loading })), []);
+  const setPhysicalExamError = useCallback((error: string | null) => setState(s => ({ ...s, physicalExamError: error })), []);
 
   const setClinicalAnalysisInput = useCallback((input: string | null) => setState(s => ({ ...s, clinicalAnalysisInput: input })), []);
   const setGeneratedClinicalAnalysis = useCallback((analysis: ClinicalAnalysisOutputState) => setState(s => ({ ...s, generatedClinicalAnalysis: analysis })), []);
@@ -360,6 +365,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       isTextAnalyzing: false,
       textAnalysisError: null,
       interrogationQuestionsInput: null,
+      physicalExamInput: null,
       clinicalAnalysisInput: null,
     }));
   }, []);
@@ -370,6 +376,16 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       generatedInterrogationQuestions: null,
       isGeneratingInterrogationQuestions: false,
       interrogationQuestionsError: null,
+    }));
+  }, []);
+
+  const clearPhysicalExamModule = useCallback(() => {
+    setState(s => ({
+      ...s,
+      physicalExamInput: null, // It will be repopulated by textAnalysisSummary if it exists, which is fine
+      generatedPhysicalExam: null,
+      isGeneratingPhysicalExam: false,
+      physicalExamError: null,
     }));
   }, []);
 
@@ -481,6 +497,10 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setGeneratedInterrogationQuestions,
     setIsGeneratingInterrogationQuestions,
     setInterrogationQuestionsError,
+    setPhysicalExamInput,
+    setGeneratedPhysicalExam,
+    setIsGeneratingPhysicalExam,
+    setPhysicalExamError,
     setClinicalAnalysisInput,
     setGeneratedClinicalAnalysis,
     setIsGeneratingClinicalAnalysis,
@@ -521,6 +541,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     clearPdfModule,
     clearTextModule,
     clearInterrogationQuestionsModule,
+    clearPhysicalExamModule,
     clearClinicalAnalysisModule,
     clearDiagnosisModule,
     clearMedicalOrdersModule,
@@ -546,5 +567,3 @@ export const useClinicalData = (): ClinicalDataContextType => {
   }
   return context;
 };
-
-    
