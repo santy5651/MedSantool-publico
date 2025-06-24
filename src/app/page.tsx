@@ -2,21 +2,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ImageAnalysisModule } from '@/components/modules/image-analysis-module';
-import { PdfExtractionModule } from '@/components/modules/pdf-extraction-module';
-import { TextAnalysisModule } from '@/components/modules/text-analysis-module';
-import { PhysicalExamModule } from '@/components/modules/physical-exam-module';
-import { ClinicalAnalysisModule } from '@/components/modules/clinical-analysis-module';
-import { DiagnosisSupportModule } from '@/components/modules/diagnosis-support-module';
-import { TreatmentPlanModule } from '@/components/modules/treatment-plan-module';
-import { MedicalOrdersModule } from '@/components/modules/medical-orders-module';
-import { PatientAdviceModule } from '@/components/modules/patient-advice-module';
-import { DischargeSummaryModule } from '@/components/modules/discharge-summary-module'; 
-import { MedicalJustificationModule } from '@/components/modules/medical-justification-module';
-import { MedicalAssistantChatModule } from '@/components/modules/medical-assistant-chat-module';
-import { DoseCalculatorModule } from '@/components/modules/dose-calculator-module';
-import { HistoryModule } from '@/components/modules/history-module';
-import { LabStandardizerModule } from '@/components/modules/lab-standardizer-module';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Eraser } from 'lucide-react';
 import { useClinicalData } from '@/contexts/clinical-data-context';
@@ -34,6 +21,36 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useView } from '@/contexts/view-context';
 import { cn } from '@/lib/utils';
+
+const ModuleLoadingSkeleton = () => (
+    <div className="p-4 border rounded-lg shadow-sm bg-card h-[300px] flex flex-col">
+        <div className="space-y-2 mb-4">
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+        </div>
+        <div className="space-y-4 mt-4 flex-grow">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-20 w-full" />
+        </div>
+    </div>
+);
+
+const ImageAnalysisModule = dynamic(() => import('@/components/modules/image-analysis-module').then(mod => mod.ImageAnalysisModule), { loading: () => <ModuleLoadingSkeleton /> });
+const PdfExtractionModule = dynamic(() => import('@/components/modules/pdf-extraction-module').then(mod => mod.PdfExtractionModule), { loading: () => <ModuleLoadingSkeleton /> });
+const TextAnalysisModule = dynamic(() => import('@/components/modules/text-analysis-module').then(mod => mod.TextAnalysisModule), { loading: () => <ModuleLoadingSkeleton /> });
+const PhysicalExamModule = dynamic(() => import('@/components/modules/physical-exam-module').then(mod => mod.PhysicalExamModule), { loading: () => <ModuleLoadingSkeleton /> });
+const ClinicalAnalysisModule = dynamic(() => import('@/components/modules/clinical-analysis-module').then(mod => mod.ClinicalAnalysisModule), { loading: () => <ModuleLoadingSkeleton /> });
+const DiagnosisSupportModule = dynamic(() => import('@/components/modules/diagnosis-support-module').then(mod => mod.DiagnosisSupportModule), { loading: () => <ModuleLoadingSkeleton /> });
+const TreatmentPlanModule = dynamic(() => import('@/components/modules/treatment-plan-module').then(mod => mod.TreatmentPlanModule), { loading: () => <ModuleLoadingSkeleton /> });
+const MedicalOrdersModule = dynamic(() => import('@/components/modules/medical-orders-module').then(mod => mod.MedicalOrdersModule), { loading: () => <ModuleLoadingSkeleton /> });
+const PatientAdviceModule = dynamic(() => import('@/components/modules/patient-advice-module').then(mod => mod.PatientAdviceModule), { loading: () => <ModuleLoadingSkeleton /> });
+const DischargeSummaryModule = dynamic(() => import('@/components/modules/discharge-summary-module').then(mod => mod.DischargeSummaryModule), { loading: () => <ModuleLoadingSkeleton /> });
+const MedicalJustificationModule = dynamic(() => import('@/components/modules/medical-justification-module').then(mod => mod.MedicalJustificationModule), { loading: () => <ModuleLoadingSkeleton /> });
+const MedicalAssistantChatModule = dynamic(() => import('@/components/modules/medical-assistant-chat-module').then(mod => mod.MedicalAssistantChatModule), { loading: () => <ModuleLoadingSkeleton /> });
+const DoseCalculatorModule = dynamic(() => import('@/components/modules/dose-calculator-module').then(mod => mod.DoseCalculatorModule), { loading: () => <ModuleLoadingSkeleton /> });
+const HistoryModule = dynamic(() => import('@/components/modules/history-module').then(mod => mod.HistoryModule), { loading: () => <ModuleLoadingSkeleton /> });
+const LabStandardizerModule = dynamic(() => import('@/components/modules/lab-standardizer-module').then(mod => mod.LabStandardizerModule), { loading: () => <ModuleLoadingSkeleton /> });
+
 
 export default function MedSanToolsPage() {
   const { activeView, expandedModuleId } = useView();
@@ -65,7 +82,7 @@ export default function MedSanToolsPage() {
     clearDiagnosisModule();
     clearTreatmentPlanModule();
     clearMedicalOrdersModule();
-    clearPatientAdviceModule();
+    clearPatientAdviceModule;
     clearDischargeSummaryModule(); 
     clearMedicalJustificationModule();
     clearChatModule();
