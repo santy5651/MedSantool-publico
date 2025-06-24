@@ -222,7 +222,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setState(s => ({ ...s, clinicalNotesInput: typeof notes === 'function' ? notes(s.clinicalNotesInput) : notes }));
   }, []);
   const setTextAnalysisSummary = useCallback((summary: string | null) => {
-    setState(s => ({ ...s, textAnalysisSummary: summary, clinicalAnalysisInput: summary, interrogationQuestionsInput: summary, physicalExamInput: summary }));
+    setState(s => ({ ...s, textAnalysisSummary: summary, clinicalAnalysisInput: summary, interrogationQuestionsInput: summary }));
   }, []);
   const setIsTextAnalyzing = useCallback((loading: boolean) => setState(s => ({ ...s, isTextAnalyzing: loading })), []);
   const setTextAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, textAnalysisError: error })), []);
@@ -232,7 +232,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setIsGeneratingInterrogationQuestions = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingInterrogationQuestions: loading })), []);
   const setInterrogationQuestionsError = useCallback((error: string | null) => setState(s => ({ ...s, interrogationQuestionsError: error })), []);
 
-  const setPhysicalExamInput = useCallback((input: string | null) => setState(s => ({ ...s, physicalExamInput: input })), []);
+  const setPhysicalExamInput = useCallback((input: ValidatedDiagnosis[] | null) => setState(s => ({ ...s, physicalExamInput: input })), []);
   const setGeneratedPhysicalExam = useCallback((exam: string | null) => setState(s => ({ ...s, generatedPhysicalExam: exam })), []);
   const setIsGeneratingPhysicalExam = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingPhysicalExam: loading })), []);
   const setPhysicalExamError = useCallback((error: string | null) => setState(s => ({ ...s, physicalExamError: error })), []);
@@ -365,7 +365,6 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       isTextAnalyzing: false,
       textAnalysisError: null,
       interrogationQuestionsInput: null,
-      physicalExamInput: null,
       clinicalAnalysisInput: null,
     }));
   }, []);
@@ -382,7 +381,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const clearPhysicalExamModule = useCallback(() => {
     setState(s => ({
       ...s,
-      physicalExamInput: null, // It will be repopulated by textAnalysisSummary if it exists, which is fine
+      physicalExamInput: null,
       generatedPhysicalExam: null,
       isGeneratingPhysicalExam: false,
       physicalExamError: null,

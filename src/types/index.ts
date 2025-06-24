@@ -272,7 +272,7 @@ export interface ClinicalDataContextState {
   interrogationQuestionsError: string | null;
 
   // Physical Exam
-  physicalExamInput: string | null;
+  physicalExamInput: ValidatedDiagnosis[] | null;
   generatedPhysicalExam: string | null;
   isGeneratingPhysicalExam: boolean;
   physicalExamError: string | null;
@@ -353,7 +353,7 @@ export interface ClinicalDataContextActions {
   setIsGeneratingInterrogationQuestions: (loading: boolean) => void;
   setInterrogationQuestionsError: (error: string | null) => void;
 
-  setPhysicalExamInput: (input: string | null) => void;
+  setPhysicalExamInput: (input: ValidatedDiagnosis[] | null) => void;
   setGeneratedPhysicalExam: (exam: string | null) => void;
   setIsGeneratingPhysicalExam: (loading: boolean) => void;
   setPhysicalExamError: (error: string | null) => void;

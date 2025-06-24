@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Stethoscope, Eraser, Save, Copy } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
+import type { ValidatedDiagnosis } from '@/types';
 
 interface PhysicalExamModuleProps {
   id?: string;
@@ -17,7 +18,7 @@ interface PhysicalExamModuleProps {
 
 export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
   const {
-    textAnalysisSummary,
+    diagnosisResults,
     physicalExamInput, setPhysicalExamInput,
     generatedPhysicalExam, setGeneratedPhysicalExam,
     isGeneratingPhysicalExam, setIsGeneratingPhysicalExam,
@@ -30,16 +31,16 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
   const moduleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (textAnalysisSummary !== physicalExamInput) {
-        setPhysicalExamInput(textAnalysisSummary);
+    const validatedDiagnoses = diagnosisResults?.filter(d => d.isValidated).map(d => ({ code: d.code, description: d.description })) || [];
+    // Prevent infinite loops by comparing stringified versions
+    if (JSON.stringify(validatedDiagnoses) !== JSON.stringify(physicalExamInput)) {
+        setPhysicalExamInput(validatedDiagnoses);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [textAnalysisSummary, setPhysicalExamInput]);
+  }, [diagnosisResults, physicalExamInput, setPhysicalExamInput]);
 
   const handleGenerateExam = async () => {
-    const currentInput = String(physicalExamInput || '').trim();
-    if (!currentInput) {
-      toast({ title: "Sin Texto Clínico", description: "Se necesita el texto del módulo de 'Mejora de Redacción' para generar el examen físico.", variant: "destructive" });
+    if (!physicalExamInput || physicalExamInput.length === 0) {
+      toast({ title: "Sin Diagnósticos", description: "Se necesita al menos un diagnóstico validado del módulo de 'Diagnóstico Inteligente'.", variant: "destructive" });
       return;
     }
 
@@ -48,17 +49,17 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
     let examOutput: GeneratePhysicalExamOutput | null = null;
 
     try {
-      examOutput = await generatePhysicalExam({ clinicalText: currentInput });
+      examOutput = await generatePhysicalExam({ diagnoses: physicalExamInput });
       setGeneratedPhysicalExam(examOutput?.physicalExamText || null);
       toast({ title: "Examen Físico Sugerido", description: "Se han generado hallazgos para el examen físico." });
 
       if (isAutoSaveEnabled) {
         await addHistoryEntry({
           module: 'PhysicalExam',
-          inputType: 'text/plain',
-          inputSummary: getTextSummary(currentInput),
+          inputType: 'application/json',
+          inputSummary: `Basado en ${physicalExamInput.length} diagnósticos validados`,
           outputSummary: `${getTextSummary(examOutput?.physicalExamText || '', 100)}`,
-          fullInput: currentInput,
+          fullInput: { diagnoses: physicalExamInput },
           fullOutput: examOutput,
           status: 'completed',
         });
@@ -71,10 +72,10 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
       if (isAutoSaveEnabled) {
          await addHistoryEntry({
           module: 'PhysicalExam',
-          inputType: 'text/plain',
-          inputSummary: getTextSummary(currentInput),
+          inputType: 'application/json',
+          inputSummary: `Basado en ${physicalExamInput.length} diagnósticos validados`,
           outputSummary: 'Error en la generación',
-          fullInput: currentInput,
+          fullInput: { diagnoses: physicalExamInput },
           fullOutput: { error: errorMessage },
           status: 'error',
           errorDetails: errorMessage,
@@ -102,8 +103,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
   };
 
   const handleSaveManually = async () => {
-    const currentInput = String(physicalExamInput || '');
-    if (!currentInput && !generatedPhysicalExam && !physicalExamError) {
+    if (!physicalExamInput && !generatedPhysicalExam && !physicalExamError) {
       toast({ title: "Nada que Guardar", description: "Genere un examen físico primero.", variant: "default" });
       return;
     }
@@ -114,10 +114,10 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
 
     await addHistoryEntry({
       module: 'PhysicalExam',
-      inputType: 'text/plain',
-      inputSummary: getTextSummary(currentInput),
+      inputType: 'application/json',
+      inputSummary: `Basado en ${physicalExamInput?.length || 0} diagnósticos validados`,
       outputSummary: outputSum,
-      fullInput: currentInput,
+      fullInput: { diagnoses: physicalExamInput },
       fullOutput: output,
       status: status,
       errorDetails: physicalExamError || undefined,
@@ -129,21 +129,31 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
       ref={moduleRef}
       id={id}
       title="Generador de Examen Físico Dirigido"
-      description="Basado en el texto médico mejorado, la IA sugiere hallazgos patológicos para un examen físico enfocado."
+      description="Basado en los diagnósticos validados, la IA sugiere hallazgos patológicos para un examen físico enfocado."
       icon={Stethoscope}
       isLoading={isGeneratingPhysicalExam}
     >
         <div className="space-y-4">
             <div className='p-3 border rounded-md bg-muted/30'>
-                <label htmlFor="physicalExamInput" className="block text-sm font-medium mb-1">
-                Texto Clínico Base (del Módulo 3):
+                <label className="block text-sm font-medium mb-1">
+                  Diagnósticos Validados (del Módulo 5):
                 </label>
-                <p id="physicalExamInput" className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {getTextSummary(physicalExamInput, 200) || "Esperando texto del módulo de 'Mejora de Redacción Médica'..."}
-                </p>
+                <div className="text-sm text-muted-foreground">
+                  {physicalExamInput && physicalExamInput.length > 0 ? (
+                    <ul className="list-disc pl-5 space-y-1">
+                      {physicalExamInput.map(dx => (
+                        <li key={dx.code}>
+                          {dx.code}: {getTextSummary(dx.description, 50)}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>Esperando diagnósticos validados del módulo de 'Diagnóstico Inteligente'...</p>
+                  )}
+                </div>
             </div>
             
-            <Button onClick={handleGenerateExam} disabled={!String(physicalExamInput || '').trim() || isGeneratingPhysicalExam} className="w-full">
+            <Button onClick={handleGenerateExam} disabled={!physicalExamInput || physicalExamInput.length === 0 || isGeneratingPhysicalExam} className="w-full">
                 <Stethoscope className="mr-2 h-4 w-4" />
                 Sugerir Hallazgos de Examen Físico
             </Button>

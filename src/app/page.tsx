@@ -112,9 +112,9 @@ export default function MedSanToolsPage() {
         {/* Herramientas de Análisis */}
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'text-analysis-module') && <TextAnalysisModule id="text-analysis-module" /> }
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'interrogation-questions-module') && <InterrogationQuestionsModule id="interrogation-questions-module" /> }
-        { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'physical-exam-module') && <PhysicalExamModule id="physical-exam-module" /> }
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'clinical-analysis-module') && <ClinicalAnalysisModule id="clinical-analysis-module" /> }
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'diagnosis-support-module') && <DiagnosisSupportModule id="diagnosis-support-module" /> }
+        { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'physical-exam-module') && <PhysicalExamModule id="physical-exam-module" /> }
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'treatment-plan-module') && <TreatmentPlanModule id="treatment-plan-module" /> }
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'medical-orders-module') && <MedicalOrdersModule id="medical-orders-module" /> }
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'patient-advice-module') && <PatientAdviceModule id="patient-advice-module" /> }

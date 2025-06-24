@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson, Utensils, ShieldPlus, FileOutput, HelpCircle, Stethoscope } from 'lucide-react';
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion, ClinicalAnalysisOutputState } from '@/types';
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion, ClinicalAnalysisOutputState, ValidatedDiagnosis } from '@/types';
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import type { ChatMessageHistoryItem } from '@/ai/flows/medical-assistant-chat-flow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -238,7 +238,7 @@ export function HistoryModule() {
           clinicalData.setInterrogationQuestionsError(outputData?.error || null);
           break;
         case 'PhysicalExam':
-          clinicalData.setPhysicalExamInput(inputData as string || null);
+          clinicalData.setPhysicalExamInput(inputData.diagnoses as ValidatedDiagnosis[] || null);
           if (outputData && outputData.physicalExamText) {
             clinicalData.setGeneratedPhysicalExam(outputData.physicalExamText);
           }
@@ -597,6 +597,14 @@ export function HistoryModule() {
               )}
             </div>
           );
+        }
+        if (entry.module === 'PhysicalExam' && 'diagnoses' in entry.fullInput) {
+           const examInput = entry.fullInput as { diagnoses: ValidatedDiagnosis[] };
+           return (
+                <div className="space-y-1 text-xs p-2 bg-muted/30 rounded-md">
+                    <div><strong>Dx Validados:</strong> <ul className="list-disc pl-4">{examInput.diagnoses.map(dx => <li key={dx.code}>{dx.code}: {dx.description}</li>)}</ul></div>
+                </div>
+           );
         }
         return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{JSON.stringify(entry.fullInput, null, 2)}</pre>;
      }
