@@ -12,6 +12,8 @@ import '@/ai/flows/suggest-treatment-plan.ts';
 import '@/ai/flows/generate-patient-advice.ts';
 import '@/ai/flows/generate-medical-justification.ts';
 import '@/ai/flows/medical-assistant-chat-flow.ts';
-import '@/ai/flows/generate-discharge-summary.ts'; // Added import
+import '@/ai/flows/generate-discharge-summary.ts';
+import '@/ai/flows/suggest-interrogation-questions.ts'; // Added import
+
 
 

@@ -1,6 +1,7 @@
 
 
 
+
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -16,7 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson, Utensils, ShieldPlus, FileOutput } from 'lucide-react';
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson, Utensils, ShieldPlus, FileOutput, HelpCircle } from 'lucide-react';
 import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData, DischargeSummaryInputState, DischargeSummaryOutputState } from '@/types';
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import type { ChatMessageHistoryItem } from '@/ai/flows/medical-assistant-chat-flow';
@@ -29,6 +30,7 @@ const moduleIcons: Record<ModuleType, LucideIcon> = {
   ImageAnalysis: ImageIcon,
   PdfExtraction: FileText,
   TextAnalysis: MessageSquareText,
+  InterrogationQuestions: HelpCircle,
   ClinicalAnalysis: Brain, 
   DiagnosisSupport: Lightbulb,
   MedicalOrders: FileEdit,
@@ -220,10 +222,17 @@ export function HistoryModule() {
           break;
         case 'TextAnalysis':
           clinicalData.setClinicalNotesInput(inputData as string || '');
-          if (outputData && outputData.summary) {
-            clinicalData.setTextAnalysisSummary(outputData.summary);
+          if (outputData && outputData.improvedText) {
+            clinicalData.setTextAnalysisSummary(outputData.improvedText);
           }
           clinicalData.setTextAnalysisError(outputData?.error || null);
+          break;
+        case 'InterrogationQuestions':
+          clinicalData.setInterrogationQuestionsInput(inputData as string || null);
+          if (outputData && outputData.questions) {
+            clinicalData.setGeneratedInterrogationQuestions(outputData.questions);
+          }
+          clinicalData.setInterrogationQuestionsError(outputData?.error || null);
           break;
         case 'ClinicalAnalysis':
           clinicalData.setClinicalAnalysisInput(inputData as string || null);
@@ -432,7 +441,19 @@ export function HistoryModule() {
           if (typeof output === 'object' && output !== null && 'clinicalAnalysis' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {clinicalAnalysis: string}).clinicalAnalysis}</pre>; }
           break;
         case 'TextAnalysis':
-          if (typeof output === 'object' && output !== null && 'summary' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {summary: string}).summary}</pre>; }
+          if (typeof output === 'object' && output !== null && 'improvedText' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {improvedText: string}).improvedText}</pre>; }
+          break;
+        case 'InterrogationQuestions':
+          if (typeof output === 'object' && output !== null && 'questions' in output) {
+            const questions = output.questions as string[];
+            if (questions.length > 0) {
+              return (
+                <ul className="list-disc pl-5 space-y-1 text-xs">
+                  {questions.map((q, i) => <li key={i}>{q}</li>)}
+                </ul>
+              );
+            }
+          }
           break;
         case 'TreatmentPlanSuggestion':
           if (typeof output === 'object' && output !== null && 'suggestedPlanText' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as TreatmentPlanOutputState).suggestedPlanText}</pre>; }
@@ -739,4 +760,5 @@ declare module "@/components/ui/button" {
 }
 
     
+
 

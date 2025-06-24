@@ -73,7 +73,7 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
           inputSummary: getTextSummary(currentText),
           outputSummary: getTextSummary(newContent || '', 100),
           fullInput: currentText,
-          fullOutput: analysisOutput,
+          fullOutput: { improvedText: newContent },
           status: 'completed',
         });
       }

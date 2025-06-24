@@ -1,6 +1,7 @@
 
 
 
+
 'use client';
 
 import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, DischargeSummaryInputState, DischargeSummaryOutputState } from '@/types';
@@ -143,6 +144,11 @@ const initialState: ClinicalDataContextState = {
   isTextAnalyzing: false,
   textAnalysisError: null,
 
+  interrogationQuestionsInput: null,
+  generatedInterrogationQuestions: null,
+  isGeneratingInterrogationQuestions: false,
+  interrogationQuestionsError: null,
+
   clinicalAnalysisInput: null,
   generatedClinicalAnalysis: null,
   isGeneratingClinicalAnalysis: false,
@@ -208,10 +214,15 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setState(s => ({ ...s, clinicalNotesInput: typeof notes === 'function' ? notes(s.clinicalNotesInput) : notes }));
   }, []);
   const setTextAnalysisSummary = useCallback((summary: string | null) => {
-    setState(s => ({ ...s, textAnalysisSummary: summary, clinicalAnalysisInput: summary }));
+    setState(s => ({ ...s, textAnalysisSummary: summary, clinicalAnalysisInput: summary, interrogationQuestionsInput: summary }));
   }, []);
   const setIsTextAnalyzing = useCallback((loading: boolean) => setState(s => ({ ...s, isTextAnalyzing: loading })), []);
-  const constSetTextAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, textAnalysisError: error })), []);
+  const setTextAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, textAnalysisError: error })), []);
+
+  const setInterrogationQuestionsInput = useCallback((input: string | null) => setState(s => ({ ...s, interrogationQuestionsInput: input })), []);
+  const setGeneratedInterrogationQuestions = useCallback((questions: string[] | null) => setState(s => ({ ...s, generatedInterrogationQuestions: questions })), []);
+  const setIsGeneratingInterrogationQuestions = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingInterrogationQuestions: loading })), []);
+  const setInterrogationQuestionsError = useCallback((error: string | null) => setState(s => ({ ...s, interrogationQuestionsError: error })), []);
 
   const setClinicalAnalysisInput = useCallback((input: string | null) => setState(s => ({ ...s, clinicalAnalysisInput: input })), []);
   const setGeneratedClinicalAnalysis = useCallback((analysis: string | null) => setState(s => ({ ...s, generatedClinicalAnalysis: analysis })), []);
@@ -223,7 +234,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
   const setDiagnosisResults = useCallback((results: DiagnosisResult[] | null) => setState(s => ({ ...s, diagnosisResults: results })), []);
   const setIsDiagnosing = useCallback((loading: boolean) => setState(s => ({ ...s, isDiagnosing: loading })), []);
-  const constSetDiagnosisError = useCallback((error: string | null) => setState(s => ({...s, diagnosisError: error})), []);
+  const setDiagnosisError = useCallback((error: string | null) => setState(s => ({...s, diagnosisError: error})), []);
 
   const setMedicalOrderInputs = useCallback((inputsOrUpdater: MedicalOrderInputState | ((prevState: MedicalOrderInputState) => MedicalOrderInputState)) => {
     setState(s => ({
@@ -340,7 +351,17 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       textAnalysisSummary: null,
       isTextAnalyzing: false,
       textAnalysisError: null,
+      interrogationQuestionsInput: null,
       clinicalAnalysisInput: null,
+    }));
+  }, []);
+
+  const clearInterrogationQuestionsModule = useCallback(() => {
+    setState(s => ({
+      ...s,
+      generatedInterrogationQuestions: null,
+      isGeneratingInterrogationQuestions: false,
+      interrogationQuestionsError: null,
     }));
   }, []);
 
@@ -447,7 +468,11 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setClinicalNotesInput,
     setTextAnalysisSummary,
     setIsTextAnalyzing,
-    setTextAnalysisError: constSetTextAnalysisError,
+    setTextAnalysisError,
+    setInterrogationQuestionsInput,
+    setGeneratedInterrogationQuestions,
+    setIsGeneratingInterrogationQuestions,
+    setInterrogationQuestionsError,
     setClinicalAnalysisInput,
     setGeneratedClinicalAnalysis,
     setIsGeneratingClinicalAnalysis,
@@ -455,7 +480,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setDiagnosisInputData,
     setDiagnosisResults,
     setIsDiagnosing,
-    setDiagnosisError: constSetDiagnosisError,
+    setDiagnosisError,
     setMedicalOrderInputs,
     setMedicalOrderOutput,
     setIsGeneratingMedicalOrder,
@@ -487,6 +512,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     clearImageModule,
     clearPdfModule,
     clearTextModule,
+    clearInterrogationQuestionsModule,
     clearClinicalAnalysisModule,
     clearDiagnosisModule,
     clearMedicalOrdersModule,
@@ -514,4 +540,3 @@ export const useClinicalData = (): ClinicalDataContextType => {
 };
 
     
-

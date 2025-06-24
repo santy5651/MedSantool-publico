@@ -5,12 +5,13 @@ import React, { useState } from 'react';
 import { ImageAnalysisModule } from '@/components/modules/image-analysis-module';
 import { PdfExtractionModule } from '@/components/modules/pdf-extraction-module';
 import { TextAnalysisModule } from '@/components/modules/text-analysis-module';
+import { InterrogationQuestionsModule } from '@/components/modules/interrogation-questions-module';
 import { ClinicalAnalysisModule } from '@/components/modules/clinical-analysis-module';
 import { DiagnosisSupportModule } from '@/components/modules/diagnosis-support-module';
 import { TreatmentPlanModule } from '@/components/modules/treatment-plan-module';
 import { MedicalOrdersModule } from '@/components/modules/medical-orders-module';
 import { PatientAdviceModule } from '@/components/modules/patient-advice-module';
-import { DischargeSummaryModule } from '@/components/modules/discharge-summary-module'; // Added import
+import { DischargeSummaryModule } from '@/components/modules/discharge-summary-module'; 
 import { MedicalJustificationModule } from '@/components/modules/medical-justification-module';
 import { MedicalAssistantChatModule } from '@/components/modules/medical-assistant-chat-module';
 import { DoseCalculatorModule } from '@/components/modules/dose-calculator-module';
@@ -39,12 +40,13 @@ export default function MedSanToolsPage() {
     clearImageModule,
     clearPdfModule,
     clearTextModule,
+    clearInterrogationQuestionsModule,
     clearClinicalAnalysisModule,
     clearDiagnosisModule,
     clearTreatmentPlanModule,
     clearMedicalOrdersModule,
     clearPatientAdviceModule,
-    clearDischargeSummaryModule, // Added clearDischargeSummaryModule
+    clearDischargeSummaryModule, 
     clearMedicalJustificationModule,
     clearChatModule,
     clearDoseCalculatorModule,
@@ -56,12 +58,13 @@ export default function MedSanToolsPage() {
     clearImageModule();
     clearPdfModule();
     clearTextModule();
+    clearInterrogationQuestionsModule();
     clearClinicalAnalysisModule();
     clearDiagnosisModule();
     clearTreatmentPlanModule();
     clearMedicalOrdersModule();
     clearPatientAdviceModule();
-    clearDischargeSummaryModule(); // Added call to clearDischargeSummaryModule
+    clearDischargeSummaryModule(); 
     clearMedicalJustificationModule();
     clearChatModule();
     clearDoseCalculatorModule();
@@ -105,6 +108,7 @@ export default function MedSanToolsPage() {
       >
         {/* Herramientas de Análisis */}
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'text-analysis-module') && <TextAnalysisModule id="text-analysis-module" /> }
+        { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'interrogation-questions-module') && <InterrogationQuestionsModule id="interrogation-questions-module" /> }
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'clinical-analysis-module') && <ClinicalAnalysisModule id="clinical-analysis-module" /> }
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'diagnosis-support-module') && <DiagnosisSupportModule id="diagnosis-support-module" /> }
         { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'treatment-plan-module') && <TreatmentPlanModule id="treatment-plan-module" /> }

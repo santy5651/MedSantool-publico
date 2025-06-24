@@ -1,7 +1,8 @@
 
 
 
-export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator' | 'DischargeSummary';
+
+export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'InterrogationQuestions' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator' | 'DischargeSummary';
 
 export type ActiveView = 'analysis' | 'other' | 'all';
 export type FontSize = 'small' | 'normal' | 'large';
@@ -104,7 +105,7 @@ export interface HistoryEntry {
   inputSummary: string;
   outputSummary: string;
   fullInput?: string | Record<string, any> | DoseCalculatorInputState | PatientAdviceInputData | DischargeSummaryInputState;
-  fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { clinicalAnalysis: string } | { summary: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState | DischargeSummaryOutputState;
+  fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { improvedText: string } | { clinicalAnalysis: string } | { questions: string[] } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState | DischargeSummaryOutputState;
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
 }
@@ -250,6 +251,12 @@ export interface ClinicalDataContextState {
   isTextAnalyzing: boolean;
   textAnalysisError: string |null;
 
+  // Interrogation Questions
+  interrogationQuestionsInput: string | null;
+  generatedInterrogationQuestions: string[] | null;
+  isGeneratingInterrogationQuestions: boolean;
+  interrogationQuestionsError: string | null;
+
   // Clinical Analysis
   clinicalAnalysisInput: string | null; 
   generatedClinicalAnalysis: string | null;
@@ -321,6 +328,11 @@ export interface ClinicalDataContextActions {
   setIsTextAnalyzing: (loading: boolean) => void;
   setTextAnalysisError: (error: string | null) => void;
 
+  setInterrogationQuestionsInput: (input: string | null) => void;
+  setGeneratedInterrogationQuestions: (questions: string[] | null) => void;
+  setIsGeneratingInterrogationQuestions: (loading: boolean) => void;
+  setInterrogationQuestionsError: (error: string | null) => void;
+
   setClinicalAnalysisInput: (input: string | null) => void;
   setGeneratedClinicalAnalysis: (analysis: string | null) => void;
   setIsGeneratingClinicalAnalysis: (loading: boolean) => void;
@@ -372,6 +384,7 @@ export interface ClinicalDataContextActions {
   clearImageModule: () => void;
   clearPdfModule: () => void;
   clearTextModule: () => void;
+  clearInterrogationQuestionsModule: () => void;
   clearClinicalAnalysisModule: () => void;
   clearDiagnosisModule: () => void;
   clearMedicalOrdersModule: () => void;
@@ -395,4 +408,3 @@ export interface ViewContextType {
   setFontSize: (size: FontSize) => void;
 }
     
-
