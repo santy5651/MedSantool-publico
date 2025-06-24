@@ -202,8 +202,8 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
     <ModuleCardWrapper
       ref={moduleRef}
       id={id}
-      title="Análisis Avanzado de Radiografías"
-      description="Cargue o pegue radiografías para análisis por IA. Obtenga un resumen de hallazgos y una lectura radiológica detallada."
+      title="Análisis Avanzado de Imágenes Médicas"
+      description="Cargue o pegue radiografías o electrocardiogramas (EKG) para análisis por IA. Obtenga un resumen de hallazgos y una lectura detallada."
       icon={ScanSearch}
       isLoading={isImageAnalyzing}
     >
