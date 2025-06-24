@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ModuleCardWrapper } from '@/components/common/module-card-wrapper';
 import { useClinicalData } from '@/contexts/clinical-data-context';
@@ -11,6 +11,8 @@ import { Stethoscope, Eraser, Save, Copy } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import type { ValidatedDiagnosis } from '@/types';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface PhysicalExamModuleProps {
   id?: string;
@@ -24,11 +26,13 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
     isGeneratingPhysicalExam, setIsGeneratingPhysicalExam,
     physicalExamError, setPhysicalExamError,
     clearPhysicalExamModule,
+    generatedClinicalAnalysis,
   } = useClinicalData();
 
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
+  const [useFocusedAnalysis, setUseFocusedAnalysis] = useState(true);
 
   useEffect(() => {
     const validatedDiagnoses = diagnosisResults?.filter(d => d.isValidated).map(d => ({ code: d.code, description: d.description })) || [];
@@ -47,9 +51,15 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
     setIsGeneratingPhysicalExam(true);
     setPhysicalExamError(null);
     let examOutput: GeneratePhysicalExamOutput | null = null;
+    const focusedAnalysis = useFocusedAnalysis ? generatedClinicalAnalysis.focusedAnalysis : null;
+
+    const inputForAI = {
+      diagnoses: physicalExamInput,
+      focusedAnalysis: focusedAnalysis || undefined,
+    };
 
     try {
-      examOutput = await generatePhysicalExam({ diagnoses: physicalExamInput });
+      examOutput = await generatePhysicalExam(inputForAI);
       setGeneratedPhysicalExam(examOutput?.physicalExamText || null);
       toast({ title: "Examen Físico Sugerido", description: "Se han generado hallazgos para el examen físico." });
 
@@ -59,7 +69,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
           inputType: 'application/json',
           inputSummary: `Basado en ${physicalExamInput.length} diagnósticos validados`,
           outputSummary: `${getTextSummary(examOutput?.physicalExamText || '', 100)}`,
-          fullInput: { diagnoses: physicalExamInput },
+          fullInput: inputForAI,
           fullOutput: examOutput,
           status: 'completed',
         });
@@ -75,7 +85,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
           inputType: 'application/json',
           inputSummary: `Basado en ${physicalExamInput.length} diagnósticos validados`,
           outputSummary: 'Error en la generación',
-          fullInput: { diagnoses: physicalExamInput },
+          fullInput: inputForAI,
           fullOutput: { error: errorMessage },
           status: 'error',
           errorDetails: errorMessage,
@@ -111,13 +121,20 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
     const status = physicalExamError ? 'error' : 'completed';
     const output = physicalExamError ? { error: physicalExamError } : { physicalExamText: generatedPhysicalExam };
     const outputSum = physicalExamError ? 'Error en la generación' : getTextSummary(generatedPhysicalExam, 100);
+    const focusedAnalysis = useFocusedAnalysis ? generatedClinicalAnalysis.focusedAnalysis : null;
+
+    const inputForHistory = {
+      diagnoses: physicalExamInput,
+      focusedAnalysis: focusedAnalysis || undefined,
+    };
+
 
     await addHistoryEntry({
       module: 'PhysicalExam',
       inputType: 'application/json',
       inputSummary: `Basado en ${physicalExamInput?.length || 0} diagnósticos validados`,
       outputSummary: outputSum,
-      fullInput: { diagnoses: physicalExamInput },
+      fullInput: inputForHistory,
       fullOutput: output,
       status: status,
       errorDetails: physicalExamError || undefined,
@@ -153,6 +170,19 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
                 </div>
             </div>
             
+            {generatedClinicalAnalysis.focusedAnalysis && (
+              <div className="flex items-center space-x-2 rounded-md border p-3">
+                <Switch
+                  id="use-focused-analysis-switch"
+                  checked={useFocusedAnalysis}
+                  onCheckedChange={setUseFocusedAnalysis}
+                />
+                <Label htmlFor="use-focused-analysis-switch" className="text-sm font-normal cursor-pointer flex-1">
+                  Usar análisis corto del Módulo 4 para enriquecer el examen físico.
+                </Label>
+              </div>
+            )}
+
             <Button onClick={handleGenerateExam} disabled={!physicalExamInput || physicalExamInput.length === 0 || isGeneratingPhysicalExam} className="w-full">
                 <Stethoscope className="mr-2 h-4 w-4" />
                 Sugerir Hallazgos de Examen Físico

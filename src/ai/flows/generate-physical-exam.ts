@@ -15,6 +15,7 @@ const GeneratePhysicalExamInputSchema = z.object({
     code: z.string().describe('Código CIE-10 del diagnóstico.'),
     description: z.string().describe('Descripción del diagnóstico.'),
   })).describe('Lista de diagnósticos validados por el médico.'),
+  focusedAnalysis: z.string().optional().describe('Un análisis clínico enfocado o resumen del caso. Si se proporciona, usarlo como contexto adicional para los hallazgos patológicos.'),
 });
 export type GeneratePhysicalExamInput = z.infer<typeof GeneratePhysicalExamInputSchema>;
 
@@ -41,10 +42,15 @@ Tu tarea es generar un texto completo de examen físico.
 - {{{this.description}}} ({{{this.code}}})
 {{/each}}
 
+{{#if focusedAnalysis}}
+**Análisis Clínico Adicional:**
+{{{focusedAnalysis}}}
+{{/if}}
+
 **Instrucciones:**
 1.  Utiliza la siguiente plantilla de examen físico normal como base.
-2.  Analiza los diagnósticos validados del paciente.
-3.  **Modifica la plantilla** para incluir los hallazgos patológicos que esperarías encontrar en el examen físico basándote en esos diagnósticos.
+2.  Analiza los diagnósticos validados del paciente{{#if focusedAnalysis}} y el análisis clínico adicional proporcionado{{/if}}.
+3.  **Modifica la plantilla** para incluir los hallazgos patológicos que esperarías encontrar en el examen físico basándote en esa información combinada.
 4.  Si un sistema no se ve afectado por los diagnósticos, mantén los hallazgos normales de la plantilla.
 5.  La salida debe ser un texto único, bien estructurado y profesional, donde cada sistema está en una nueva línea.
 
