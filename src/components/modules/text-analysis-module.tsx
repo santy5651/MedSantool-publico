@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ModuleCardWrapper } from '@/components/common/module-card-wrapper';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -12,7 +12,7 @@ import { improveMedicalWriting, type ImproveMedicalWritingOutput } from '@/ai/fl
 import { suggestInterrogationQuestions, type SuggestInterrogationQuestionsOutput } from '@/ai/flows/suggest-interrogation-questions';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardEdit, Eraser, Copy, Save, Send, HelpCircle } from 'lucide-react';
-import { getTextSummary } from '@/lib/utils';
+import { getTextSummary, cn } from '@/lib/utils';
 import type { InterrogationQuestion } from '@/types';
 
 
@@ -333,10 +333,10 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
                   className="p-0 hover:no-underline"
                 >
                   <div className="flex w-full justify-end">
-                    <Button variant="ghost">
+                    <div className={cn(buttonVariants({ variant: 'ghost' }), "inline-flex items-center")}>
                       <HelpCircle className="mr-2 h-4 w-4" />
                       Sugerir Preguntas de Interrogatorio
-                    </Button>
+                    </div>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
