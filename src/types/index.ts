@@ -1,5 +1,5 @@
 
-export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'InterrogationQuestions' | 'PhysicalExam' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator' | 'DischargeSummary';
+export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'InterrogationQuestions' | 'PhysicalExam' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator' | 'DischargeSummary' | 'LabStandardizer';
 
 export type ActiveView = 'analysis' | 'other' | 'all';
 export type FontSize = 'small' | 'normal' | 'large';
@@ -100,6 +100,14 @@ export interface DischargeSummaryOutputState {
 }
 // --- End Discharge Summary Module Specific Types ---
 
+// --- Lab Standardizer Module Specific Types ---
+export interface LabStandardizerOutputState {
+  abbreviatedReport: string | null;
+  fullReport: string | null;
+}
+// --- End Lab Standardizer Module Specific Types ---
+
+
 // --- Interrogation Questions Module Specific Types ---
 export interface InterrogationQuestion {
   question: string;
@@ -119,7 +127,7 @@ export interface HistoryEntry {
   inputSummary: string;
   outputSummary: string;
   fullInput?: string | Record<string, any> | DoseCalculatorInputState | PatientAdviceInputData | DischargeSummaryInputState;
-  fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { improvedText: string } | ClinicalAnalysisOutputState | { questions: InterrogationQuestion[] } | { physicalExamText: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState | DischargeSummaryOutputState;
+  fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { improvedText: string } | ClinicalAnalysisOutputState | { questions: InterrogationQuestion[] } | { physicalExamText: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState | DischargeSummaryOutputState | LabStandardizerOutputState;
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
 }
@@ -329,6 +337,12 @@ export interface ClinicalDataContextState {
   generatedDischargeSummary: DischargeSummaryOutputState;
   isGeneratingDischargeSummary: boolean;
   dischargeSummaryError: string | null;
+
+  // Lab Standardizer
+  labStandardizerInput: string | null;
+  labStandardizerOutput: LabStandardizerOutputState;
+  isStandardizingLabs: boolean;
+  labStandardizerError: string | null;
 }
 
 export interface ClinicalDataContextActions {
@@ -405,6 +419,12 @@ export interface ClinicalDataContextActions {
   setGeneratedDischargeSummary: (summary: DischargeSummaryOutputState) => void;
   setIsGeneratingDischargeSummary: (loading: boolean) => void;
   setDischargeSummaryError: (error: string | null) => void;
+
+  // Lab Standardizer actions
+  setLabStandardizerInput: (input: string | null) => void;
+  setLabStandardizerOutput: (output: LabStandardizerOutputState) => void;
+  setIsStandardizingLabs: (loading: boolean) => void;
+  setLabStandardizerError: (error: string | null) => void;
   
   clearImageModule: () => void;
   clearPdfModule: () => void;
@@ -419,6 +439,7 @@ export interface ClinicalDataContextActions {
   clearChatModule: () => void;
   clearDoseCalculatorModule: () => void;
   clearDischargeSummaryModule: () => void;
+  clearLabStandardizerModule: () => void;
 }
 
 export type ClinicalDataContextType = ClinicalDataContextState & ClinicalDataContextActions;

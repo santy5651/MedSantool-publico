@@ -16,6 +16,7 @@ import { MedicalJustificationModule } from '@/components/modules/medical-justifi
 import { MedicalAssistantChatModule } from '@/components/modules/medical-assistant-chat-module';
 import { DoseCalculatorModule } from '@/components/modules/dose-calculator-module';
 import { HistoryModule } from '@/components/modules/history-module';
+import { LabStandardizerModule } from '@/components/modules/lab-standardizer-module';
 import { Button } from '@/components/ui/button';
 import { Eraser } from 'lucide-react';
 import { useClinicalData } from '@/contexts/clinical-data-context';
@@ -50,6 +51,7 @@ export default function MedSanToolsPage() {
     clearMedicalJustificationModule,
     clearChatModule,
     clearDoseCalculatorModule,
+    clearLabStandardizerModule,
   } = useClinicalData();
   const { toast } = useToast();
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
@@ -68,6 +70,7 @@ export default function MedSanToolsPage() {
     clearMedicalJustificationModule();
     clearChatModule();
     clearDoseCalculatorModule();
+    clearLabStandardizerModule();
     toast({
       title: "Todos los Módulos Limpiados",
       description: "Se ha restablecido el estado de todos los módulos de datos.",
@@ -119,6 +122,7 @@ export default function MedSanToolsPage() {
         {/* Otras Herramientas */}
         { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'pdf-extraction-module') && <PdfExtractionModule id="pdf-extraction-module" /> }
         { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'image-analysis-module') && <ImageAnalysisModule id="image-analysis-module" /> }
+        { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'lab-standardizer-module') && <LabStandardizerModule id="lab-standardizer-module" /> }
         { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'medical-justification-module') && <MedicalJustificationModule id="medical-justification-module" /> }
         { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'medical-assistant-chat-module') && <MedicalAssistantChatModule id="medical-assistant-chat-module" /> }
         { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'dose-calculator-module') && <DoseCalculatorModule id="dose-calculator-module" /> }

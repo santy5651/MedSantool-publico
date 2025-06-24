@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion, ClinicalAnalysisOutputState } from '@/types';
+import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion, ClinicalAnalysisOutputState, LabStandardizerOutputState } from '@/types';
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const initialNursingSurveillanceState: NursingSurveillanceState = {
@@ -129,6 +129,10 @@ const initialGeneratedDischargeSummary: DischargeSummaryOutputState = {
   generatedSummary: null,
 };
 
+const initialLabStandardizerOutput: LabStandardizerOutputState = {
+    abbreviatedReport: null,
+    fullReport: null,
+};
 
 const initialState: ClinicalDataContextState = {
   imageFile: null,
@@ -200,6 +204,11 @@ const initialState: ClinicalDataContextState = {
   generatedDischargeSummary: initialGeneratedDischargeSummary,
   isGeneratingDischargeSummary: false,
   dischargeSummaryError: null,
+
+  labStandardizerInput: null,
+  labStandardizerOutput: initialLabStandardizerOutput,
+  isStandardizingLabs: false,
+  labStandardizerError: null,
 };
 
 const ClinicalDataContext = createContext<ClinicalDataContextType | undefined>(undefined);
@@ -335,6 +344,10 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setIsGeneratingDischargeSummary = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingDischargeSummary: loading })), []);
   const setDischargeSummaryError = useCallback((error: string | null) => setState(s => ({ ...s, dischargeSummaryError: error })), []);
 
+  const setLabStandardizerInput = useCallback((input: string | null) => setState(s => ({ ...s, labStandardizerInput: input })), []);
+  const setLabStandardizerOutput = useCallback((output: LabStandardizerOutputState) => setState(s => ({ ...s, labStandardizerOutput: output })), []);
+  const setIsStandardizingLabs = useCallback((loading: boolean) => setState(s => ({ ...s, isStandardizingLabs: loading })), []);
+  const setLabStandardizerError = useCallback((error: string | null) => setState(s => ({ ...s, labStandardizerError: error })), []);
 
   const clearImageModule = useCallback(() => {
     setState(s => ({
@@ -470,6 +483,16 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }));
   }, []);
 
+  const clearLabStandardizerModule = useCallback(() => {
+    setState(s => ({
+      ...s,
+      labStandardizerInput: null,
+      labStandardizerOutput: initialLabStandardizerOutput,
+      isStandardizingLabs: false,
+      labStandardizerError: null,
+    }));
+  }, []);
+
 
   const contextValue: ClinicalDataContextType = {
     ...state,
@@ -530,6 +553,10 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setGeneratedDischargeSummary,
     setIsGeneratingDischargeSummary,
     setDischargeSummaryError,
+    setLabStandardizerInput,
+    setLabStandardizerOutput,
+    setIsStandardizingLabs,
+    setLabStandardizerError,
     clearImageModule,
     clearPdfModule,
     clearTextModule,
@@ -543,6 +570,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     clearChatModule,
     clearDoseCalculatorModule,
     clearDischargeSummaryModule,
+    clearLabStandardizerModule,
   };
 
   return (

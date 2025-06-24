@@ -14,8 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson, Utensils, ShieldPlus, FileOutput, HelpCircle, Stethoscope } from 'lucide-react';
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion, ClinicalAnalysisOutputState, ValidatedDiagnosis } from '@/types';
+import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson, Utensils, ShieldPlus, FileOutput, HelpCircle, Stethoscope, FlaskConical } from 'lucide-react';
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion, ClinicalAnalysisOutputState, ValidatedDiagnosis, LabStandardizerOutputState } from '@/types';
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import type { ChatMessageHistoryItem } from '@/ai/flows/medical-assistant-chat-flow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -38,6 +38,7 @@ const moduleIcons: Record<ModuleType, LucideIcon> = {
   MedicalAssistantChat: Bot,
   DoseCalculator: Calculator,
   DischargeSummary: FileOutput,
+  LabStandardizer: FlaskConical,
 };
 
 const statusIcons: Record<HistoryEntry['status'], LucideIcon> = {
@@ -376,6 +377,15 @@ export function HistoryModule() {
           }
           clinicalData.setDischargeSummaryError(outputData?.error || null);
           break;
+        case 'LabStandardizer':
+          clinicalData.setLabStandardizerInput(inputData.rawLabText as string || '');
+          if (outputData && (outputData.abbreviatedReport || outputData.fullReport)) {
+            clinicalData.setLabStandardizerOutput(outputData as LabStandardizerOutputState);
+          } else {
+            clinicalData.setLabStandardizerOutput({ abbreviatedReport: null, fullReport: null });
+          }
+          clinicalData.setLabStandardizerError(outputData?.error || null);
+          break;
         default:
           toast({ variant: "destructive", title: "Módulo Desconocido", description: "No se puede cargar esta entrada." });
           return;
@@ -526,6 +536,17 @@ export function HistoryModule() {
         case 'DischargeSummary':
           if (typeof output === 'object' && output !== null && 'generatedSummary' in output) {
             return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as DischargeSummaryOutputState).generatedSummary}</pre>;
+          }
+          break;
+        case 'LabStandardizer':
+          if (typeof output === 'object' && output !== null && ('abbreviatedReport' in output || 'fullReport' in output)) {
+            const labOutput = output as LabStandardizerOutputState;
+            return (
+              <div className="space-y-2 text-xs">
+                {labOutput.abbreviatedReport && (<div><strong>Para Entrega de Turno:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{labOutput.abbreviatedReport}</pre></div>)}
+                {labOutput.fullReport && (<div><strong>Para Reporte en Sistema:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{labOutput.fullReport}</pre></div>)}
+              </div>
+            );
           }
           break;
       }

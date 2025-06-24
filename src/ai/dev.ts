@@ -14,4 +14,5 @@ import '@/ai/flows/generate-medical-justification.ts';
 import '@/ai/flows/medical-assistant-chat-flow.ts';
 import '@/ai/flows/generate-discharge-summary.ts';
 import '@/ai/flows/suggest-interrogation-questions.ts';
-import '@/ai/flows/generate-physical-exam.ts'; // Added import
+import '@/ai/flows/generate-physical-exam.ts';
+import '@/ai/flows/standardize-lab-results.ts'; // Added import
