@@ -12,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateMedicalOrderInputSchema = z.object({
-  orderType: z.enum(['OBSERVACIÓN', 'HOSPITALIZACIÓN', 'EGRESO']).describe('Tipo de orden médica.'),
+  orderType: z.enum(['OBSERVACIÓN MENOR A 6 HORAS', 'OBSERVACIÓN', 'HOSPITALIZACIÓN', 'EGRESO']).describe('Tipo de orden médica.'),
   oxygen: z.string().default("NO REQUIERE OXÍGENO").describe('Requerimientos de oxígeno. Ejemplo: "Oxígeno por cánula nasal a 2 L/min" o "NO REQUIERE OXÍGENO".'),
   isolation: z.string().default("NO REQUIERE AISLAMIENTO").describe('Tipo de aislamiento. Ejemplo: "Aislamiento de contacto" o "NO REQUIERE AISLAMIENTO".'),
   diet: z.string().optional().describe('Dieta del paciente. Aplicable solo si orderType es HOSPITALIZACIÓN. Ejemplo: "Dieta absoluta", "Dieta líquida".'),
@@ -49,6 +49,7 @@ export type GenerateMedicalOrderInput = z.infer<typeof GenerateMedicalOrderInput
 // Define a new type for the prompt's input, including the derived boolean flags
 const PromptInputSchema = GenerateMedicalOrderInputSchema.extend({
   isHospitalizacionOrder: z.boolean(),
+  isObservacionCorta: z.boolean(),
   requiresSpecialNursingSurveillance: z.boolean()
 });
 type PromptInput = z.infer<typeof PromptInputSchema>;
@@ -87,19 +88,23 @@ Genera la orden médica utilizando la siguiente estructura exacta, incluyendo lo
 {{else}}
 NO REQUIERE MEDICAMENTOS
 {{/if}}
+{{#unless isObservacionCorta}}
 **CONCILIACIÓN MEDICAMENTOSA**
 {{#if medicationReconciliationInput}}
 {{{medicationReconciliationInput}}}
 {{else}}
 NO TIENE CONCILIACIÓN MEDICAMENTOSA
 {{/if}}
+{{/unless}}
 {{#if isHospitalizacionOrder}}
 {{#if specialtyFollowUp}}
 SEGUIMIENTO POR ESPECIALIDAD: {{{specialtyFollowUp}}}
 {{/if}}
 {{/if}}
 {{{fallRisk}}}
+{{#unless isObservacionCorta}}
 ESCALA DE PADUA: {{{paduaScale}}}
+{{/unless}}
 Vigilar signos vitales
 Avisar cambios{{#if requiresSpecialNursingSurveillance}}
 {{#if surveillanceNursing.thermalCurve}}\n- Curva térmica{{/if}}
@@ -140,6 +145,7 @@ const generateMedicalOrderFlow = ai.defineFlow(
     const promptData: PromptInput = {
       ...input,
       isHospitalizacionOrder: input.orderType === "HOSPITALIZACIÓN",
+      isObservacionCorta: input.orderType === "OBSERVACIÓN MENOR A 6 HORAS",
       requiresSpecialNursingSurveillance: 
         input.surveillanceNursing.thermalCurve || 
         input.surveillanceNursing.monitorPain || 
@@ -165,4 +171,3 @@ const generateMedicalOrderFlow = ai.defineFlow(
     return output!;
   }
 );
-

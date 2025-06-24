@@ -312,8 +312,9 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
     });
   };
 
-  const orderTypeOptions: MedicalOrderType[] = ["OBSERVACIÓN", "HOSPITALIZACIÓN", "EGRESO"];
+  const orderTypeOptions: MedicalOrderType[] = ["OBSERVACIÓN MENOR A 6 HORAS", "OBSERVACIÓN", "HOSPITALIZACIÓN", "EGRESO"];
   const transferConditionOptions: TransferConditionType[] = ["Grupo 1: Camillero o auxiliar", "Grupo 2: Médico general", "Grupo 3: Médico general por paciente intubado", "NO APLICA"];
+  const isObservacionCorta = medicalOrderInputs.orderType === "OBSERVACIÓN MENOR A 6 HORAS";
 
   return (
     <ModuleCardWrapper
@@ -356,29 +357,31 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
           <Textarea id="medicationsInput" value={medicalOrderInputs.medicationsInput} onChange={(e) => handleInputChange('medicationsInput', e.target.value)} rows={4} placeholder="Ej: Acetaminofén, tabletas 500mg, 1g VO c/8h" disabled={isGeneratingMedicalOrder}/>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="medicationReconciliationInput">Conciliación Medicamentosa</Label>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="noMedicationReconciliation"
-              checked={medicalOrderInputs.noMedicationReconciliation}
-              onCheckedChange={(checked) => handleNoMedicationReconciliationChange(!!checked)}
-              disabled={isGeneratingMedicalOrder}
+        {!isObservacionCorta && (
+          <div className="space-y-2">
+            <Label htmlFor="medicationReconciliationInput">Conciliación Medicamentosa</Label>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="noMedicationReconciliation"
+                checked={medicalOrderInputs.noMedicationReconciliation}
+                onCheckedChange={(checked) => handleNoMedicationReconciliationChange(!!checked)}
+                disabled={isGeneratingMedicalOrder}
+              />
+              <Label htmlFor="noMedicationReconciliation" className="text-sm font-normal">
+                No tiene conciliación medicamentosa
+              </Label>
+            </div>
+            <Textarea 
+              id="medicationReconciliationInput" 
+              value={medicalOrderInputs.medicationReconciliationInput} 
+              onChange={(e) => handleInputChange('medicationReconciliationInput', e.target.value)} 
+              rows={3} 
+              placeholder="Ej: Losartán 50mg VO c/día." 
+              disabled={isGeneratingMedicalOrder || medicalOrderInputs.noMedicationReconciliation}
+              className={medicalOrderInputs.noMedicationReconciliation ? "bg-muted/50" : ""}
             />
-            <Label htmlFor="noMedicationReconciliation" className="text-sm font-normal">
-              No tiene conciliación medicamentosa
-            </Label>
           </div>
-          <Textarea 
-            id="medicationReconciliationInput" 
-            value={medicalOrderInputs.medicationReconciliationInput} 
-            onChange={(e) => handleInputChange('medicationReconciliationInput', e.target.value)} 
-            rows={3} 
-            placeholder="Ej: Losartán 50mg VO c/día." 
-            disabled={isGeneratingMedicalOrder || medicalOrderInputs.noMedicationReconciliation}
-            className={medicalOrderInputs.noMedicationReconciliation ? "bg-muted/50" : ""}
-          />
-        </div>
+        )}
 
         {medicalOrderInputs.orderType === 'HOSPITALIZACIÓN' && (
             <div>
@@ -398,59 +401,61 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
                 <Label htmlFor="fallRisk">Riesgo de Caídas y Lesiones por Presión</Label>
                 <Input id="fallRisk" value={medicalOrderInputs.fallRisk} onChange={(e) => handleInputChange('fallRisk', e.target.value)} disabled={isGeneratingMedicalOrder}/>
             </div>
-            <div className="flex flex-col">
-                <Label htmlFor="paduaScale">Escala de Padua</Label>
-                <div className="flex items-center gap-2">
-                  <Input 
-                    id="paduaScale" 
-                    value={medicalOrderInputs.paduaScale} 
-                    onChange={(e) => handleInputChange('paduaScale', e.target.value)} 
-                    placeholder="Ej: 3 puntos" 
-                    disabled={isGeneratingMedicalOrder}
-                    className="flex-grow"
-                  />
-                  <Dialog open={showPaduaCalculator} onOpenChange={setShowPaduaCalculator}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" title="Calculadora Escala de Padua" disabled={isGeneratingMedicalOrder}>
-                        <Calculator className="h-5 w-5" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Calculadora de Escala de Padua</DialogTitle>
-                        <DialogDescription>
-                          Seleccione los factores de riesgo presentes para calcular el puntaje.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-2 py-2 max-h-[60vh] overflow-y-auto pr-2">
-                        {Object.entries(paduaItems).map(([key, item]) => (
-                          <div key={key} className="flex items-center space-x-2 p-2 border rounded-md">
-                            <Checkbox
-                              id={`padua-${key}`}
-                              checked={item.checked}
-                              onCheckedChange={() => handlePaduaItemChange(key)}
-                            />
-                            <Label htmlFor={`padua-${key}`} className="text-sm font-normal flex-grow">
-                              {item.text} <span className="font-semibold">({item.points} pts)</span>
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                       <div className="mt-2 p-2 border-t text-sm">
-                        <strong>Puntaje Total:</strong> {currentPaduaScore}
-                        <br />
-                        <strong>Interpretación:</strong> {getPaduaRiskInterpretation(currentPaduaScore)}
-                      </div>
-                      <DialogFooter className="sm:justify-between">
-                        <DialogClose asChild>
-                            <Button type="button" variant="outline">Cerrar</Button>
-                        </DialogClose>
-                        <Button type="button" onClick={handleApplyPaduaScore}>Aplicar Puntaje</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-            </div>
+            {!isObservacionCorta && (
+              <div className="flex flex-col">
+                  <Label htmlFor="paduaScale">Escala de Padua</Label>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      id="paduaScale" 
+                      value={medicalOrderInputs.paduaScale} 
+                      onChange={(e) => handleInputChange('paduaScale', e.target.value)} 
+                      placeholder="Ej: 3 puntos" 
+                      disabled={isGeneratingMedicalOrder}
+                      className="flex-grow"
+                    />
+                    <Dialog open={showPaduaCalculator} onOpenChange={setShowPaduaCalculator}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" title="Calculadora Escala de Padua" disabled={isGeneratingMedicalOrder}>
+                          <Calculator className="h-5 w-5" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Calculadora de Escala de Padua</DialogTitle>
+                          <DialogDescription>
+                            Seleccione los factores de riesgo presentes para calcular el puntaje.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-2 py-2 max-h-[60vh] overflow-y-auto pr-2">
+                          {Object.entries(paduaItems).map(([key, item]) => (
+                            <div key={key} className="flex items-center space-x-2 p-2 border rounded-md">
+                              <Checkbox
+                                id={`padua-${key}`}
+                                checked={item.checked}
+                                onCheckedChange={() => handlePaduaItemChange(key)}
+                              />
+                              <Label htmlFor={`padua-${key}`} className="text-sm font-normal flex-grow">
+                                {item.text} <span className="font-semibold">({item.points} pts)</span>
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                         <div className="mt-2 p-2 border-t text-sm">
+                          <strong>Puntaje Total:</strong> {currentPaduaScore}
+                          <br />
+                          <strong>Interpretación:</strong> {getPaduaRiskInterpretation(currentPaduaScore)}
+                        </div>
+                        <DialogFooter className="sm:justify-between">
+                          <DialogClose asChild>
+                              <Button type="button" variant="outline">Cerrar</Button>
+                          </DialogClose>
+                          <Button type="button" onClick={handleApplyPaduaScore}>Aplicar Puntaje</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+              </div>
+            )}
         </div>
         
         <div>

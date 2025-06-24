@@ -4,6 +4,7 @@
 
 
 
+
 export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'InterrogationQuestions' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator' | 'DischargeSummary';
 
 export type ActiveView = 'analysis' | 'other' | 'all';
@@ -143,7 +144,7 @@ export interface PdfStructuredData {
 }
 
 // --- Medical Orders Module Specific Types ---
-export type MedicalOrderType = "OBSERVACIÓN" | "HOSPITALIZACIÓN" | "EGRESO";
+export type MedicalOrderType = "OBSERVACIÓN MENOR A 6 HORAS" | "OBSERVACIÓN" | "HOSPITALIZACIÓN" | "EGRESO";
 export type TransferConditionType = "Grupo 1: Camillero o auxiliar" | "Grupo 2: Médico general" | "Grupo 3: Médico general por paciente intubado" | "NO APLICA";
 
 export interface NursingSurveillanceState {
