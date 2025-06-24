@@ -202,8 +202,8 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
     <ModuleCardWrapper
       ref={moduleRef}
       id={id}
-      title="Análisis Avanzado de Imágenes Médicas"
-      description="Cargue o pegue radiografías o electrocardiogramas (EKG) para análisis por IA. Obtenga un resumen de hallazgos y una lectura detallada."
+      title="Análisis Avanzado de Radiografías"
+      description="Cargue o pegue radiografías para análisis por IA. Obtenga un resumen de hallazgos y una lectura radiológica detallada."
       icon={ScanSearch}
       isLoading={isImageAnalyzing}
     >
@@ -237,7 +237,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
         <div className="flex space-x-2">
           <Button onClick={handleAnalyzeImage} disabled={!imageFile || isImageAnalyzing} className="flex-1">
             <ScanSearch className="mr-2 h-4 w-4" />
-            Analizar Imagen
+            Analizar Radiografía
           </Button>
           <Button onClick={handleClearSelection} variant="outline" disabled={isImageAnalyzing} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
@@ -271,7 +271,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
           <div className="space-y-2 mt-4">
             <h3 className="text-md font-semibold font-headline flex items-center">
               <FileJson className="mr-2 h-5 w-5 text-primary" />
-              Lectura Detallada:
+              Lectura Radiológica Detallada:
             </h3>
             <Textarea
               value={imageAnalysisOutput.radiologistReading || ''}
