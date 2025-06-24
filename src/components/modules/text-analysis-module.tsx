@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useRef } from 'react';
@@ -7,9 +6,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { ModuleCardWrapper } from '@/components/common/module-card-wrapper';
 import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
-import { summarizeClinicalNotes, type SummarizeClinicalNotesOutput } from '@/ai/flows/summarize-clinical-notes';
+import { improveMedicalWriting, type ImproveMedicalWritingOutput } from '@/ai/flows/summarize-clinical-notes';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardEdit, Eraser, Copy, Save, MessageSquareText, Send } from 'lucide-react';
+import { ClipboardEdit, Eraser, Copy, Save, Send } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 
 interface TextAnalysisModuleProps {
@@ -31,33 +30,33 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
-  const handleAnalyzeNotes = async () => {
-    const currentNotes = String(clinicalNotesInput || '').trim();
-    if (currentNotes === '') {
-      toast({ title: "Sin Notas", description: "Por favor, ingrese notas clínicas para analizar.", variant: "destructive" });
+  const handleImproveWriting = async () => {
+    const currentText = String(clinicalNotesInput || '').trim();
+    if (currentText === '') {
+      toast({ title: "Sin Texto", description: "Por favor, ingrese texto para mejorar.", variant: "destructive" });
       return;
     }
 
     setIsTextAnalyzing(true);
     setTextAnalysisError(null);
-    let analysisOutput: SummarizeClinicalNotesOutput | null = null;
+    let analysisOutput: ImproveMedicalWritingOutput | null = null;
 
     try {
-      analysisOutput = await summarizeClinicalNotes({ clinicalNotes: currentNotes });
-      const newSummaryContent = (analysisOutput?.summary || '').trim();
-      setTextAnalysisSummary(newSummaryContent || null);
-      toast({ title: "Análisis de Texto Completado", description: "Las notas han sido resumidas." });
+      analysisOutput = await improveMedicalWriting({ clinicalText: currentText });
+      const newContent = (analysisOutput?.improvedText || '').trim();
+      setTextAnalysisSummary(newContent || null);
+      toast({ title: "Redacción Mejorada", description: "El texto ha sido mejorado por la IA." });
 
-      if (newSummaryContent) {
-        const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${newSummaryContent}`;
+      if (newContent) {
+        const summaryBlockToAdd = `[Texto Médico Mejorado]:\n${newContent}`;
         const currentDiagnosisText = String(diagnosisInputData || ''); 
 
         if (!currentDiagnosisText.includes(summaryBlockToAdd)) {
           const newDiagnosisValue = `${currentDiagnosisText ? currentDiagnosisText + '\n\n' : ''}${summaryBlockToAdd}`;
           setDiagnosisInputData(newDiagnosisValue); 
           toast({
-            title: "Resumen Enviado a Diagnóstico",
-            description: "El resumen de notas se ha añadido automáticamente para soporte diagnóstico.",
+            title: "Texto Enviado a Diagnóstico",
+            description: "El texto mejorado se ha añadido para soporte diagnóstico.",
           });
           
           setTimeout(() => {
@@ -71,25 +70,25 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
         await addHistoryEntry({
           module: 'TextAnalysis',
           inputType: 'text/plain',
-          inputSummary: getTextSummary(currentNotes),
-          outputSummary: getTextSummary(newSummaryContent || '', 100),
-          fullInput: currentNotes,
+          inputSummary: getTextSummary(currentText),
+          outputSummary: getTextSummary(newContent || '', 100),
+          fullInput: currentText,
           fullOutput: analysisOutput,
           status: 'completed',
         });
       }
     } catch (error: any) {
-      console.error("Error analyzing text:", error);
+      console.error("Error improving text:", error);
       const errorMessage = error.message || "Ocurrió un error desconocido.";
       setTextAnalysisError(errorMessage);
-      toast({ title: "Error de Análisis de Texto", description: errorMessage, variant: "destructive" });
+      toast({ title: "Error en la Mejora", description: errorMessage, variant: "destructive" });
       if (isAutoSaveEnabled) {
          await addHistoryEntry({
           module: 'TextAnalysis',
           inputType: 'text/plain',
-          inputSummary: getTextSummary(currentNotes),
-          outputSummary: 'Error en el análisis',
-          fullInput: currentNotes,
+          inputSummary: getTextSummary(currentText),
+          outputSummary: 'Error en la mejora',
+          fullInput: currentText,
           fullOutput: { error: errorMessage },
           status: 'error',
           errorDetails: errorMessage,
@@ -100,40 +99,40 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
     }
   };
 
-  const handleClearNotes = () => {
+  const handleClearText = () => {
     clearTextModule();
-    toast({ title: "Notas Limpiadas", description: "Se ha limpiado el campo de notas clínicas." });
+    toast({ title: "Texto Limpiado", description: "Se ha limpiado el módulo." });
   };
 
   const handleCopyToClipboard = () => {
-    const summaryToCopy = String(textAnalysisSummary || '').trim();
+    const textToCopy = String(textAnalysisSummary || '').trim();
 
-    if (summaryToCopy === '') {
-      toast({ title: "Sin Resumen", description: "No hay contenido en el cuadro 'Resumen de Información Clave' para copiar.", variant: "default"});
+    if (textToCopy === '') {
+      toast({ title: "Sin Texto", description: "No hay texto mejorado para copiar.", variant: "default"});
       return;
     }
     
-    navigator.clipboard.writeText(summaryToCopy)
-      .then(() => toast({ title: "Resumen Copiado", description: "El contenido del cuadro 'Resumen de Información Clave' ha sido copiado al portapapeles." }))
-      .catch(() => toast({ title: "Error al Copiar", description: "No se pudo copiar el contenido del cuadro 'Resumen de Información Clave'.", variant: "destructive" }));
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => toast({ title: "Texto Copiado", description: "El texto mejorado ha sido copiado al portapapeles." }))
+      .catch(() => toast({ title: "Error al Copiar", description: "No se pudo copiar el texto mejorado.", variant: "destructive" }));
   };
   
-  const handleSendSummaryToDiagnosis = () => {
-    const summaryToSend = String(textAnalysisSummary || '').trim();
-    if (!summaryToSend) {
-      toast({ title: "Sin Resumen", description: "No hay contenido en el cuadro 'Resumen de Información Clave' para enviar a diagnóstico.", variant: "default" });
+  const handleSendTextToDiagnosis = () => {
+    const textToSend = String(textAnalysisSummary || '').trim();
+    if (!textToSend) {
+      toast({ title: "Sin Texto", description: "No hay texto mejorado para enviar a diagnóstico.", variant: "default" });
       return;
     }
 
-    const summaryBlockToAdd = `[Resumen de Notas Clínicas]:\n${summaryToSend}`;
+    const textBlockToAdd = `[Texto Médico Mejorado]:\n${textToSend}`;
     const currentDiagnosisText = String(diagnosisInputData || ''); 
 
-    if (currentDiagnosisText.includes(summaryBlockToAdd)) {
-      toast({ title: "Resumen ya Incluido", description: "El contenido del cuadro 'Resumen de Información Clave' ya está en los datos de diagnóstico.", variant: "default" });
+    if (currentDiagnosisText.includes(textBlockToAdd)) {
+      toast({ title: "Texto ya Incluido", description: "El texto mejorado ya está en los datos de diagnóstico.", variant: "default" });
     } else {
-      const newDiagnosisValue = `${currentDiagnosisText ? currentDiagnosisText + '\n\n' : ''}${summaryBlockToAdd}`;
+      const newDiagnosisValue = `${currentDiagnosisText ? currentDiagnosisText + '\n\n' : ''}${textBlockToAdd}`;
       setDiagnosisInputData(newDiagnosisValue); 
-      toast({ title: "Resumen Enviado a Diagnóstico", description: "El contenido del cuadro 'Resumen de Información Clave' ha sido añadido para soporte diagnóstico." });
+      toast({ title: "Texto Enviado a Diagnóstico", description: "El texto mejorado ha sido añadido para soporte diagnóstico." });
     }
 
     setTimeout(() => {
@@ -144,24 +143,24 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
 
 
   const handleSaveManually = async () => {
-    const currentNotes = String(clinicalNotesInput || '');
-    const currentSummaryInBox = textAnalysisSummary; 
+    const currentText = String(clinicalNotesInput || '');
+    const currentImprovedText = textAnalysisSummary; 
     
-    if (currentNotes.trim() === '' && (currentSummaryInBox === null || currentSummaryInBox === undefined) && !textAnalysisError) {
-      toast({ title: "Nada que Guardar", description: "No hay notas de entrada ni resumen generado para guardar.", variant: "default" });
+    if (currentText.trim() === '' && (currentImprovedText === null || currentImprovedText === undefined) && !textAnalysisError) {
+      toast({ title: "Nada que Guardar", description: "No hay texto de entrada ni texto mejorado para guardar.", variant: "default" });
       return;
     }
         
-    let outputToSave = textAnalysisError ? { error: textAnalysisError } : { summary: currentSummaryInBox || '' };
-    let outputSummaryForHistory = textAnalysisError ? 'Error en el análisis' : getTextSummary(currentSummaryInBox || '', 100);
+    let outputToSave = textAnalysisError ? { error: textAnalysisError } : { improvedText: currentImprovedText || '' };
+    let outputSummaryForHistory = textAnalysisError ? 'Error en la mejora' : getTextSummary(currentImprovedText || '', 100);
     let status: 'completed' | 'error' = textAnalysisError ? 'error' : 'completed';
     
     await addHistoryEntry({
       module: 'TextAnalysis',
       inputType: 'text/plain',
-      inputSummary: getTextSummary(currentNotes),
+      inputSummary: getTextSummary(currentText),
       outputSummary: outputSummaryForHistory,
-      fullInput: currentNotes,
+      fullInput: currentText,
       fullOutput: outputToSave,
       status: status,
       errorDetails: textAnalysisError || undefined,
@@ -173,19 +172,19 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
     <ModuleCardWrapper
       ref={moduleRef}
       id={id}
-      title="Comprensión Profunda de Texto Clínico"
-      description="Ingrese notas clínicas o use datos de módulos anteriores. La IA generará un resumen clave."
-      icon={MessageSquareText}
+      title="Mejora de Redacción Médica"
+      description="Introduce un texto para que la IA lo amplíe y refine, aplicando un estilo de redacción médica profesional."
+      icon={ClipboardEdit}
       isLoading={isTextAnalyzing}
     >
       <div className="space-y-4">
         <div>
           <label htmlFor="clinicalNotes" className="block text-sm font-medium mb-1">
-            Notas Clínicas e Historial (Fuentes: Manual, Resumen de Imagen, Notas de PDF):
+            Texto a Mejorar:
           </label>
           <Textarea
             id="clinicalNotes"
-            placeholder="Pegue o escriba notas clínicas aquí..."
+            placeholder="Pegue o escriba aquí el texto a mejorar..."
             value={clinicalNotesInput || ''}
             onChange={(e) => setClinicalNotesInput(e.target.value)}
             rows={8}
@@ -194,38 +193,38 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
         </div>
 
         <div className="flex space-x-2">
-          <Button onClick={handleAnalyzeNotes} disabled={!String(clinicalNotesInput || '').trim() || isTextAnalyzing} className="flex-1">
+          <Button onClick={handleImproveWriting} disabled={!String(clinicalNotesInput || '').trim() || isTextAnalyzing} className="flex-1">
             <ClipboardEdit className="mr-2 h-4 w-4" />
-            Analizar Notas
+            Mejorar Redacción
           </Button>
-          <Button onClick={handleClearNotes} variant="outline" disabled={isTextAnalyzing} className="flex-1">
+          <Button onClick={handleClearText} variant="outline" disabled={isTextAnalyzing} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
-            Limpiar Notas
+            Limpiar Texto
           </Button>
         </div>
 
         {(textAnalysisSummary !== null) && ( 
           <div className="space-y-2">
-            <h3 className="text-md font-semibold font-headline">Resumen de Información Clave:</h3>
+            <h3 className="text-md font-semibold font-headline">Texto Médico Mejorado:</h3>
             <Textarea
               value={textAnalysisSummary || ''}
               readOnly
-              rows={6}
+              rows={8}
               className="bg-muted/30"
             />
             <div className="flex space-x-2">
               <Button onClick={handleCopyToClipboard} variant="outline" size="sm" disabled={(textAnalysisSummary === null || textAnalysisSummary.trim() === '')}>
                 <Copy className="mr-2 h-4 w-4" />
-                Copiar Resumen
+                Copiar Texto Mejorado
               </Button>
               <Button 
-                onClick={handleSendSummaryToDiagnosis} 
+                onClick={handleSendTextToDiagnosis} 
                 variant="default" 
                 size="sm" 
                 disabled={(textAnalysisSummary === null || textAnalysisSummary.trim() === '')}
               >
                 <Send className="mr-2 h-4 w-4" />
-                Enviar Resumen a Diagnóstico
+                Usar en Diagnóstico
               </Button>
             </div>
           </div>

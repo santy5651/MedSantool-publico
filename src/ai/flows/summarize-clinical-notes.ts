@@ -1,50 +1,52 @@
 'use server';
 /**
- * @fileOverview Clinical text analysis AI agent.
+ * @fileOverview Medical writing improvement AI agent.
  *
- * - summarizeClinicalNotes - A function that handles the summarization of clinical notes.
- * - SummarizeClinicalNotesInput - The input type for the summarizeClinicalNotes function.
- * - SummarizeClinicalNotesOutput - The return type for the summarizeClinicalNotes function.
+ * - improveMedicalWriting - A function that handles the improvement and expansion of clinical text.
+ * - ImproveMedicalWritingInput - The input type for the improveMedicalWriting function.
+ * - ImproveMedicalWritingOutput - The return type for the improveMedicalWriting function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const SummarizeClinicalNotesInputSchema = z.object({
-  clinicalNotes: z.string().describe('Clinical notes and summaries to be analyzed.'),
+const ImproveMedicalWritingInputSchema = z.object({
+  clinicalText: z.string().describe('Clinical text to be improved and expanded.'),
 });
-export type SummarizeClinicalNotesInput = z.infer<
-  typeof SummarizeClinicalNotesInputSchema
+export type ImproveMedicalWritingInput = z.infer<
+  typeof ImproveMedicalWritingInputSchema
 >;
 
-const SummarizeClinicalNotesOutputSchema = z.object({
-  summary: z.string().describe('Concise summary of key information in Spanish.'),
+const ImproveMedicalWritingOutputSchema = z.object({
+  improvedText: z.string().describe('The improved and expanded medical text in Spanish.'),
 });
-export type SummarizeClinicalNotesOutput = z.infer<
-  typeof SummarizeClinicalNotesOutputSchema
+export type ImproveMedicalWritingOutput = z.infer<
+  typeof ImproveMedicalWritingOutputSchema
 >;
 
-export async function summarizeClinicalNotes(
-  input: SummarizeClinicalNotesInput
-): Promise<SummarizeClinicalNotesOutput> {
-  return summarizeClinicalNotesFlow(input);
+export async function improveMedicalWriting(
+  input: ImproveMedicalWritingInput
+): Promise<ImproveMedicalWritingOutput> {
+  return improveMedicalWritingFlow(input);
 }
 
 const prompt = ai.definePrompt({
-  name: 'summarizeClinicalNotesPrompt',
-  input: {schema: SummarizeClinicalNotesInputSchema},
-  output: {schema: SummarizeClinicalNotesOutputSchema},
-  prompt: `You are an AI assistant expert in analyzing clinical notes and summaries.
-  Your task is to provide a concise summary of the key information in Spanish from the provided clinical notes.
+  name: 'improveMedicalWritingPrompt',
+  input: {schema: ImproveMedicalWritingInputSchema},
+  output: {schema: ImproveMedicalWritingOutputSchema},
+  prompt: `Eres un asistente experto en redacción médica. Tu tarea es tomar el siguiente texto clínico, que puede ser una idea, una nota breve o un borrador, y mejorarlo significativamente.
+  Debes ampliarlo, corregir la gramática y la ortografía, y reescribirlo para que siga un estilo de redacción médica profesional, claro y formal, adecuado para historias clínicas y reportes.
+  La salida debe estar en español.
 
-  Clinical Notes: {{{clinicalNotes}}} `,
+  Texto a mejorar: {{{clinicalText}}}
+  `,
 });
 
-const summarizeClinicalNotesFlow = ai.defineFlow(
+const improveMedicalWritingFlow = ai.defineFlow(
   {
-    name: 'summarizeClinicalNotesFlow',
-    inputSchema: SummarizeClinicalNotesInputSchema,
-    outputSchema: SummarizeClinicalNotesOutputSchema,
+    name: 'improveMedicalWritingFlow',
+    inputSchema: ImproveMedicalWritingInputSchema,
+    outputSchema: ImproveMedicalWritingOutputSchema,
   },
   async input => {
     const {output} = await prompt(input);
