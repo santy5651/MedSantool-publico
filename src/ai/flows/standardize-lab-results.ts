@@ -38,15 +38,16 @@ const prompt = ai.definePrompt({
 
 **Instrucciones:**
 1.  **Formato 1: "PARA ENTREGA DE TURNO" (con abreviaturas):**
-    -   Genera un resumen de los paraclínicos usando abreviaturas médicas comunes.
+    -   Genera un resumen de los paraclínicos usando abreviaturas médicas comunes. **No incluyas las unidades, solo las abreviaturas y sus valores.**
     -   Agrupa los exámenes por categoría (Ej: Hemograma, Química, Perfil Hepático, etc.).
     -   Si detectas anemia (hemoglobina o hematocrito bajos), asegúrate de incluir VCM, HCM y ADE/RDW junto a los resultados del hemograma.
+    -   Si detectas gases arteriales, usa el formato: "- GASES ARTERIALES: pH, PCO2, PO2, HCO3, LACT, PAFI".
     -   El resultado debe ser un texto continuo, claro y conciso, ideal para una entrega de turno rápida.
     -   **Ejemplo de formato de salida para "PARA ENTREGA DE TURNO":**
-        "Hemograma: Hb, Hto, Leu, Lin #, Neu #, Neu %, Plt. (Si hay anemia, se agregara, al lado de Hto los siguientes: VCM, HCM, ADE/RDW) - BUN, CREA - TGO, TGP, GGT, FA, BT, BD, BI, Alb - TPT, TP, INR - NA, K, CL, CA, MG - TSH, T3, T4, T3L, T4L, CORTISOL AM, CORTISOL PM - Uroanálisis: BACT, HB, ERI, ESTERASA, NITRITOS, MOCO, CEL EPIT."
+        "Hemograma: Hb, Hto, Leu, Lin #, Neu #, Neu %, Plt. (Si hay anemia, se agregara, al lado de Hto los siguientes: VCM, HCM, ADE/RDW) - BUN, CREA - TGO, TGP, GGT, FA, BT, BD, BI, Alb - TPT, TP, INR - NA, K, CL, CA, MG - TSH, T3, T4, T3L, T4L, CORTISOL AM, CORTISOL PM - GASES ARTERIALES: pH, PCO2, PO2, HCO3, LACT, PAFI - Uroanálisis: BACT, HB, ERI, ESTERASA, NITRITOS, MOCO, CEL EPIT."
 
 2.  **Formato 2: "PARA REPORTE EN SISTEMA" (sin abreviaturas):**
-    -   Genera un listado de los paraclínicos con sus nombres completos.
+    -   Genera un listado de los paraclínicos con sus nombres completos y valores.
     -   Agrupa los exámenes por categoría, usando los nombres completos de las categorías (Ej: Hemograma Completo, Función Renal, Perfil Hepático).
     -   Cada examen debe estar en una nueva línea con su nombre completo.
     -   **Ejemplo de formato de salida para "PARA REPORTE EN SISTEMA":**
