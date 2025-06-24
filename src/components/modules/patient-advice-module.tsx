@@ -52,7 +52,7 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
   useEffect(() => {
     setPatientAdviceInput(prevInput => ({
         ...prevInput, // Mantiene manualDiagnosisOrAnalysis
-        clinicalAnalysis: generatedClinicalAnalysis || null,
+        clinicalAnalysis: generatedClinicalAnalysis?.comprehensiveAnalysis || null,
         textSummary: textAnalysisSummary || null,
         // validatedDiagnoses se omite aquí, se llenará con los seleccionados al generar/guardar
     }));
@@ -97,7 +97,7 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
     let aiOutput: GeneratePatientAdviceOutput | null = null;
 
     const inputForAI: GeneratePatientAdviceInput = {
-      clinicalAnalysis: generatedClinicalAnalysis || undefined,
+      clinicalAnalysis: patientAdviceInput.clinicalAnalysis || undefined,
       textSummary: textAnalysisSummary || undefined,
       validatedDiagnoses: hasSelectedDx ? selectedDiagnoses : undefined,
       manualDiagnosisOrAnalysis: hasManualText ? String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() : undefined,
@@ -215,7 +215,7 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
 
     // Construir inputForAI con los datos actuales para el historial
     const inputForHistory: GeneratePatientAdviceInput = {
-        clinicalAnalysis: generatedClinicalAnalysis || undefined,
+        clinicalAnalysis: patientAdviceInput.clinicalAnalysis || undefined,
         textSummary: textAnalysisSummary || undefined,
         validatedDiagnoses: selectedDiagnoses.length > 0 ? selectedDiagnoses : undefined,
         manualDiagnosisOrAnalysis: String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() || undefined,

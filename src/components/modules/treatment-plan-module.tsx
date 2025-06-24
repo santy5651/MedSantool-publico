@@ -39,7 +39,7 @@ export function TreatmentPlanModule({ id }: TreatmentPlanModuleProps) {
       .map(d => ({ code: d.code, description: d.description })) || [];
 
     const newTreatmentInput: TreatmentPlanInputData = {
-      clinicalAnalysis: generatedClinicalAnalysis || null,
+      clinicalAnalysis: generatedClinicalAnalysis?.comprehensiveAnalysis || null,
       textSummary: textAnalysisSummary || null,
       validatedDiagnoses: validatedDiagnoses.length > 0 ? validatedDiagnoses : null,
     };
