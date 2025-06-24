@@ -35,7 +35,8 @@ const prompt = ai.definePrompt({
   input: {schema: ImproveMedicalWritingInputSchema},
   output: {schema: ImproveMedicalWritingOutputSchema},
   prompt: `Eres un asistente experto en redacción médica. Tu tarea es tomar el siguiente texto clínico, que puede ser una idea, una nota breve o un borrador, y mejorarlo significativamente.
-  Debes ampliarlo, corregir la gramática y la ortografía, y reescribirlo para que siga un estilo de redacción médica profesional, claro y formal, adecuado para historias clínicas y reportes.
+  Debes ampliarlo, corregir la gramática y la ortografía, y reescribirlo para que siga un estilo de redacción médica profesional, claro y formal.
+  Además, estructura el texto de una manera lógica y coherente, similar a una sección de "Enfermedad Actual" en una historia clínica, organizando la información de forma cronológica o por sistemas si es apropiado.
   La salida debe estar en español.
 
   Texto a mejorar: {{{clinicalText}}}
