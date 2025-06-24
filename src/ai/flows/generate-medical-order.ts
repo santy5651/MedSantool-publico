@@ -105,8 +105,12 @@ SEGUIMIENTO POR ESPECIALIDAD: {{{specialtyFollowUp}}}
 {{#unless isObservacionCorta}}
 ESCALA DE PADUA: {{{paduaScale}}}
 {{/unless}}
+{{#if isObservacionCorta}}
+INFORMAR NOVEDADES
+{{else}}
 Vigilar signos vitales
-Avisar cambios{{#if requiresSpecialNursingSurveillance}}
+Avisar cambios
+{{/if}}{{#if requiresSpecialNursingSurveillance}}
 {{#if surveillanceNursing.thermalCurve}}\n- Curva térmica{{/if}}
 {{#if surveillanceNursing.monitorPain}}\n- Vigilar dolor{{/if}}
 {{#if surveillanceNursing.monitorWounds}}\n- Vigilar heridas{{/if}}
