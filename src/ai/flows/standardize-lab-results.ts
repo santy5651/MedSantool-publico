@@ -42,6 +42,7 @@ const prompt = ai.definePrompt({
     -   Agrupa los exámenes por categoría (Ej: Hemograma, Química, Perfil Hepático, etc.).
     -   Si detectas anemia (hemoglobina o hematocrito bajos), asegúrate de incluir VCM, HCM y ADE/RDW junto a los resultados del hemograma.
     -   Si detectas gases arteriales, usa el formato: "- GASES ARTERIALES: pH, PCO2, PO2, HCO3, LACT, PAFI".
+    -   Si encuentras paraclínicos que no encajan en las categorías comunes del ejemplo, agrégalos al final del reporte, usando su nombre completo y valor, sin unidades. Por ejemplo, si el texto de entrada contiene "CREATININA EN ORINA PARCIAL 189.7", debes agregar al reporte "- CREATININA EN ORINA PARCIAL 189.7".
     -   El resultado debe ser un texto continuo, claro y conciso, ideal para una entrega de turno rápida.
     -   **Ejemplo de formato de salida para "PARA ENTREGA DE TURNO":**
         "Hemograma: Hb, Hto, Leu, Lin #, Neu #, Neu %, Plt. (Si hay anemia, se agregara, al lado de Hto los siguientes: VCM, HCM, ADE/RDW) - PCT, PCR - BUN, CREA - TGO, TGP, GGT, FA, BT, BD, BI, Alb, AMIL, LIPAS - TPT, TP, INR - NA, K, CL, CA, MG - TSH, T3, T4, T3L, T4L, CORTISOL AM, CORTISOL PM - GASES ARTERIALES: pH, PCO2, PO2, HCO3, LACT, PAFI - Uroanálisis: BACT, HB, ERI, ESTERASA, NITRITOS, MOCO, CEL EPIT."
@@ -50,6 +51,7 @@ const prompt = ai.definePrompt({
     -   Genera un reporte de los paraclínicos con sus nombres completos y valores, agrupados por categoría.
     -   Cada categoría debe comenzar en una **nueva línea**, con el nombre de la categoría en negrita (usando asteriscos, ej: \`**Hemograma Completo**\`).
     -   Todos los resultados dentro de una misma categoría deben ir en la **misma línea** que el título de la categoría, separados por comas.
+    -   Si encuentras paraclínicos que no encajan en las categorías comunes del ejemplo, agrégalos en una nueva categoría llamada \`**Otros**\`, cada uno con su nombre completo y valor. Por ejemplo: \`**Otros:** Creatinina en Orina Parcial 189.7 mg/dL\`.
     -   **Ejemplo de formato de salida para "PARA REPORTE EN SISTEMA" (asegúrate de que cada categoría empiece en una línea nueva):**
         **Hemograma Completo:** Hemoglobina 15.70, Hematocrito 47.50, Leucocitos 18.58, Linfocitos # 0.30, Neutrófilos # 17.42, Neutrófilos % 93.8, Plaquetas 283.00, Volumen Corpuscular Medio 80.30, Hemoglobina Corpuscular Media 26.70, Ancho de Distribución Eritrocitaria 13.90
         **Química Sanguínea:** Glicemia 111, Nitrógeno Ureico: 8.0, Creatinina en Suero: 0.70
