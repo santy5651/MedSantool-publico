@@ -9,7 +9,7 @@ import { suggestInterrogationQuestions, type SuggestInterrogationQuestionsOutput
 import { useToast } from '@/hooks/use-toast';
 import { HelpCircle, Eraser, Save, Copy } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
-import { Badge } from '../ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 
 interface InterrogationQuestionsModuleProps {
   id?: string;
@@ -151,11 +151,12 @@ export function InterrogationQuestionsModule({ id }: InterrogationQuestionsModul
             {generatedInterrogationQuestions && generatedInterrogationQuestions.length > 0 && (
                 <div className="space-y-2">
                     <h3 className="text-md font-semibold font-headline">Preguntas Sugeridas:</h3>
-                    <div className="p-3 border rounded-md bg-background max-h-60 overflow-y-auto">
-                        <ul className="list-disc pl-5 space-y-2">
-                        {generatedInterrogationQuestions.map((q, i) => <li key={i} className="text-sm">{q}</li>)}
-                        </ul>
-                    </div>
+                    <Textarea
+                        readOnly
+                        value={generatedInterrogationQuestions.join('\n')}
+                        className="bg-background min-h-[150px]"
+                        rows={Math.min(10, generatedInterrogationQuestions.length)}
+                    />
                     <div className="flex space-x-2">
                         <Button onClick={handleCopyToClipboard} variant="outline" size="sm">
                             <Copy className="mr-2 h-4 w-4" />
