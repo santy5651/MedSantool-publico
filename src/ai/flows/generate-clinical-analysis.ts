@@ -16,7 +16,8 @@ const GenerateClinicalAnalysisInputSchema = z.object({
 export type GenerateClinicalAnalysisInput = z.infer<typeof GenerateClinicalAnalysisInputSchema>;
 
 const GenerateClinicalAnalysisOutputSchema = z.object({
-  clinicalAnalysis: z.string().describe('A professional, clear, and comprehensive clinical case analysis in a single paragraph, suitable for hospital environments.'),
+  comprehensiveAnalysis: z.string().describe('Análisis clínico del caso profesional, claro y completo, en uno o dos párrafos, adecuado para entornos hospitalarios.'),
+  focusedAnalysis: z.string().describe('Un resumen muy breve y enfocado (2-3 líneas máximo) que resuma los hallazgos más críticos, la lista de problemas principales o la impresión diagnóstica primaria.'),
 });
 export type GenerateClinicalAnalysisOutput = z.infer<typeof GenerateClinicalAnalysisOutputSchema>;
 
@@ -30,15 +31,17 @@ const prompt = ai.definePrompt({
   name: 'generateClinicalAnalysisPrompt',
   input: {schema: GenerateClinicalAnalysisInputSchema},
   output: {schema: GenerateClinicalAnalysisOutputSchema},
-  prompt: `You are an expert physician. Based on the following key clinical information summary, generate a concise and professional analysis of the case in a single paragraph.
-The analysis must be clear, comprehensive, and suitable for a hospital environment, as if you were presenting the case to colleagues.
-Focus on the most relevant aspects, potential implications, and a structured assessment.
-The output should be in Spanish.
+  prompt: `Eres un médico experto. Basado en el siguiente resumen de información clave, tu tarea es doble:
 
-Clinical Summary:
+1.  **Generar un Análisis Clínico Completo:** Redacta un análisis del caso que sea profesional, claro y completo, en uno o dos párrafos. Debe ser adecuado para un entorno hospitalario, como si estuvieras presentando el caso a colegas. Enfócate en los aspectos más relevantes, implicaciones potenciales y una evaluación estructurada.
+2.  **Generar un Análisis Enfocado:** Redacta un resumen muy breve y directo (máximo 2-3 líneas) que sintetice los hallazgos más críticos, la lista de problemas o la impresión diagnóstica principal.
+
+La salida debe estar en español y seguir el esquema de salida proporcionado.
+
+Resumen Clínico:
 {{{clinicalSummary}}}
 
-Generated Clinical Analysis (single paragraph):
+Genera ambos análisis:
 `,
 });
 

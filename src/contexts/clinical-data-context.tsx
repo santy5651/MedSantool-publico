@@ -3,9 +3,10 @@
 
 
 
+
 'use client';
 
-import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion } from '@/types';
+import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion, ClinicalAnalysisOutputState } from '@/types';
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const initialNursingSurveillanceState: NursingSurveillanceState = {
@@ -109,6 +110,12 @@ const initialImageAnalysisOutput: ImageAnalysisOutputState = {
   radiologistReading: null,
 };
 
+const initialClinicalAnalysisOutput: ClinicalAnalysisOutputState = {
+  comprehensiveAnalysis: null,
+  focusedAnalysis: null,
+};
+
+
 const initialDischargeSummaryInputs: DischargeSummaryInputState = {
   formulaMedica: null,
   conciliacionMedicamentosa: null,
@@ -151,7 +158,7 @@ const initialState: ClinicalDataContextState = {
   interrogationQuestionsError: null,
 
   clinicalAnalysisInput: null,
-  generatedClinicalAnalysis: null,
+  generatedClinicalAnalysis: initialClinicalAnalysisOutput,
   isGeneratingClinicalAnalysis: false,
   clinicalAnalysisError: null,
 
@@ -226,7 +233,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setInterrogationQuestionsError = useCallback((error: string | null) => setState(s => ({ ...s, interrogationQuestionsError: error })), []);
 
   const setClinicalAnalysisInput = useCallback((input: string | null) => setState(s => ({ ...s, clinicalAnalysisInput: input })), []);
-  const setGeneratedClinicalAnalysis = useCallback((analysis: string | null) => setState(s => ({ ...s, generatedClinicalAnalysis: analysis })), []);
+  const setGeneratedClinicalAnalysis = useCallback((analysis: ClinicalAnalysisOutputState) => setState(s => ({ ...s, generatedClinicalAnalysis: analysis })), []);
   const setIsGeneratingClinicalAnalysis = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingClinicalAnalysis: loading })), []);
   const setClinicalAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, clinicalAnalysisError: error })), []);
 
@@ -262,7 +269,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   );
   const setGeneratedTreatmentPlan = useCallback((plan: TreatmentPlanOutputState) => setState(s => ({ ...s, generatedTreatmentPlan: plan })), []);
   const setIsGeneratingTreatmentPlan = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingTreatmentPlan: loading })), []);
-  const setTreatmentPlanError = useCallback((error: string | null) => setState(s => ({ ...s, treatmentPlanError: error})), []);
+  const setTreatmentPlanError = useCallback((error: string | null) => setState(s => ({...s, treatmentPlanError: error})), []);
 
   const setPatientAdviceInput = useCallback(
     (updater: PatientAdviceInputData | ((prevState: PatientAdviceInputData) => PatientAdviceInputData)) => {
@@ -369,7 +376,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const clearClinicalAnalysisModule = useCallback(() => {
     setState(s => ({
       ...s,
-      generatedClinicalAnalysis: null,
+      generatedClinicalAnalysis: initialClinicalAnalysisOutput,
       isGeneratingClinicalAnalysis: false,
       clinicalAnalysisError: null,
     }));

@@ -11,6 +11,7 @@ import { generateClinicalAnalysis, type GenerateClinicalAnalysisOutput } from '@
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Brain, Eraser, Send, Save, Copy } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
+import type { ClinicalAnalysisOutputState } from '@/types';
 
 interface ClinicalAnalysisModuleProps {
   id?: string;
@@ -52,16 +53,22 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
 
     try {
       analysisOutput = await generateClinicalAnalysis({ clinicalSummary: currentInput });
-      const newAnalysisContent = (analysisOutput?.clinicalAnalysis || '').trim();
-      setGeneratedClinicalAnalysis(newAnalysisContent || null);
+      const newComprehensiveAnalysis = (analysisOutput?.comprehensiveAnalysis || '').trim();
+      const newFocusedAnalysis = (analysisOutput?.focusedAnalysis || '').trim();
+      
+      setGeneratedClinicalAnalysis({
+        comprehensiveAnalysis: newComprehensiveAnalysis,
+        focusedAnalysis: newFocusedAnalysis,
+      });
+
       toast({ title: "Análisis Clínico Generado", description: "El caso ha sido analizado por la IA." });
       
-      if (newAnalysisContent) {
-        const analysisBlockToAdd = `[Análisis Clínico del Caso por IA]:\n${newAnalysisContent}`;
+      if (newComprehensiveAnalysis) {
+        const analysisBlockToAdd = `[Análisis Clínico del Caso por IA]:\n${newComprehensiveAnalysis}`;
         setDiagnosisInputData(prev => `${prev ? prev + '\n\n' : ''}${analysisBlockToAdd}`);
         toast({
           title: "Análisis Enviado a Diagnóstico",
-          description: "El análisis clínico del caso se ha añadido automáticamente para soporte diagnóstico.",
+          description: "El análisis clínico completo se ha añadido automáticamente para soporte diagnóstico.",
         });
         setTimeout(() => {
           const diagnosisModule = document.getElementById('diagnosis-support-module');
@@ -69,15 +76,14 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
         }, 0);
       }
 
-
       if (isAutoSaveEnabled) {
         await addHistoryEntry({
           module: 'ClinicalAnalysis',
           inputType: 'text/plain',
           inputSummary: getTextSummary(currentInput),
-          outputSummary: getTextSummary(newAnalysisContent, 100),
+          outputSummary: `Completo: ${getTextSummary(newComprehensiveAnalysis, 50)}. Enfocado: ${getTextSummary(newFocusedAnalysis, 50)}`,
           fullInput: currentInput,
-          fullOutput: analysisOutput,
+          fullOutput: analysisOutput as ClinicalAnalysisOutputState,
           status: 'completed',
         });
       }
@@ -93,7 +99,7 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
           inputSummary: getTextSummary(currentInput),
           outputSummary: 'Error en el análisis',
           fullInput: currentInput,
-          fullOutput: { error: errorMessage },
+          fullOutput: { error: errorMessage } as any,
           status: 'error',
           errorDetails: errorMessage,
         });
@@ -109,7 +115,7 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
   };
 
   const handleSendToDiagnosis = () => {
-    const analysisToSend = String(generatedClinicalAnalysis || '').trim();
+    const analysisToSend = String(generatedClinicalAnalysis.comprehensiveAnalysis || '').trim();
     if (!analysisToSend) {
       toast({ title: "Sin Análisis", description: "No hay análisis clínico generado para enviar.", variant: "default" });
       return;
@@ -119,34 +125,33 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
         if (prev.includes(analysisBlockToAdd)) return prev;
         return `${prev ? prev + '\n\n' : ''}${analysisBlockToAdd}`;
     });
-    toast({ title: "Análisis Enviado a Diagnóstico", description: "El análisis clínico se ha añadido para soporte diagnóstico." });
+    toast({ title: "Análisis Enviado a Diagnóstico", description: "El análisis clínico completo se ha añadido para soporte diagnóstico." });
     setTimeout(() => {
         const diagnosisModule = document.getElementById('diagnosis-support-module');
         diagnosisModule?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 0);
   };
   
-  const handleCopyToClipboard = () => {
-    const textToCopy = String(generatedClinicalAnalysis || '').trim();
-    if (!textToCopy) {
-      toast({ title: "Sin Análisis", description: "No hay análisis para copiar.", variant: "default" });
+  const handleCopyToClipboard = (textToCopy: string | null, type: string) => {
+    if (!textToCopy || textToCopy.trim() === '') {
+      toast({ title: `Sin Análisis ${type}`, description: `No hay análisis ${type.toLowerCase()} para copiar.`, variant: "default" });
       return;
     }
     navigator.clipboard.writeText(textToCopy)
-      .then(() => toast({ title: "Análisis Copiado", description: "El análisis clínico ha sido copiado." }))
+      .then(() => toast({ title: `Análisis ${type} Copiado`, description: `El análisis ${type.toLowerCase()} ha sido copiado.` }))
       .catch(() => toast({ title: "Error al Copiar", variant: "destructive" }));
   };
 
   const handleSaveManually = async () => {
     const currentInput = String(clinicalAnalysisInput || '');
-    if (!currentInput && !generatedClinicalAnalysis && !clinicalAnalysisError) {
+    if (!currentInput && !generatedClinicalAnalysis.comprehensiveAnalysis && !clinicalAnalysisError) {
       toast({ title: "Nada que Guardar", description: "Genere un análisis primero o provea un resumen.", variant: "default" });
       return;
     }
     
     const status = clinicalAnalysisError ? 'error' : 'completed';
-    const output = clinicalAnalysisError ? { error: clinicalAnalysisError } : { clinicalAnalysis: generatedClinicalAnalysis };
-    const outputSum = clinicalAnalysisError ? 'Error en el análisis' : getTextSummary(generatedClinicalAnalysis, 100);
+    const output = clinicalAnalysisError ? { error: clinicalAnalysisError } as any : generatedClinicalAnalysis;
+    const outputSum = clinicalAnalysisError ? 'Error en el análisis' : `Completo: ${getTextSummary(generatedClinicalAnalysis.comprehensiveAnalysis, 50)}. Enfocado: ${getTextSummary(generatedClinicalAnalysis.focusedAnalysis, 50)}`;
 
     await addHistoryEntry({
       module: 'ClinicalAnalysis',
@@ -159,13 +164,15 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
       errorDetails: clinicalAnalysisError || undefined,
     });
   };
+  
+  const hasOutput = generatedClinicalAnalysis.comprehensiveAnalysis || generatedClinicalAnalysis.focusedAnalysis;
 
   return (
     <ModuleCardWrapper
       ref={moduleRef}
       id={id}
       title="Análisis Clínico Asistido por IA"
-      description="Utiliza el resumen de información clave del Módulo 3 para generar un análisis del caso clínico en formato profesional."
+      description="Genera un análisis completo y un resumen enfocado a partir del texto del Módulo de Mejora de Redacción."
       icon={Brain}
       isLoading={isGeneratingClinicalAnalysis}
     >
@@ -196,32 +203,53 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
           </Button>
         </div>
 
-        {generatedClinicalAnalysis && (
-          <div className="space-y-2">
-            <h3 className="text-md font-semibold font-headline">Análisis Clínico Generado:</h3>
-            <Textarea
-              value={generatedClinicalAnalysis || ''}
-              readOnly 
-              rows={8}
-              className="bg-muted/30"
-            />
-            <div className="flex space-x-2">
-               <Button onClick={handleCopyToClipboard} variant="outline" size="sm">
-                <Copy className="mr-2 h-4 w-4" />
-                Copiar Análisis
-              </Button>
-              <Button onClick={handleSendToDiagnosis} variant="default" size="sm">
-                <Send className="mr-2 h-4 w-4" />
-                Usar Análisis en Soporte Diagnóstico
-              </Button>
-            </div>
+        {hasOutput && (
+          <div className="space-y-4">
+            {generatedClinicalAnalysis.focusedAnalysis && (
+              <div className="space-y-2">
+                <h3 className="text-md font-semibold font-headline">Análisis Enfocado (Resumen):</h3>
+                <Textarea
+                  value={generatedClinicalAnalysis.focusedAnalysis}
+                  readOnly 
+                  rows={3}
+                  className="bg-muted/30"
+                />
+                <Button onClick={() => handleCopyToClipboard(generatedClinicalAnalysis.focusedAnalysis, 'Enfocado')} variant="outline" size="sm">
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copiar Análisis Enfocado
+                </Button>
+              </div>
+            )}
+            
+            {generatedClinicalAnalysis.comprehensiveAnalysis && (
+              <div className="space-y-2">
+                <h3 className="text-md font-semibold font-headline">Análisis Clínico Completo:</h3>
+                <Textarea
+                  value={generatedClinicalAnalysis.comprehensiveAnalysis}
+                  readOnly 
+                  rows={8}
+                  className="bg-muted/30"
+                />
+                <div className="flex space-x-2">
+                   <Button onClick={() => handleCopyToClipboard(generatedClinicalAnalysis.comprehensiveAnalysis, 'Completo')} variant="outline" size="sm">
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copiar Análisis Completo
+                  </Button>
+                  <Button onClick={handleSendToDiagnosis} variant="default" size="sm">
+                    <Send className="mr-2 h-4 w-4" />
+                    Usar Análisis Completo en Diagnóstico
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
+
         {clinicalAnalysisError && (
           <p className="text-sm text-destructive">Error: {clinicalAnalysisError}</p>
         )}
         
-        {!isAutoSaveEnabled && (generatedClinicalAnalysis || clinicalAnalysisError) && (
+        {!isAutoSaveEnabled && (hasOutput || clinicalAnalysisError) && (
            <Button onClick={handleSaveManually} variant="secondary" className="w-full mt-2">
             <Save className="mr-2 h-4 w-4" /> Guardar en Historial
           </Button>

@@ -2,6 +2,7 @@
 
 
 
+
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -18,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson, Utensils, ShieldPlus, FileOutput, HelpCircle } from 'lucide-react';
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion } from '@/types';
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion, ClinicalAnalysisOutputState } from '@/types';
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import type { ChatMessageHistoryItem } from '@/ai/flows/medical-assistant-chat-flow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -130,6 +131,11 @@ const initialImageAnalysisOutput: ImageAnalysisOutputState = {
   radiologistReading: null,
 };
 
+const initialClinicalAnalysisOutput: ClinicalAnalysisOutputState = {
+  comprehensiveAnalysis: null,
+  focusedAnalysis: null,
+};
+
 const initialDischargeSummaryInputs: DischargeSummaryInputState = {
   formulaMedica: null,
   conciliacionMedicamentosa: null,
@@ -236,8 +242,10 @@ export function HistoryModule() {
           break;
         case 'ClinicalAnalysis':
           clinicalData.setClinicalAnalysisInput(inputData as string || null);
-           if (outputData && outputData.clinicalAnalysis) {
-            clinicalData.setGeneratedClinicalAnalysis(outputData.clinicalAnalysis);
+           if (outputData && (outputData.comprehensiveAnalysis || outputData.focusedAnalysis)) {
+            clinicalData.setGeneratedClinicalAnalysis(outputData as ClinicalAnalysisOutputState);
+          } else {
+            clinicalData.setGeneratedClinicalAnalysis(initialClinicalAnalysisOutput);
           }
           clinicalData.setClinicalAnalysisError(outputData?.error || null);
           break;
@@ -438,7 +446,15 @@ export function HistoryModule() {
           if (typeof output === 'object' && output !== null && 'generatedOrderText' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as MedicalOrderOutputState).generatedOrderText}</pre>; }
           break;
         case 'ClinicalAnalysis':
-          if (typeof output === 'object' && output !== null && 'clinicalAnalysis' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {clinicalAnalysis: string}).clinicalAnalysis}</pre>; }
+          if (typeof output === 'object' && output !== null && ('comprehensiveAnalysis' in output || 'focusedAnalysis' in output)) {
+            const analysisOutput = output as ClinicalAnalysisOutputState;
+            return (
+              <div className="space-y-2 text-xs">
+                {analysisOutput.comprehensiveAnalysis && (<div><strong>Análisis Completo:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{analysisOutput.comprehensiveAnalysis}</pre></div>)}
+                {analysisOutput.focusedAnalysis && (<div><strong>Análisis Enfocado:</strong><pre className="whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{analysisOutput.focusedAnalysis}</pre></div>)}
+              </div>
+            );
+          }
           break;
         case 'TextAnalysis':
           if (typeof output === 'object' && output !== null && 'improvedText' in output) { return <pre className="text-xs whitespace-pre-wrap p-2 bg-muted/30 rounded-md">{(output as {improvedText: string}).improvedText}</pre>; }
