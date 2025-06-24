@@ -124,9 +124,9 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
   const handleSendReadingToText = () => {
     if (imageAnalysisOutput.radiologistReading) {
       setClinicalNotesInput(prev => 
-        `${prev ? prev + '\n\n' : ''}[Lectura Radiológica de Imagen - ${getFileSummary(imageFile)}]:\n${imageAnalysisOutput.radiologistReading}`
+        `${prev ? prev + '\n\n' : ''}[Lectura Detallada de Imagen - ${getFileSummary(imageFile)}]:\n${imageAnalysisOutput.radiologistReading}`
       );
-      toast({ title: "Lectura Enviada", description: "La lectura radiológica se ha añadido a las notas clínicas." });
+      toast({ title: "Lectura Enviada", description: "La lectura detallada se ha añadido a las notas clínicas." });
       const textModule = document.getElementById('text-analysis-module');
       textModule?.scrollIntoView({ behavior: 'smooth' });
     }
@@ -172,7 +172,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
       ref={moduleRef}
       id={id}
       title="Análisis Avanzado de Imágenes Médicas"
-      description="Cargue imágenes médicas (radiografías, TAC, RMN) para análisis por IA. Obtenga un resumen de hallazgos y una lectura detallada."
+      description="Cargue imágenes médicas (radiografías, TAC, RMN, EKG) para análisis por IA. Obtenga un resumen de hallazgos y una lectura detallada."
       icon={ScanSearch}
       isLoading={isImageAnalyzing}
     >
@@ -234,7 +234,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
           <div className="space-y-2 mt-4">
             <h3 className="text-md font-semibold font-headline flex items-center">
               <FileJson className="mr-2 h-5 w-5 text-primary" />
-              Lectura Radiológica Detallada:
+              Lectura Detallada:
             </h3>
             <Textarea
               value={imageAnalysisOutput.radiologistReading || ''}
@@ -243,7 +243,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
               className="bg-muted/30"
             />
             <div className="flex space-x-2">
-              <Button onClick={() => handleCopyToClipboard(imageAnalysisOutput.radiologistReading, 'Lectura Radiológica')} variant="outline" size="sm">
+              <Button onClick={() => handleCopyToClipboard(imageAnalysisOutput.radiologistReading, 'Lectura Detallada')} variant="outline" size="sm">
                 <Copy className="mr-2 h-4 w-4" />
                 Copiar Lectura
               </Button>

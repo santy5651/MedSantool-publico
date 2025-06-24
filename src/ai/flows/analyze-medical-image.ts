@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview Analyzes medical images to identify potential anomalies, generate a summary of findings, and provide a detailed radiological reading in Spanish.
+ * @fileOverview Analyzes medical images (including EKGs) to identify potential anomalies, generate a summary of findings, and provide a detailed reading in Spanish.
  *
  * - analyzeMedicalImage - A function that handles the medical image analysis process.
  * - AnalyzeMedicalImageInput - The input type for the analyzeMedicalImage function.
@@ -16,14 +16,14 @@ const AnalyzeMedicalImageInputSchema = z.object({
   photoDataUri: z
     .string()
     .describe(
-      "A medical image (radiograph, CT scan, MRI) as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A medical image (radiograph, CT scan, MRI, EKG) as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
 export type AnalyzeMedicalImageInput = z.infer<typeof AnalyzeMedicalImageInputSchema>;
 
 const AnalyzeMedicalImageOutputSchema = z.object({
   summary: z.string().describe('A concise summary of the key findings in Spanish.'),
-  radiologistReading: z.string().describe('A detailed radiological reading of the image in Spanish, as if written by a radiologist, including description of structures, anomalies, measurements if applicable, and impressions.'),
+  radiologistReading: z.string().describe('A detailed reading of the image in Spanish. For radiological images, this is a formal report. For an EKG, this is a cardiologist\'s interpretation (rhythm, rate, axis, intervals, morphology, conclusion).'),
 });
 export type AnalyzeMedicalImageOutput = z.infer<typeof AnalyzeMedicalImageOutputSchema>;
 
@@ -37,13 +37,19 @@ const prompt = ai.definePrompt({
   name: 'analyzeMedicalImagePrompt',
   input: {schema: AnalyzeMedicalImageInputSchema},
   output: {schema: AnalyzeMedicalImageOutputSchema},
-  prompt: `Eres un experto radiólogo. Analiza la siguiente imagen médica. Tu tarea es doble:
+  prompt: `Eres un experto en diagnóstico médico por imagen. Tu rol se adapta al tipo de imagen proporcionada.
+- Si la imagen es radiológica (radiografía, TAC, RMN), actuarás como un **radiólogo experto**.
+- Si la imagen es un electrocardiograma (EKG), actuarás como un **cardiólogo experto**.
+
+Tu tarea es doble:
 1.  Identifica posibles anomalías y genera un **resumen conciso de los hallazgos clave** en español.
-2.  Proporciona una **lectura radiológica detallada** de la imagen en español. Esta lectura debe ser similar a un informe radiológico formal, describiendo las estructuras visualizadas, cualquier anomalía detectada (con detalles sobre su tamaño, forma, localización si es posible), comparaciones si se mencionan implícitamente en la imagen, y una impresión diagnóstica basada en los hallazgos.
+2.  Proporciona una **lectura detallada** de la imagen en español.
+    -   Para imágenes radiológicas, la lectura debe ser similar a un informe radiológico formal.
+    -   Para un EKG, la lectura debe ser un informe de interpretación cardiológica, analizando ritmo, frecuencia, eje, intervalos (PR, QRS, QT), morfología de ondas y segmentos (P, QRS, T, ST) y una conclusión diagnóstica.
 
 Imagen: {{media url=photoDataUri}}
 
-Por favor, estructura tu respuesta según el esquema de salida, asegurándote de completar ambos campos: 'summary' y 'radiologistReading'.
+Por favor, estructura tu respuesta según el esquema de salida, asegurándote de completar ambos campos: 'summary' y 'radiologistReading'. El campo 'radiologistReading' debe contener el informe detallado, ya sea radiológico o cardiológico.
 `,
 });
 
