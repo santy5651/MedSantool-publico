@@ -172,7 +172,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
       ref={moduleRef}
       id={id}
       title="Análisis Avanzado de Imágenes Médicas"
-      description="Cargue imágenes médicas (radiografías, TAC, RMN, EKG) para análisis por IA. Obtenga un resumen de hallazgos y una lectura detallada."
+      description="Cargue radiografías o electrocardiogramas (EKG) para análisis por IA. Obtenga un resumen de hallazgos y una lectura detallada."
       icon={ScanSearch}
       isLoading={isImageAnalyzing}
     >
@@ -268,4 +268,3 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
     </ModuleCardWrapper>
   );
 }
-
