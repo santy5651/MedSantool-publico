@@ -2,9 +2,10 @@
 
 
 
+
 'use client';
 
-import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, DischargeSummaryInputState, DischargeSummaryOutputState } from '@/types';
+import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion } from '@/types';
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const initialNursingSurveillanceState: NursingSurveillanceState = {
@@ -220,7 +221,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setTextAnalysisError = useCallback((error: string | null) => setState(s => ({ ...s, textAnalysisError: error })), []);
 
   const setInterrogationQuestionsInput = useCallback((input: string | null) => setState(s => ({ ...s, interrogationQuestionsInput: input })), []);
-  const setGeneratedInterrogationQuestions = useCallback((questions: string[] | null) => setState(s => ({ ...s, generatedInterrogationQuestions: questions })), []);
+  const setGeneratedInterrogationQuestions = useCallback((questions: InterrogationQuestion[] | null) => setState(s => ({ ...s, generatedInterrogationQuestions: questions })), []);
   const setIsGeneratingInterrogationQuestions = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingInterrogationQuestions: loading })), []);
   const setInterrogationQuestionsError = useCallback((error: string | null) => setState(s => ({ ...s, interrogationQuestionsError: error })), []);
 

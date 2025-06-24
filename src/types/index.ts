@@ -2,6 +2,7 @@
 
 
 
+
 export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'InterrogationQuestions' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator' | 'DischargeSummary';
 
 export type ActiveView = 'analysis' | 'other' | 'all';
@@ -96,6 +97,16 @@ export interface DischargeSummaryOutputState {
 }
 // --- End Discharge Summary Module Specific Types ---
 
+// --- Interrogation Questions Module Specific Types ---
+export interface InterrogationQuestion {
+  question: string;
+  rationale: string;
+}
+
+export interface InterrogationQuestionsOutput {
+  questions: InterrogationQuestion[] | null;
+}
+// --- End Interrogation Questions Module Specific Types ---
 
 export interface HistoryEntry {
   id?: number;
@@ -105,7 +116,7 @@ export interface HistoryEntry {
   inputSummary: string;
   outputSummary: string;
   fullInput?: string | Record<string, any> | DoseCalculatorInputState | PatientAdviceInputData | DischargeSummaryInputState;
-  fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { improvedText: string } | { clinicalAnalysis: string } | { questions: string[] } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState | DischargeSummaryOutputState;
+  fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { improvedText: string } | { clinicalAnalysis: string } | { questions: InterrogationQuestion[] } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState | DischargeSummaryOutputState;
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
 }
@@ -253,7 +264,7 @@ export interface ClinicalDataContextState {
 
   // Interrogation Questions
   interrogationQuestionsInput: string | null;
-  generatedInterrogationQuestions: string[] | null;
+  generatedInterrogationQuestions: InterrogationQuestion[] | null;
   isGeneratingInterrogationQuestions: boolean;
   interrogationQuestionsError: string | null;
 
@@ -329,7 +340,7 @@ export interface ClinicalDataContextActions {
   setTextAnalysisError: (error: string | null) => void;
 
   setInterrogationQuestionsInput: (input: string | null) => void;
-  setGeneratedInterrogationQuestions: (questions: string[] | null) => void;
+  setGeneratedInterrogationQuestions: (questions: InterrogationQuestion[] | null) => void;
   setIsGeneratingInterrogationQuestions: (loading: boolean) => void;
   setInterrogationQuestionsError: (error: string | null) => void;
 

@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { HelpCircle, Eraser, Save, Copy } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
+import type { InterrogationQuestion } from '@/types';
 
 interface InterrogationQuestionsModuleProps {
   id?: string;
@@ -91,7 +92,7 @@ export function InterrogationQuestionsModule({ id }: InterrogationQuestionsModul
   };
 
   const handleCopyToClipboard = () => {
-    const questionsText = generatedInterrogationQuestions?.join('\n');
+    const questionsText = generatedInterrogationQuestions?.map(q => `${q.question} (${q.rationale})`).join('\n');
     if (!questionsText) {
       toast({ title: "Sin Preguntas", description: "No hay preguntas para copiar.", variant: "default" });
       return;
@@ -124,6 +125,8 @@ export function InterrogationQuestionsModule({ id }: InterrogationQuestionsModul
     });
   };
 
+  const questionsToDisplay = generatedInterrogationQuestions?.map(q => `- ${q.question} (${q.rationale})`).join('\n') || '';
+
   return (
     <ModuleCardWrapper
       ref={moduleRef}
@@ -153,7 +156,7 @@ export function InterrogationQuestionsModule({ id }: InterrogationQuestionsModul
                     <h3 className="text-md font-semibold font-headline">Preguntas Sugeridas:</h3>
                     <Textarea
                         readOnly
-                        value={generatedInterrogationQuestions.join('\n')}
+                        value={questionsToDisplay}
                         className="bg-background min-h-[150px]"
                         rows={Math.min(10, generatedInterrogationQuestions.length)}
                     />

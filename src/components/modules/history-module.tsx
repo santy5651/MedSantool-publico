@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Trash2, Upload, Download, FileText, Image as ImageIcon, MessageSquareText, Lightbulb, Info, AlertCircle, CheckCircle, Settings2, FileEdit, Star, Brain, ListChecks, UserCheck, FileSignature, Bot, Calculator, FileJson, Utensils, ShieldPlus, FileOutput, HelpCircle } from 'lucide-react';
-import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData, DischargeSummaryInputState, DischargeSummaryOutputState } from '@/types';
+import type { HistoryEntry, ModuleType, DiagnosisResult, PdfStructuredData, MedicalOrderOutputState, TreatmentPlanOutputState, PatientAdviceOutputState, MedicalJustificationOutputState, ChatMessage as ChatMessageType, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, PatientAdviceInputData, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion } from '@/types';
 import type { GenerateMedicalOrderInput } from '@/ai/flows/generate-medical-order';
 import type { ChatMessageHistoryItem } from '@/ai/flows/medical-assistant-chat-flow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -445,11 +445,11 @@ export function HistoryModule() {
           break;
         case 'InterrogationQuestions':
           if (typeof output === 'object' && output !== null && 'questions' in output) {
-            const questions = output.questions as string[];
-            if (questions.length > 0) {
+            const questions = output.questions as InterrogationQuestion[];
+            if (questions && questions.length > 0) {
               return (
                 <ul className="list-disc pl-5 space-y-1 text-xs">
-                  {questions.map((q, i) => <li key={i}>{q}</li>)}
+                  {questions.map((q, i) => <li key={i}>{q.question} <span className="text-muted-foreground">({q.rationale})</span></li>)}
                 </ul>
               );
             }
@@ -760,5 +760,3 @@ declare module "@/components/ui/button" {
 }
 
     
-
-

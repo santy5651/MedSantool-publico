@@ -15,8 +15,13 @@ const SuggestInterrogationQuestionsInputSchema = z.object({
 });
 export type SuggestInterrogationQuestionsInput = z.infer<typeof SuggestInterrogationQuestionsInputSchema>;
 
+const InterrogationQuestionSchema = z.object({
+  question: z.string().describe('La pregunta específica a realizar.'),
+  rationale: z.string().describe('El diagnóstico diferencial o la patología que la pregunta ayuda a explorar. (ej. TEP, SCA, Pericarditis)'),
+});
+
 const SuggestInterrogationQuestionsOutputSchema = z.object({
-    questions: z.array(z.string()).describe('Una lista de un máximo de 5 preguntas de alto impacto clínico sugeridas para ampliar el interrogatorio.'),
+    questions: z.array(InterrogationQuestionSchema).describe('Una lista de un máximo de 5 preguntas de alto impacto clínico sugeridas para ampliar el interrogatorio, cada una con su justificación diagnóstica.'),
 });
 export type SuggestInterrogationQuestionsOutput = z.infer<typeof SuggestInterrogationQuestionsOutputSchema>;
 
@@ -37,12 +42,16 @@ Estas preguntas deben ser las de **mayor relevancia e impacto clínico**. Deben 
 -   Aclarar detalles ambiguos.
 -   Explorar y diferenciar diagnósticos diferenciales relevantes, con el potencial de cambiar el diagnóstico principal.
 
-Evita preguntas genéricas. Enfócate en las preguntas más críticas que un médico haría para refinar su diagnóstico. Las preguntas deben estar formuladas en español.
+**Instrucciones de Salida:**
+-   Por cada pregunta, debes proporcionar también una breve justificación o el diagnóstico diferencial que se busca explorar con dicha pregunta (campo 'rationale').
+-   Evita preguntas genéricas. Enfócate en las preguntas más críticas que un médico haría para refinar su diagnóstico.
+-   Las preguntas y justificaciones deben estar formuladas en español.
+-   La salida debe seguir el esquema proporcionado (un array de objetos, cada uno con 'question' y 'rationale').
 
 Texto Clínico:
 {{{clinicalText}}}
 
-Genera la lista de un máximo de 5 preguntas más importantes:
+Genera la lista de un máximo de 5 preguntas más importantes con su justificación:
 `,
 });
 
