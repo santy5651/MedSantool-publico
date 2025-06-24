@@ -16,7 +16,7 @@ const SuggestInterrogationQuestionsInputSchema = z.object({
 export type SuggestInterrogationQuestionsInput = z.infer<typeof SuggestInterrogationQuestionsInputSchema>;
 
 const SuggestInterrogationQuestionsOutputSchema = z.object({
-    questions: z.array(z.string()).describe('Una lista de preguntas sugeridas para ampliar el interrogatorio dirigido.'),
+    questions: z.array(z.string()).describe('Una lista de un máximo de 5 preguntas de alto impacto clínico sugeridas para ampliar el interrogatorio.'),
 });
 export type SuggestInterrogationQuestionsOutput = z.infer<typeof SuggestInterrogationQuestionsOutputSchema>;
 
@@ -30,14 +30,19 @@ const prompt = ai.definePrompt({
   name: 'suggestInterrogationQuestionsPrompt',
   input: {schema: SuggestInterrogationQuestionsInputSchema},
   output: {schema: SuggestInterrogationQuestionsOutputSchema},
-  prompt: `Eres un médico experto en semiología. Tu tarea es analizar el siguiente texto de la enfermedad actual de un paciente y generar una lista de preguntas de interrogatorio dirigido.
-Estas preguntas deben ser específicas y diseñadas para obtener información adicional crucial que pueda faltar, aclarar detalles ambiguos o explorar diagnósticos diferenciales relevantes.
-Evita preguntas genéricas y enfócate en lo que realmente ayudaría a un médico a entender mejor el caso. Las preguntas deben estar formuladas en español.
+  prompt: `Eres un médico experto en semiología y diagnóstico diferencial. Tu tarea es analizar el siguiente texto de la enfermedad actual de un paciente y generar una lista de **un máximo de 5 preguntas** de interrogatorio dirigido.
+
+Estas preguntas deben ser las de **mayor relevancia e impacto clínico**. Deben estar diseñadas para:
+-   Obtener información adicional crucial que pueda faltar.
+-   Aclarar detalles ambiguos.
+-   Explorar y diferenciar diagnósticos diferenciales relevantes, con el potencial de cambiar el diagnóstico principal.
+
+Evita preguntas genéricas. Enfócate en las preguntas más críticas que un médico haría para refinar su diagnóstico. Las preguntas deben estar formuladas en español.
 
 Texto Clínico:
 {{{clinicalText}}}
 
-Genera la lista de preguntas:
+Genera la lista de un máximo de 5 preguntas más importantes:
 `,
 });
 
