@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ModuleCardWrapper } from '@/components/common/module-card-wrapper';
 import { useClinicalData } from '@/contexts/clinical-data-context';
@@ -13,6 +13,8 @@ import { Textarea } from '@/components/ui/textarea';
 import type { ValidatedDiagnosis } from '@/types';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface PhysicalExamModuleProps {
   id?: string;
@@ -33,18 +35,39 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
   const [useFocusedAnalysis, setUseFocusedAnalysis] = useState(true);
+  const [selectedDiagnoses, setSelectedDiagnoses] = useState<ValidatedDiagnosis[]>([]);
+
+  const availableValidatedDiagnoses: ValidatedDiagnosis[] = useMemo(() => {
+    return diagnosisResults
+      ?.filter(d => d.isValidated)
+      .map(d => ({ code: d.code, description: d.description })) || [];
+  }, [diagnosisResults]);
 
   useEffect(() => {
-    const validatedDiagnoses = diagnosisResults?.filter(d => d.isValidated).map(d => ({ code: d.code, description: d.description })) || [];
-    // Prevent infinite loops by comparing stringified versions
-    if (JSON.stringify(validatedDiagnoses) !== JSON.stringify(physicalExamInput)) {
-        setPhysicalExamInput(validatedDiagnoses);
-    }
-  }, [diagnosisResults, physicalExamInput, setPhysicalExamInput]);
+    setPhysicalExamInput(selectedDiagnoses);
+  }, [selectedDiagnoses, setPhysicalExamInput]);
+  
+  useEffect(() => {
+    setSelectedDiagnoses(prevSelected =>
+        prevSelected.filter(selDx =>
+            availableValidatedDiagnoses.some(availDx => availDx.code === selDx.code)
+        )
+    );
+  }, [availableValidatedDiagnoses]);
+
+
+  const handleCheckboxChange = (diagnosis: ValidatedDiagnosis, checked: boolean) => {
+    setSelectedDiagnoses(prevSelected => {
+        const newSelected = checked
+            ? [...prevSelected, diagnosis]
+            : prevSelected.filter(d => d.code !== diagnosis.code);
+        return newSelected;
+    });
+  };
 
   const handleGenerateExam = async () => {
-    if (!physicalExamInput || physicalExamInput.length === 0) {
-      toast({ title: "Sin Diagnósticos", description: "Se necesita al menos un diagnóstico validado del módulo de 'Diagnóstico Inteligente'.", variant: "destructive" });
+    if (selectedDiagnoses.length === 0) {
+      toast({ title: "Sin Diagnósticos Seleccionados", description: "Por favor, seleccione al menos un diagnóstico validado para generar el examen.", variant: "destructive" });
       return;
     }
 
@@ -54,7 +77,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
     const focusedAnalysis = useFocusedAnalysis ? generatedClinicalAnalysis.focusedAnalysis : null;
 
     const inputForAI = {
-      diagnoses: physicalExamInput,
+      diagnoses: selectedDiagnoses,
       focusedAnalysis: focusedAnalysis || undefined,
     };
 
@@ -67,7 +90,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
         await addHistoryEntry({
           module: 'PhysicalExam',
           inputType: 'application/json',
-          inputSummary: `Basado en ${physicalExamInput.length} diagnósticos validados`,
+          inputSummary: `Basado en ${selectedDiagnoses.length} diagnósticos seleccionados`,
           outputSummary: `${getTextSummary(examOutput?.physicalExamText || '', 100)}`,
           fullInput: inputForAI,
           fullOutput: examOutput,
@@ -83,7 +106,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
          await addHistoryEntry({
           module: 'PhysicalExam',
           inputType: 'application/json',
-          inputSummary: `Basado en ${physicalExamInput.length} diagnósticos validados`,
+          inputSummary: `Basado en ${selectedDiagnoses.length} diagnósticos`,
           outputSummary: 'Error en la generación',
           fullInput: inputForAI,
           fullOutput: { error: errorMessage },
@@ -98,6 +121,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
 
   const handleClearModule = () => {
     clearPhysicalExamModule();
+    setSelectedDiagnoses([]);
     toast({ title: "Módulo Limpiado", description: "Se ha limpiado el examen físico sugerido." });
   };
 
@@ -113,7 +137,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
   };
 
   const handleSaveManually = async () => {
-    if (!physicalExamInput && !generatedPhysicalExam && !physicalExamError) {
+    if (selectedDiagnoses.length === 0 && !generatedPhysicalExam && !physicalExamError) {
       toast({ title: "Nada que Guardar", description: "Genere un examen físico primero.", variant: "default" });
       return;
     }
@@ -124,7 +148,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
     const focusedAnalysis = useFocusedAnalysis ? generatedClinicalAnalysis.focusedAnalysis : null;
 
     const inputForHistory = {
-      diagnoses: physicalExamInput,
+      diagnoses: selectedDiagnoses,
       focusedAnalysis: focusedAnalysis || undefined,
     };
 
@@ -132,7 +156,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
     await addHistoryEntry({
       module: 'PhysicalExam',
       inputType: 'application/json',
-      inputSummary: `Basado en ${physicalExamInput?.length || 0} diagnósticos validados`,
+      inputSummary: `Basado en ${selectedDiagnoses.length || 0} diagnósticos`,
       outputSummary: outputSum,
       fullInput: inputForHistory,
       fullOutput: output,
@@ -146,28 +170,34 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
       ref={moduleRef}
       id={id}
       title="Generador de Examen Físico Dirigido"
-      description="Basado en los diagnósticos validados, la IA sugiere hallazgos patológicos para un examen físico enfocado."
+      description="Seleccione los diagnósticos validados para que la IA sugiera hallazgos patológicos para un examen físico enfocado."
       icon={Stethoscope}
       isLoading={isGeneratingPhysicalExam}
     >
         <div className="space-y-4">
             <div className='p-3 border rounded-md bg-muted/30'>
                 <label className="block text-sm font-medium mb-1">
-                  Diagnósticos Validados (del Módulo 5):
+                  Seleccionar Diagnósticos Validados (del Módulo 5):
                 </label>
-                <div className="text-sm text-muted-foreground">
-                  {physicalExamInput && physicalExamInput.length > 0 ? (
-                    <ul className="list-disc pl-5 space-y-1">
-                      {physicalExamInput.map(dx => (
-                        <li key={dx.code}>
-                          {dx.code}: {getTextSummary(dx.description, 50)}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>Esperando diagnósticos validados del módulo de 'Diagnóstico Inteligente'...</p>
-                  )}
-                </div>
+                {availableValidatedDiagnoses.length > 0 ? (
+                  <ScrollArea className="h-32 rounded-md border p-2 bg-background">
+                    {availableValidatedDiagnoses.map((diag) => (
+                      <div key={diag.code} className="flex items-center space-x-2 mb-1">
+                        <Checkbox
+                          id={`diag-exam-${diag.code}`}
+                          checked={selectedDiagnoses.some(s => s.code === diag.code)}
+                          onCheckedChange={(checked) => handleCheckboxChange(diag, !!checked)}
+                          disabled={isGeneratingPhysicalExam}
+                        />
+                        <Label htmlFor={`diag-exam-${diag.code}`} className="text-xs font-normal cursor-pointer flex-grow">
+                          {diag.code} - {getTextSummary(diag.description, 60)}
+                        </Label>
+                      </div>
+                    ))}
+                  </ScrollArea>
+                ) : (
+                  <p className="text-xs text-muted-foreground py-4 text-center">Esperando diagnósticos validados del módulo de 'Diagnóstico Inteligente'...</p>
+                )}
             </div>
             
             {generatedClinicalAnalysis.focusedAnalysis && (
@@ -183,7 +213,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
               </div>
             )}
 
-            <Button onClick={handleGenerateExam} disabled={!physicalExamInput || physicalExamInput.length === 0 || isGeneratingPhysicalExam} className="w-full">
+            <Button onClick={handleGenerateExam} disabled={selectedDiagnoses.length === 0 || isGeneratingPhysicalExam} className="w-full">
                 <Stethoscope className="mr-2 h-4 w-4" />
                 Sugerir Hallazgos de Examen Físico
             </Button>
