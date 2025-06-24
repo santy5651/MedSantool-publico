@@ -1,15 +1,20 @@
+
 'use client';
 
 import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ModuleCardWrapper } from '@/components/common/module-card-wrapper';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useClinicalData } from '@/contexts/clinical-data-context';
 import { useHistoryStore } from '@/hooks/use-history-store';
 import { improveMedicalWriting, type ImproveMedicalWritingOutput } from '@/ai/flows/summarize-clinical-notes';
+import { suggestInterrogationQuestions, type SuggestInterrogationQuestionsOutput } from '@/ai/flows/suggest-interrogation-questions';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardEdit, Eraser, Copy, Save, Send } from 'lucide-react';
+import { ClipboardEdit, Eraser, Copy, Save, Send, HelpCircle } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
+import type { InterrogationQuestion } from '@/types';
+
 
 interface TextAnalysisModuleProps {
   id?: string;
@@ -23,6 +28,9 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
     textAnalysisError, setTextAnalysisError,
     diagnosisInputData, 
     setDiagnosisInputData,
+    generatedInterrogationQuestions, setGeneratedInterrogationQuestions,
+    isGeneratingInterrogationQuestions, setIsGeneratingInterrogationQuestions,
+    interrogationQuestionsError, setInterrogationQuestionsError,
     clearTextModule
   } = useClinicalData();
 
@@ -98,23 +106,81 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
       setIsTextAnalyzing(false);
     }
   };
+  
+  const handleGenerateQuestions = async () => {
+    const currentInput = String(textAnalysisSummary || '').trim();
+    if (!currentInput) {
+      toast({ title: "Sin Texto Base", description: "Primero debe mejorar la redacción de un texto para generar preguntas.", variant: "destructive" });
+      return;
+    }
+
+    setIsGeneratingInterrogationQuestions(true);
+    setInterrogationQuestionsError(null);
+    let questionsOutput: SuggestInterrogationQuestionsOutput | null = null;
+
+    try {
+      questionsOutput = await suggestInterrogationQuestions({ clinicalText: currentInput });
+      setGeneratedInterrogationQuestions(questionsOutput?.questions || null);
+      toast({ title: "Preguntas Sugeridas", description: "Se han generado preguntas para el interrogatorio." });
+
+      if (isAutoSaveEnabled) {
+        await addHistoryEntry({
+          module: 'InterrogationQuestions',
+          inputType: 'text/plain',
+          inputSummary: getTextSummary(currentInput),
+          outputSummary: `${questionsOutput?.questions?.length || 0} preguntas generadas`,
+          fullInput: currentInput,
+          fullOutput: questionsOutput,
+          status: 'completed',
+        });
+      }
+    } catch (error: any) {
+      console.error("Error generating interrogation questions:", error);
+      const errorMessage = error.message || "Ocurrió un error desconocido.";
+      setInterrogationQuestionsError(errorMessage);
+      toast({ title: "Error al Sugerir Preguntas", description: errorMessage, variant: "destructive" });
+      if (isAutoSaveEnabled) {
+         await addHistoryEntry({
+          module: 'InterrogationQuestions',
+          inputType: 'text/plain',
+          inputSummary: getTextSummary(currentInput),
+          outputSummary: 'Error en la generación',
+          fullInput: currentInput,
+          fullOutput: { error: errorMessage },
+          status: 'error',
+          errorDetails: errorMessage,
+        });
+      }
+    } finally {
+      setIsGeneratingInterrogationQuestions(false);
+    }
+  };
 
   const handleClearText = () => {
     clearTextModule();
-    toast({ title: "Texto Limpiado", description: "Se ha limpiado el módulo." });
+    toast({ title: "Módulo Limpiado", description: "Se ha limpiado el módulo." });
   };
 
-  const handleCopyToClipboard = () => {
-    const textToCopy = String(textAnalysisSummary || '').trim();
+  const handleCopyToClipboard = (type: 'improvedText' | 'questions') => {
+    let textToCopy = '';
+    let toastTitle = '';
+
+    if (type === 'improvedText') {
+        textToCopy = String(textAnalysisSummary || '').trim();
+        toastTitle = "Texto Mejorado Copiado";
+    } else if (type === 'questions') {
+        textToCopy = generatedInterrogationQuestions?.map(q => `- ${q.question} (${q.rationale})`).join('\n') || '';
+        toastTitle = "Preguntas Copiadas";
+    }
 
     if (textToCopy === '') {
-      toast({ title: "Sin Texto", description: "No hay texto mejorado para copiar.", variant: "default"});
+      toast({ title: "Sin Contenido", description: "No hay nada que copiar.", variant: "default"});
       return;
     }
     
     navigator.clipboard.writeText(textToCopy)
-      .then(() => toast({ title: "Texto Copiado", description: "El texto mejorado ha sido copiado al portapapeles." }))
-      .catch(() => toast({ title: "Error al Copiar", description: "No se pudo copiar el texto mejorado.", variant: "destructive" }));
+      .then(() => toast({ title: toastTitle, description: "El contenido ha sido copiado al portapapeles." }))
+      .catch(() => toast({ title: "Error al Copiar", variant: "destructive" }));
   };
   
   const handleSendTextToDiagnosis = () => {
@@ -142,31 +208,52 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
   };
 
 
-  const handleSaveManually = async () => {
+  const handleSaveManually = async (type: 'textAnalysis' | 'interrogationQuestions') => {
     const currentText = String(clinicalNotesInput || '');
     const currentImprovedText = textAnalysisSummary; 
     
-    if (currentText.trim() === '' && (currentImprovedText === null || currentImprovedText === undefined) && !textAnalysisError) {
-      toast({ title: "Nada que Guardar", description: "No hay texto de entrada ni texto mejorado para guardar.", variant: "default" });
-      return;
-    }
+    if (type === 'textAnalysis') {
+        if (currentText.trim() === '' && (currentImprovedText === null || currentImprovedText === undefined) && !textAnalysisError) {
+          toast({ title: "Nada que Guardar", description: "No hay texto de entrada ni texto mejorado para guardar.", variant: "default" });
+          return;
+        }
+        let outputToSave = textAnalysisError ? { error: textAnalysisError } : { improvedText: currentImprovedText || '' };
+        let outputSummaryForHistory = textAnalysisError ? 'Error en la mejora' : getTextSummary(currentImprovedText || '', 100);
+        let status: 'completed' | 'error' = textAnalysisError ? 'error' : 'completed';
         
-    let outputToSave = textAnalysisError ? { error: textAnalysisError } : { improvedText: currentImprovedText || '' };
-    let outputSummaryForHistory = textAnalysisError ? 'Error en la mejora' : getTextSummary(currentImprovedText || '', 100);
-    let status: 'completed' | 'error' = textAnalysisError ? 'error' : 'completed';
-    
-    await addHistoryEntry({
-      module: 'TextAnalysis',
-      inputType: 'text/plain',
-      inputSummary: getTextSummary(currentText),
-      outputSummary: outputSummaryForHistory,
-      fullInput: currentText,
-      fullOutput: outputToSave,
-      status: status,
-      errorDetails: textAnalysisError || undefined,
-    });
+        await addHistoryEntry({
+          module: 'TextAnalysis',
+          inputType: 'text/plain',
+          inputSummary: getTextSummary(currentText),
+          outputSummary: outputSummaryForHistory,
+          fullInput: currentText,
+          fullOutput: outputToSave,
+          status: status,
+          errorDetails: textAnalysisError || undefined,
+        });
+    } else if (type === 'interrogationQuestions') {
+        const questionsInput = String(textAnalysisSummary || '');
+        if (!questionsInput && !generatedInterrogationQuestions && !interrogationQuestionsError) {
+            toast({ title: "Nada que Guardar", description: "Genere preguntas primero.", variant: "default" });
+            return;
+        }
+        const status = interrogationQuestionsError ? 'error' : 'completed';
+        const output = interrogationQuestionsError ? { error: interrogationQuestionsError } : { questions: generatedInterrogationQuestions };
+        const outputSum = interrogationQuestionsError ? 'Error en la generación' : `${generatedInterrogationQuestions?.length || 0} preguntas generadas`;
+        await addHistoryEntry({
+            module: 'InterrogationQuestions',
+            inputType: 'text/plain',
+            inputSummary: getTextSummary(questionsInput),
+            outputSummary: outputSum,
+            fullInput: questionsInput,
+            fullOutput: output,
+            status: status,
+            errorDetails: interrogationQuestionsError || undefined,
+        });
+    }
   };
-
+  
+  const questionsToDisplay = generatedInterrogationQuestions?.map(q => `- ${q.question} (${q.rationale})`).join('\n') || '';
 
   return (
     <ModuleCardWrapper
@@ -175,7 +262,7 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
       title="Mejora de Redacción Médica"
       description="Introduce un texto para que la IA lo amplíe y refine, aplicando un estilo de redacción médica profesional."
       icon={ClipboardEdit}
-      isLoading={isTextAnalyzing}
+      isLoading={isTextAnalyzing || isGeneratingInterrogationQuestions}
     >
       <div className="space-y-4">
         <div>
@@ -188,23 +275,23 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
             value={clinicalNotesInput || ''}
             onChange={(e) => setClinicalNotesInput(e.target.value)}
             rows={8}
-            disabled={isTextAnalyzing}
+            disabled={isTextAnalyzing || isGeneratingInterrogationQuestions}
           />
         </div>
 
         <div className="flex space-x-2">
-          <Button onClick={handleImproveWriting} disabled={!String(clinicalNotesInput || '').trim() || isTextAnalyzing} className="flex-1">
+          <Button onClick={handleImproveWriting} disabled={!String(clinicalNotesInput || '').trim() || isTextAnalyzing || isGeneratingInterrogationQuestions} className="flex-1">
             <ClipboardEdit className="mr-2 h-4 w-4" />
             Mejorar Redacción
           </Button>
-          <Button onClick={handleClearText} variant="outline" disabled={isTextAnalyzing} className="flex-1">
+          <Button onClick={handleClearText} variant="outline" disabled={isTextAnalyzing || isGeneratingInterrogationQuestions} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
             Limpiar Texto
           </Button>
         </div>
 
         {(textAnalysisSummary !== null) && ( 
-          <div className="space-y-2">
+          <div className="space-y-2 pt-4 border-t">
             <h3 className="text-md font-semibold font-headline">Texto Médico Mejorado:</h3>
             <Textarea
               value={textAnalysisSummary || ''}
@@ -212,10 +299,10 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
               rows={8}
               className="bg-muted/30"
             />
-            <div className="flex space-x-2">
-              <Button onClick={handleCopyToClipboard} variant="outline" size="sm" disabled={(textAnalysisSummary === null || textAnalysisSummary.trim() === '')}>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button onClick={() => handleCopyToClipboard('improvedText')} variant="outline" size="sm" disabled={(textAnalysisSummary === null || textAnalysisSummary.trim() === '')}>
                 <Copy className="mr-2 h-4 w-4" />
-                Copiar Texto Mejorado
+                Copiar Texto
               </Button>
               <Button 
                 onClick={handleSendTextToDiagnosis} 
@@ -226,17 +313,67 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
                 <Send className="mr-2 h-4 w-4" />
                 Usar en Diagnóstico
               </Button>
+              <div className="flex-grow" />
+              {!isAutoSaveEnabled &&
+                <Button onClick={() => handleSaveManually('textAnalysis')} variant="secondary" size="sm">
+                  <Save className="mr-2 h-4 w-4" /> Guardar Mejora
+                </Button>
+              }
             </div>
+
+            <Accordion type="single" collapsible className="w-full pt-2">
+              <AccordionItem value="interrogation-questions" className="border-b-0">
+                <AccordionTrigger
+                  onClick={(e) => {
+                    // Generate questions only if accordion is being opened and no questions are loaded yet
+                    if (!generatedInterrogationQuestions && !isGeneratingInterrogationQuestions && !interrogationQuestionsError) {
+                      handleGenerateQuestions();
+                    }
+                  }}
+                  className="p-0 hover:no-underline"
+                >
+                  <div className="flex w-full justify-end">
+                    <Button variant="ghost">
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      Sugerir Preguntas de Interrogatorio
+                    </Button>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-2 pt-2">
+                    {isGeneratingInterrogationQuestions && <p className="text-sm text-muted-foreground">Generando preguntas...</p>}
+                    {interrogationQuestionsError && <p className="text-sm text-destructive">Error: {interrogationQuestionsError}</p>}
+                    {generatedInterrogationQuestions && (
+                      <>
+                        <h4 className="text-sm font-semibold">Preguntas Sugeridas:</h4>
+                        <Textarea
+                            readOnly
+                            value={questionsToDisplay}
+                            className="bg-background min-h-[120px]"
+                            rows={Math.min(10, generatedInterrogationQuestions.length)}
+                        />
+                        <div className="flex space-x-2">
+                            <Button onClick={() => handleCopyToClipboard('questions')} variant="outline" size="sm">
+                                <Copy className="mr-2 h-4 w-4" />
+                                Copiar Preguntas
+                            </Button>
+                            {!isAutoSaveEnabled &&
+                              <Button onClick={() => handleSaveManually('interrogationQuestions')} variant="secondary" size="sm">
+                                <Save className="mr-2 h-4 w-4" /> Guardar Preguntas
+                              </Button>
+                            }
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         )}
+
         {textAnalysisError && (
           <p className="text-sm text-destructive">Error: {textAnalysisError}</p>
-        )}
-         {!isAutoSaveEnabled && 
-          (String(clinicalNotesInput || '').trim() !== '' || textAnalysisSummary !== null || textAnalysisError) && (
-           <Button onClick={handleSaveManually} variant="secondary" className="w-full mt-2">
-            <Save className="mr-2 h-4 w-4" /> Guardar en Historial
-          </Button>
         )}
       </div>
     </ModuleCardWrapper>

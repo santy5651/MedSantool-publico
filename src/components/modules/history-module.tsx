@@ -231,9 +231,12 @@ export function HistoryModule() {
           clinicalData.setTextAnalysisError(outputData?.error || null);
           break;
         case 'InterrogationQuestions':
-          clinicalData.setInterrogationQuestionsInput(inputData as string || null);
+          clinicalData.setClinicalNotesInput(inputData as string || '');
+          clinicalData.setTextAnalysisSummary(inputData as string || '');
           if (outputData && outputData.questions) {
             clinicalData.setGeneratedInterrogationQuestions(outputData.questions);
+          } else {
+            clinicalData.setGeneratedInterrogationQuestions(null);
           }
           clinicalData.setInterrogationQuestionsError(outputData?.error || null);
           break;

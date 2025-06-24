@@ -365,16 +365,10 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       isTextAnalyzing: false,
       textAnalysisError: null,
       interrogationQuestionsInput: null,
-      clinicalAnalysisInput: null,
-    }));
-  }, []);
-
-  const clearInterrogationQuestionsModule = useCallback(() => {
-    setState(s => ({
-      ...s,
       generatedInterrogationQuestions: null,
       isGeneratingInterrogationQuestions: false,
       interrogationQuestionsError: null,
+      clinicalAnalysisInput: null,
     }));
   }, []);
 
@@ -539,7 +533,6 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     clearImageModule,
     clearPdfModule,
     clearTextModule,
-    clearInterrogationQuestionsModule,
     clearPhysicalExamModule,
     clearClinicalAnalysisModule,
     clearDiagnosisModule,

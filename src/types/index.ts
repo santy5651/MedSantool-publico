@@ -409,7 +409,6 @@ export interface ClinicalDataContextActions {
   clearImageModule: () => void;
   clearPdfModule: () => void;
   clearTextModule: () => void;
-  clearInterrogationQuestionsModule: () => void;
   clearPhysicalExamModule: () => void;
   clearClinicalAnalysisModule: () => void;
   clearDiagnosisModule: () => void;
