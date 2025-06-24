@@ -39,6 +39,26 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps 
   }, [textAnalysisSummary, setClinicalAnalysisInput]);
 
+  const updateDiagnosisInputWithAnalysis = (analysisText: string) => {
+    const analysisBlockHeader = '[Análisis Clínico del Caso por IA]:';
+    const newAnalysisBlock = `${analysisBlockHeader}\n${analysisText}`;
+    const separator = '\n\n';
+
+    setDiagnosisInputData(prev => {
+      const blocks = prev.split(separator);
+      const analysisBlockIndex = blocks.findIndex(block => block.startsWith(analysisBlockHeader));
+
+      if (analysisBlockIndex !== -1) {
+        blocks[analysisBlockIndex] = newAnalysisBlock;
+        return blocks.join(separator);
+      } else {
+        if (prev.trim() === '') {
+          return newAnalysisBlock;
+        }
+        return prev + separator + newAnalysisBlock;
+      }
+    });
+  };
 
   const handleGenerateAnalysis = async () => {
     const currentInput = String(clinicalAnalysisInput || '').trim();
@@ -64,11 +84,10 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
       toast({ title: "Análisis Clínico Generado", description: "El caso ha sido analizado por la IA." });
       
       if (newComprehensiveAnalysis) {
-        const analysisBlockToAdd = `[Análisis Clínico del Caso por IA]:\n${newComprehensiveAnalysis}`;
-        setDiagnosisInputData(prev => `${prev ? prev + '\n\n' : ''}${analysisBlockToAdd}`);
+        updateDiagnosisInputWithAnalysis(newComprehensiveAnalysis);
         toast({
           title: "Análisis Enviado a Diagnóstico",
-          description: "El análisis clínico completo se ha añadido automáticamente para soporte diagnóstico.",
+          description: "El análisis clínico completo se ha añadido/actualizado en soporte diagnóstico.",
         });
         setTimeout(() => {
           const diagnosisModule = document.getElementById('diagnosis-support-module');
@@ -120,12 +139,8 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
       toast({ title: "Sin Análisis", description: "No hay análisis clínico generado para enviar.", variant: "default" });
       return;
     }
-    const analysisBlockToAdd = `[Análisis Clínico del Caso por IA]:\n${analysisToSend}`;
-     setDiagnosisInputData(prev => {
-        if (prev.includes(analysisBlockToAdd)) return prev;
-        return `${prev ? prev + '\n\n' : ''}${analysisBlockToAdd}`;
-    });
-    toast({ title: "Análisis Enviado a Diagnóstico", description: "El análisis clínico completo se ha añadido para soporte diagnóstico." });
+    updateDiagnosisInputWithAnalysis(analysisToSend);
+    toast({ title: "Análisis Enviado a Diagnóstico", description: "El análisis clínico completo se ha añadido/actualizado en soporte diagnóstico." });
     setTimeout(() => {
         const diagnosisModule = document.getElementById('diagnosis-support-module');
         diagnosisModule?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
