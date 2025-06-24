@@ -10,8 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Stethoscope, Eraser, Save, Copy } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
-import type { ValidatedDiagnosis } from '@/types';
-import { Switch } from '@/components/ui/switch';
+import type { ValidatedDiagnosis, PhysicalExamInputState } from '@/types';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -34,7 +33,6 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
-  const [useFocusedAnalysis, setUseFocusedAnalysis] = useState(true);
   const [selectedDiagnoses, setSelectedDiagnoses] = useState<ValidatedDiagnosis[]>([]);
 
   const availableValidatedDiagnoses: ValidatedDiagnosis[] = useMemo(() => {
@@ -44,7 +42,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
   }, [diagnosisResults]);
 
   useEffect(() => {
-    setPhysicalExamInput(selectedDiagnoses);
+    setPhysicalExamInput(prev => ({...prev, diagnoses: selectedDiagnoses }));
   }, [selectedDiagnoses, setPhysicalExamInput]);
   
   useEffect(() => {
@@ -54,6 +52,13 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
         )
     );
   }, [availableValidatedDiagnoses]);
+
+  useEffect(() => {
+    // Pre-fill with focused analysis when it becomes available. The user can then edit it.
+    if (generatedClinicalAnalysis.focusedAnalysis) {
+        setPhysicalExamInput(prev => ({...prev, additionalAnalysis: generatedClinicalAnalysis.focusedAnalysis}))
+    }
+  }, [generatedClinicalAnalysis.focusedAnalysis, setPhysicalExamInput]);
 
 
   const handleCheckboxChange = (diagnosis: ValidatedDiagnosis, checked: boolean) => {
@@ -65,6 +70,10 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
     });
   };
 
+  const handleAdditionalAnalysisChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPhysicalExamInput(prev => ({ ...prev, additionalAnalysis: e.target.value }));
+  };
+
   const handleGenerateExam = async () => {
     if (selectedDiagnoses.length === 0) {
       toast({ title: "Sin Diagnósticos Seleccionados", description: "Por favor, seleccione al menos un diagnóstico validado para generar el examen.", variant: "destructive" });
@@ -74,11 +83,10 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
     setIsGeneratingPhysicalExam(true);
     setPhysicalExamError(null);
     let examOutput: GeneratePhysicalExamOutput | null = null;
-    const focusedAnalysis = useFocusedAnalysis ? generatedClinicalAnalysis.focusedAnalysis : null;
-
+    
     const inputForAI = {
       diagnoses: selectedDiagnoses,
-      focusedAnalysis: focusedAnalysis || undefined,
+      additionalAnalysis: physicalExamInput.additionalAnalysis?.trim() || undefined,
     };
 
     try {
@@ -145,11 +153,10 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
     const status = physicalExamError ? 'error' : 'completed';
     const output = physicalExamError ? { error: physicalExamError } : { physicalExamText: generatedPhysicalExam };
     const outputSum = physicalExamError ? 'Error en la generación' : getTextSummary(generatedPhysicalExam, 100);
-    const focusedAnalysis = useFocusedAnalysis ? generatedClinicalAnalysis.focusedAnalysis : null;
 
-    const inputForHistory = {
+    const inputForHistory: PhysicalExamInputState = {
       diagnoses: selectedDiagnoses,
-      focusedAnalysis: focusedAnalysis || undefined,
+      additionalAnalysis: physicalExamInput.additionalAnalysis,
     };
 
 
@@ -199,19 +206,21 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
                   <p className="text-xs text-muted-foreground py-4 text-center">Esperando diagnósticos validados del módulo de 'Diagnóstico Inteligente'...</p>
                 )}
             </div>
+
+            <div>
+              <Label htmlFor="additional-analysis" className="text-sm font-medium">Análisis Clínico Adicional (Opcional)</Label>
+              <Textarea
+                id="additional-analysis"
+                placeholder="Añada aquí un análisis corto, o se autocompletará desde el Módulo 4..."
+                value={physicalExamInput.additionalAnalysis || ''}
+                onChange={handleAdditionalAnalysisChange}
+                rows={4}
+                className="mt-1"
+                disabled={isGeneratingPhysicalExam}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Este campo se puede llenar automáticamente con el "Análisis Enfocado" del Módulo 4, pero puede editarlo.</p>
+            </div>
             
-            {generatedClinicalAnalysis.focusedAnalysis && (
-              <div className="flex items-center space-x-2 rounded-md border p-3">
-                <Switch
-                  id="use-focused-analysis-switch"
-                  checked={useFocusedAnalysis}
-                  onCheckedChange={setUseFocusedAnalysis}
-                />
-                <Label htmlFor="use-focused-analysis-switch" className="text-sm font-normal cursor-pointer flex-1">
-                  Usar análisis corto del Módulo 4 para enriquecer el examen físico.
-                </Label>
-              </div>
-            )}
 
             <Button onClick={handleGenerateExam} disabled={selectedDiagnoses.length === 0 || isGeneratingPhysicalExam} className="w-full">
                 <Stethoscope className="mr-2 h-4 w-4" />

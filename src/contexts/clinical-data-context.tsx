@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion, ClinicalAnalysisOutputState, LabStandardizerOutputState } from '@/types';
+import type { ChatMessage, ClinicalDataContextType, ClinicalDataContextState, PdfStructuredData, DiagnosisResult, MedicalOrderInputState, MedicalOrderOutputState, NursingSurveillanceState, TreatmentPlanInputData, TreatmentPlanOutputState, ValidatedDiagnosis, PatientAdviceInputData, PatientAdviceOutputState, MedicalJustificationInputState, MedicalJustificationOutputState, DoseCalculatorInputState, DoseCalculatorOutputState, ImageAnalysisOutputState, DischargeSummaryInputState, DischargeSummaryOutputState, InterrogationQuestion, ClinicalAnalysisOutputState, LabStandardizerOutputState, PhysicalExamInputState } from '@/types';
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const initialNursingSurveillanceState: NursingSurveillanceState = {
@@ -134,6 +134,11 @@ const initialLabStandardizerOutput: LabStandardizerOutputState = {
     fullReport: null,
 };
 
+const initialPhysicalExamInput: PhysicalExamInputState = {
+  diagnoses: [],
+  additionalAnalysis: null,
+};
+
 const initialState: ClinicalDataContextState = {
   imageFile: null,
   imageAnalysisOutput: initialImageAnalysisOutput,
@@ -156,7 +161,7 @@ const initialState: ClinicalDataContextState = {
   isGeneratingInterrogationQuestions: false,
   interrogationQuestionsError: null,
 
-  physicalExamInput: null,
+  physicalExamInput: initialPhysicalExamInput,
   generatedPhysicalExam: null,
   isGeneratingPhysicalExam: false,
   physicalExamError: null,
@@ -241,7 +246,14 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setIsGeneratingInterrogationQuestions = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingInterrogationQuestions: loading })), []);
   const setInterrogationQuestionsError = useCallback((error: string | null) => setState(s => ({ ...s, interrogationQuestionsError: error })), []);
 
-  const setPhysicalExamInput = useCallback((input: ValidatedDiagnosis[] | null) => setState(s => ({ ...s, physicalExamInput: input })), []);
+  const setPhysicalExamInput = useCallback((updater: PhysicalExamInputState | ((prevState: PhysicalExamInputState) => PhysicalExamInputState)) => {
+    setState(s => ({
+      ...s,
+      physicalExamInput: typeof updater === 'function'
+        ? updater(s.physicalExamInput)
+        : updater,
+    }));
+  }, []);
   const setGeneratedPhysicalExam = useCallback((exam: string | null) => setState(s => ({ ...s, generatedPhysicalExam: exam })), []);
   const setIsGeneratingPhysicalExam = useCallback((loading: boolean) => setState(s => ({ ...s, isGeneratingPhysicalExam: loading })), []);
   const setPhysicalExamError = useCallback((error: string | null) => setState(s => ({ ...s, physicalExamError: error })), []);
@@ -388,7 +400,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const clearPhysicalExamModule = useCallback(() => {
     setState(s => ({
       ...s,
-      physicalExamInput: null,
+      physicalExamInput: initialPhysicalExamInput,
       generatedPhysicalExam: null,
       isGeneratingPhysicalExam: false,
       physicalExamError: null,

@@ -119,6 +119,13 @@ export interface InterrogationQuestionsOutput {
 }
 // --- End Interrogation Questions Module Specific Types ---
 
+// --- Physical Exam Module Specific Types ---
+export interface PhysicalExamInputState {
+  diagnoses: ValidatedDiagnosis[];
+  additionalAnalysis: string | null;
+}
+// --- End Physical Exam Module Specific Types ---
+
 export interface HistoryEntry {
   id?: number;
   timestamp: number;
@@ -126,7 +133,7 @@ export interface HistoryEntry {
   inputType: string;
   inputSummary: string;
   outputSummary: string;
-  fullInput?: string | Record<string, any> | DoseCalculatorInputState | PatientAdviceInputData | DischargeSummaryInputState;
+  fullInput?: string | Record<string, any> | DoseCalculatorInputState | PatientAdviceInputData | DischargeSummaryInputState | PhysicalExamInputState;
   fullOutput?: string | Record<string, any> | ImageAnalysisOutputState | DiagnosisResult[] | MedicalOrderOutputState | { improvedText: string } | ClinicalAnalysisOutputState | { questions: InterrogationQuestion[] } | { physicalExamText: string } | TreatmentPlanOutputState | PatientAdviceOutputState | MedicalJustificationOutputState | { messages: Array<{sender: 'user' | 'ai', text: string, error?: boolean}>, error?: string } | DoseCalculatorOutputState | DischargeSummaryOutputState | LabStandardizerOutputState;
   status: 'pending' | 'completed' | 'error';
   errorDetails?: string;
@@ -280,7 +287,7 @@ export interface ClinicalDataContextState {
   interrogationQuestionsError: string | null;
 
   // Physical Exam
-  physicalExamInput: ValidatedDiagnosis[] | null;
+  physicalExamInput: PhysicalExamInputState;
   generatedPhysicalExam: string | null;
   isGeneratingPhysicalExam: boolean;
   physicalExamError: string | null;
@@ -367,7 +374,7 @@ export interface ClinicalDataContextActions {
   setIsGeneratingInterrogationQuestions: (loading: boolean) => void;
   setInterrogationQuestionsError: (error: string | null) => void;
 
-  setPhysicalExamInput: (input: ValidatedDiagnosis[] | null) => void;
+  setPhysicalExamInput: (updater: PhysicalExamInputState | ((prevState: PhysicalExamInputState) => PhysicalExamInputState)) => void;
   setGeneratedPhysicalExam: (exam: string | null) => void;
   setIsGeneratingPhysicalExam: (loading: boolean) => void;
   setPhysicalExamError: (error: string | null) => void;
