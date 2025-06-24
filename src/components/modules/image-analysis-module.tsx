@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { FileInput } from '@/components/common/file-input';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import { useHistoryStore } from '@/hooks/use-history-store';
 import { readFileAsDataURL, getFileSummary, getTextSummary } from '@/lib/utils';
 import { analyzeMedicalImage, type AnalyzeMedicalImageOutput } from '@/ai/flows/analyze-medical-image';
 import { useToast } from '@/hooks/use-toast';
-import { ScanSearch, Eraser, Send, Save, Copy, FileJson } from 'lucide-react';
+import { ScanSearch, Eraser, Send, Save, Copy, FileJson, ClipboardPaste } from 'lucide-react';
 import type { ImageAnalysisOutputState } from '@/types';
 
 interface ImageAnalysisModuleProps {
@@ -44,11 +44,42 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
     setPreviewUrl(null);
   }, [imageFile]);
 
-  const handleFileSelect = (file: File | null) => {
+  const handleFileSelect = useCallback((file: File | null) => {
+    if (isImageAnalyzing) return;
     setImageFile(file);
     setImageAnalysisOutput({ summary: null, radiologistReading: null }); 
     setImageAnalysisError(null);
-  };
+  }, [isImageAnalyzing, setImageFile, setImageAnalysisOutput, setImageAnalysisError]);
+
+  useEffect(() => {
+    const currentModuleRef = moduleRef.current;
+    
+    const handlePasteEvent = (event: ClipboardEvent) => {
+      if (isImageAnalyzing) return;
+      const items = event.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+          if (items[i].type.startsWith('image/')) {
+              const file = items[i].getAsFile();
+              if (file) {
+                  event.preventDefault();
+                  handleFileSelect(file);
+                  toast({ title: "Imagen Pegada", description: "Se ha cargado la imagen desde el portapapeles." });
+                  break; 
+              }
+          }
+      }
+    };
+    
+    if (currentModuleRef) {
+        currentModuleRef.addEventListener('paste', handlePasteEvent);
+        return () => {
+            currentModuleRef.removeEventListener('paste', handlePasteEvent);
+        };
+    }
+  }, [isImageAnalyzing, handleFileSelect, toast]);
+
 
   const handleAnalyzeImage = async () => {
     if (!imageFile) {
@@ -172,7 +203,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
       ref={moduleRef}
       id={id}
       title="Análisis Avanzado de Imágenes Médicas"
-      description="Cargue radiografías o electrocardiogramas (EKG) para análisis por IA. Obtenga un resumen de hallazgos y una lectura detallada."
+      description="Cargue o pegue radiografías o electrocardiogramas (EKG) para análisis por IA. Obtenga un resumen de hallazgos y una lectura detallada."
       icon={ScanSearch}
       isLoading={isImageAnalyzing}
     >
@@ -184,7 +215,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
           disabled={isImageAnalyzing}
         />
 
-        {previewUrl && (
+        {previewUrl ? (
           <div className="mt-4 border rounded-md p-2 bg-muted/50 max-h-60 overflow-hidden flex justify-center">
             <Image 
               src={previewUrl} 
@@ -195,6 +226,12 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
               data-ai-hint="medical scan"
             />
           </div>
+        ) : (
+            <div className="mt-4 border-2 border-dashed rounded-md p-6 bg-muted/30 text-center text-muted-foreground">
+                <ClipboardPaste className="mx-auto h-10 w-10 mb-2" />
+                <p className="text-sm">Puede pegar una imagen aquí (Ctrl+V)</p>
+                <p className="text-xs">o usar el botón "Seleccionar archivo".</p>
+            </div>
         )}
 
         <div className="flex space-x-2">
