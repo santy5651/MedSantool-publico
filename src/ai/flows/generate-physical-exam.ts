@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview Sugiere hallazgos patológicos para un examen físico dirigido.
+ * @fileOverview Sugiere un examen físico completo, modificando una plantilla normal con hallazgos patológicos basados en los diagnósticos.
  *
  * - generatePhysicalExam - Función que maneja la generación del examen físico.
  * - GeneratePhysicalExamInput - Tipo de entrada para la función.
@@ -19,7 +19,7 @@ const GeneratePhysicalExamInputSchema = z.object({
 export type GeneratePhysicalExamInput = z.infer<typeof GeneratePhysicalExamInputSchema>;
 
 const GeneratePhysicalExamOutputSchema = z.object({
-    physicalExamText: z.string().describe('Un texto corto que describe únicamente los hallazgos patológicos probables en un examen físico, basado en los diagnósticos proporcionados. Cada hallazgo debe estar en una nueva línea y seguir el formato "SISTEMA: HALLAZGO".'),
+    physicalExamText: z.string().describe('Un texto completo del examen físico, basado en una plantilla de hallazgos normales pero modificado para incluir hallazgos patológicos relevantes según los diagnósticos proporcionados.'),
 });
 export type GeneratePhysicalExamOutput = z.infer<typeof GeneratePhysicalExamOutputSchema>;
 
@@ -33,26 +33,32 @@ const prompt = ai.definePrompt({
   name: 'generatePhysicalExamPrompt',
   input: {schema: GeneratePhysicalExamInputSchema},
   output: {schema: GeneratePhysicalExamOutputSchema},
-  prompt: `Eres un médico experto en semiología. Tu tarea es analizar la siguiente lista de diagnósticos validados y generar una lista de **hallazgos patológicos probables** para un examen físico dirigido.
+  prompt: `Eres un médico experto redactando exámenes físicos para historias clínicas.
+Tu tarea es generar un texto completo de examen físico.
 
-**Instrucciones de Salida:**
--   Solo incluye hallazgos **anormales o patológicos**. No incluyas hallazgos normales (ej. "consciente, orientado", "ruidos cardíacos rítmicos sin soplos").
--   Basa tus sugerencias estrictamente en los diagnósticos proporcionados.
--   Formatea cada hallazgo en una nueva línea, siguiendo la estructura "SISTEMA: HALLAZGO".
--   El examen físico debe ser corto y enfocado.
-
-**Ejemplo de Salida:**
-PIEL: PALIDEZ MUCOCUTÁNEA MARCADA.
-RESPIRATORIO: CRÉPITOS BIBASALES.
-ABDOMEN: DOLOR A LA PALPACIÓN PROFUNDA EN HIPOCONDRIO DERECHO, SIGNO DE MURPHY POSITIVO.
-EXTREMIDADES: EDEMA GRADO II EN MIEMBROS INFERIORES CON FÓVEA.
-
-Diagnósticos Validados:
+**Diagnósticos Validados del Paciente:**
 {{#each diagnoses}}
 - {{{this.description}}} ({{{this.code}}})
 {{/each}}
 
-Genera la lista de hallazgos patológicos para el examen físico:
+**Instrucciones:**
+1.  Utiliza la siguiente plantilla de examen físico normal como base.
+2.  Analiza los diagnósticos validados del paciente.
+3.  **Modifica la plantilla** para incluir los hallazgos patológicos que esperarías encontrar en el examen físico basándote en esos diagnósticos.
+4.  Si un sistema no se ve afectado por los diagnósticos, mantén los hallazgos normales de la plantilla.
+5.  La salida debe ser un texto único, bien estructurado y profesional, donde cada sistema está en una nueva línea.
+
+**Plantilla de Examen Físico Normal:**
+CABEZA: NORMOCÉFALO, NO SE PALPAN MASAS NI DEFORMIDADES.
+OJOS: PUPILAS ISOCÓRICAS, FOTORREACTIVAS, ESCLERAS ANICTÉRICAS, MUCOSAS HÚMEDAS Y ROSADAS
+OROFARINGE: MUCOSAS ROSADAS Y HUMEDAS. SIN ERITEMA NI CONGESTIÓN, SIN PLACAS O EXUDADOS.
+TÓRAX: NORMOEXPANSIBLE. MURMULLO VESICULAR PRESENTE EN AMBOS CAMPOS PULMONARES, SIN SOBREAGREGADOS, CORAZÓN RÍTMICO SIN SOPLOS AUDIBLES.
+ABDOMEN: BLANDO DEPRESIBLE, NO DOLOROSO A LA PALPACIÓN, SIN SIGNOS DE IRRITACIÓN PERITONEAL, NO MASAS, RUIDOS HIDROAEREOS PRESENTES.
+EXTREMIDADES: SIN EDEMA
+PIEL: ÍNTEGRA SIN LESIONES NI ULCERAS POR PRESION, ANICTÉRICA.
+NEUROLÓGICO: ESCALA DE COMA DE GLASGOW 15/15, REACTIVO, CONSCIENTE, ORIENTADO EN LAS TRES ESFERAS, NO DÉFICIT DE PARES CRANEALES. SENSIBILIDAD CONSERVADA.
+
+Genera el examen físico completo y modificado del paciente:
 `,
 });
 
