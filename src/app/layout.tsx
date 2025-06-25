@@ -6,6 +6,7 @@ import AppProviders from '@/contexts/app-providers';
 import { AppHeader } from '@/components/layout/app-header';
 import { AppFooter } from '@/components/layout/app-footer';
 import { ViewContextLayoutClient } from '@/components/layout/view-context-layout-client';
+import { ApiKeyDialog } from '@/components/common/api-key-dialog';
 
 
 export const metadata: Metadata = {
@@ -35,6 +36,7 @@ export default function RootLayout({
             </main>
             <AppFooter />
             <Toaster />
+            <ApiKeyDialog />
           </ViewContextLayoutClient>
         </AppProviders>
       </body>

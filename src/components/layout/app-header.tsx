@@ -2,17 +2,19 @@
 'use client';
 
 import Link from 'next/link';
-import { BrainCircuit, Settings, Moon, Sun, Monitor, Palette } from 'lucide-react';
+import { BrainCircuit, Settings, Moon, Sun, Monitor, Palette, KeyRound } from 'lucide-react';
 import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarSeparator, MenubarSub, MenubarSubTrigger, MenubarSubContent, MenubarRadioGroup, MenubarRadioItem, MenubarLabel } from "@/components/ui/menubar"; // Adjusted imports
 import { useView } from '@/contexts/view-context';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import type { FontSize } from '@/types';
+import { useApiKey } from '@/contexts/api-key-context';
 
 export function AppHeader() {
   const { activeView, setActiveView, fontSize, setFontSize } = useView();
   const { theme, setTheme } = useTheme();
+  const { openKeyModal } = useApiKey();
 
   const staticTriggerClasses = "cursor-pointer px-3 py-1.5 text-sm font-medium rounded-sm text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-primary";
 
@@ -62,6 +64,11 @@ export function AppHeader() {
                  </Button>
               </MenubarTrigger>
               <MenubarContent align="end" className="bg-popover text-popover-foreground">
+                <MenubarItem onClick={openKeyModal}>
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    <span>Configurar API Key</span>
+                </MenubarItem>
+                <MenubarSeparator />
                 <MenubarLabel className="px-2 py-1.5 text-sm font-semibold">Apariencia</MenubarLabel>
                 <MenubarSeparator />
                 <MenubarSub>

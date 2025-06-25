@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Standardizes raw lab results into two formats: abbreviated and full text.
@@ -7,31 +8,53 @@
  * - StandardizeLabResultsOutput - The return type for the standardizeLabResults function.
  */
 
-import {ai} from '@/ai/genkit';
+import {getGenkitInstance} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const StandardizeLabResultsInputSchema = z.object({
-  rawLabText: z.string().describe('Unstructured text containing various lab results.'),
+  rawLabText: z
+    .string()
+    .describe('Unstructured text containing various lab results.'),
 });
-export type StandardizeLabResultsInput = z.infer<typeof StandardizeLabResultsInputSchema>;
+
+const StandardizeLabResultsInputWithKeySchema =
+  StandardizeLabResultsInputSchema.extend({
+    apiKey: z.string().optional().describe('User provided Google AI API key.'),
+  });
+
+export type StandardizeLabResultsInput = z.infer<
+  typeof StandardizeLabResultsInputSchema
+>;
+export type StandardizeLabResultsInputWithKey = z.infer<
+  typeof StandardizeLabResultsInputWithKeySchema
+>;
 
 const StandardizeLabResultsOutputSchema = z.object({
-  abbreviatedReport: z.string().describe('A standardized report using common medical abbreviations, suitable for quick handovers. Titled "PARA ENTREGA DE TURNO".'),
-  fullReport: z.string().describe('A standardized report with full test names, suitable for official system records. Titled "PARA REPORTE EN SISTEMA".'),
+  abbreviatedReport: z
+    .string()
+    .describe(
+      'A standardized report using common medical abbreviations, suitable for quick handovers. Titled "PARA ENTREGA DE TURNO".'
+    ),
+  fullReport: z
+    .string()
+    .describe(
+      'A standardized report with full test names, suitable for official system records. Titled "PARA REPORTE EN SISTEMA".'
+    ),
 });
-export type StandardizeLabResultsOutput = z.infer<typeof StandardizeLabResultsOutputSchema>;
+export type StandardizeLabResultsOutput = z.infer<
+  typeof StandardizeLabResultsOutputSchema
+>;
 
 export async function standardizeLabResults(
-  input: StandardizeLabResultsInput
+  input: StandardizeLabResultsInputWithKey
 ): Promise<StandardizeLabResultsOutput> {
-  return standardizeLabResultsFlow(input);
-}
+  const ai = getGenkitInstance(input.apiKey);
 
-const prompt = ai.definePrompt({
-  name: 'standardizeLabResultsPrompt',
-  input: {schema: StandardizeLabResultsInputSchema},
-  output: {schema: StandardizeLabResultsOutputSchema},
-  prompt: `Eres un experto en terminología de laboratorio clínico. Tu tarea es analizar el siguiente texto de paraclínicos y estandarizarlo en dos formatos distintos.
+  const prompt = ai.definePrompt({
+    name: `standardizeLabResultsPrompt_${Date.now()}`,
+    input: {schema: StandardizeLabResultsInputSchema},
+    output: {schema: StandardizeLabResultsOutputSchema},
+    prompt: `Eres un experto en terminología de laboratorio clínico. Tu tarea es analizar el siguiente texto de paraclínicos y estandarizarlo en dos formatos distintos.
 
 **Texto de Paraclínicos sin Procesar:**
 {{{rawLabText}}}
@@ -59,16 +82,8 @@ const prompt = ai.definePrompt({
 
 Genera ambos reportes según el esquema de salida proporcionado.
 `,
-});
+  });
 
-const standardizeLabResultsFlow = ai.defineFlow(
-  {
-    name: 'standardizeLabResultsFlow',
-    inputSchema: StandardizeLabResultsInputSchema,
-    outputSchema: StandardizeLabResultsOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
+  const {output} = await prompt(input);
+  return output!;
+}

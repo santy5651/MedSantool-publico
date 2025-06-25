@@ -8,37 +8,62 @@
  * - SuggestTreatmentPlanOutput - Tipo de retorno para suggestTreatmentPlan.
  */
 
-import {ai} from '@/ai/genkit';
+import {getGenkitInstance} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SuggestTreatmentPlanInputSchema = z.object({
-  clinicalAnalysis: z.string().describe('El análisis clínico del caso generado por IA (del Módulo 4).'),
-  textSummary: z.string().describe('El resumen de información clave (del Módulo 3).'),
-  validatedDiagnoses: z.array(
-    z.object({
-      code: z.string().describe('Código CIE-10 del diagnóstico.'),
-      description: z.string().describe('Descripción del diagnóstico.'),
-    })
-  ).optional().describe('Lista de diagnósticos validados por el usuario (del Módulo 5), si existen.'),
+  clinicalAnalysis: z
+    .string()
+    .describe('El análisis clínico del caso generado por IA (del Módulo 4).'),
+  textSummary: z
+    .string()
+    .describe('El resumen de información clave (del Módulo 3).'),
+  validatedDiagnoses: z
+    .array(
+      z.object({
+        code: z.string().describe('Código CIE-10 del diagnóstico.'),
+        description: z.string().describe('Descripción del diagnóstico.'),
+      })
+    )
+    .optional()
+    .describe(
+      'Lista de diagnósticos validados por el usuario (del Módulo 5), si existen.'
+    ),
 });
-export type SuggestTreatmentPlanInput = z.infer<typeof SuggestTreatmentPlanInputSchema>;
+
+const SuggestTreatmentPlanInputWithKeySchema =
+  SuggestTreatmentPlanInputSchema.extend({
+    apiKey: z.string().optional().describe('User provided Google AI API key.'),
+  });
+
+export type SuggestTreatmentPlanInput = z.infer<
+  typeof SuggestTreatmentPlanInputSchema
+>;
+export type SuggestTreatmentPlanInputWithKey = z.infer<
+  typeof SuggestTreatmentPlanInputWithKeySchema
+>;
 
 const SuggestTreatmentPlanOutputSchema = z.object({
-  suggestedPlanText: z.string().describe('Texto con las sugerencias de medicamentos y conductas, formateado como se especifica.'),
+  suggestedPlanText: z
+    .string()
+    .describe(
+      'Texto con las sugerencias de medicamentos y conductas, formateado como se especifica.'
+    ),
 });
-export type SuggestTreatmentPlanOutput = z.infer<typeof SuggestTreatmentPlanOutputSchema>;
+export type SuggestTreatmentPlanOutput = z.infer<
+  typeof SuggestTreatmentPlanOutputSchema
+>;
 
 export async function suggestTreatmentPlan(
-  input: SuggestTreatmentPlanInput
+  input: SuggestTreatmentPlanInputWithKey
 ): Promise<SuggestTreatmentPlanOutput> {
-  return suggestTreatmentPlanFlow(input);
-}
+  const ai = getGenkitInstance(input.apiKey);
 
-const prompt = ai.definePrompt({
-  name: 'suggestTreatmentPlanPrompt',
-  input: {schema: SuggestTreatmentPlanInputSchema},
-  output: {schema: SuggestTreatmentPlanOutputSchema},
-  prompt: `Eres un asistente médico experto en la creación de planes terapéuticos.
+  const prompt = ai.definePrompt({
+    name: `suggestTreatmentPlanPrompt_${Date.now()}`,
+    input: {schema: SuggestTreatmentPlanInputSchema},
+    output: {schema: SuggestTreatmentPlanOutputSchema},
+    prompt: `Eres un asistente médico experto en la creación de planes terapéuticos.
 Basado en la siguiente información clínica, genera sugerencias de medicamentos y conductas/procedimientos.
 
 **Análisis Clínico del Caso (IA):**
@@ -74,16 +99,8 @@ CONSIDERAR INTERCONSULTA CON CARDIOLOGÍA
 
 Genera el plan terapéutico sugerido:
 `,
-});
+  });
 
-const suggestTreatmentPlanFlow = ai.defineFlow(
-  {
-    name: 'suggestTreatmentPlanFlow',
-    inputSchema: SuggestTreatmentPlanInputSchema,
-    outputSchema: SuggestTreatmentPlanOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
+  const {output} = await prompt(input);
+  return output!;
+}

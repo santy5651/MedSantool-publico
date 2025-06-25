@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -8,34 +9,49 @@
  * - SuggestDiagnosisOutput - The return type for the suggestDiagnosis function.
  */
 
-import {ai} from '@/ai/genkit';
+import {getGenkitInstance} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SuggestDiagnosisInputSchema = z.object({
   clinicalData: z
     .string()
-    .describe('The consolidated clinical data, including summaries of medical images, PDF documents, and clinical notes.'),
+    .describe(
+      'The consolidated clinical data, including summaries of medical images, PDF documents, and clinical notes.'
+    ),
 });
+
+const SuggestDiagnosisInputWithKeySchema = SuggestDiagnosisInputSchema.extend({
+  apiKey: z.string().optional().describe('User provided Google AI API key.'),
+});
+
 export type SuggestDiagnosisInput = z.infer<typeof SuggestDiagnosisInputSchema>;
+export type SuggestDiagnosisInputWithKey = z.infer<
+  typeof SuggestDiagnosisInputWithKeySchema
+>;
 
 const SuggestDiagnosisOutputSchema = z.array(
   z.object({
     code: z.string().describe('The CIE-10 code for the diagnosis.'),
-    description: z.string().describe('The description of the diagnosis in Spanish.'),
-    confidence: z.number().describe('The confidence score for the diagnosis (0-1).'),
+    description: z
+      .string()
+      .describe('The description of the diagnosis in Spanish.'),
+    confidence: z
+      .number()
+      .describe('The confidence score for the diagnosis (0-1).'),
   })
 );
 export type SuggestDiagnosisOutput = z.infer<typeof SuggestDiagnosisOutputSchema>;
 
-export async function suggestDiagnosis(input: SuggestDiagnosisInput): Promise<SuggestDiagnosisOutput> {
-  return suggestDiagnosisFlow(input);
-}
+export async function suggestDiagnosis(
+  input: SuggestDiagnosisInputWithKey
+): Promise<SuggestDiagnosisOutput> {
+  const ai = getGenkitInstance(input.apiKey);
 
-const prompt = ai.definePrompt({
-  name: 'suggestDiagnosisPrompt',
-  input: {schema: SuggestDiagnosisInputSchema},
-  output: {schema: SuggestDiagnosisOutputSchema},
-  prompt: `You are an AI assistant designed to suggest potential diagnoses based on the provided clinical data.
+  const prompt = ai.definePrompt({
+    name: `suggestDiagnosisPrompt_${Date.now()}`,
+    input: {schema: SuggestDiagnosisInputSchema},
+    output: {schema: SuggestDiagnosisOutputSchema},
+    prompt: `You are an AI assistant designed to suggest potential diagnoses based on the provided clinical data.
   You should provide a list of possible diagnoses with their corresponding CIE-10 codes, descriptions in Spanish, and a confidence score between 0 and 1.
 
   Clinical Data: {{{clinicalData}}}
@@ -55,16 +71,8 @@ const prompt = ai.definePrompt({
     }
   ]
 `,
-});
+  });
 
-const suggestDiagnosisFlow = ai.defineFlow(
-  {
-    name: 'suggestDiagnosisFlow',
-    inputSchema: SuggestDiagnosisInputSchema,
-    outputSchema: SuggestDiagnosisOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
+  const {output} = await prompt(input);
+  return output!;
+}

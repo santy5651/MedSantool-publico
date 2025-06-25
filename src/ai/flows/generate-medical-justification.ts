@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Genera justificaciones médicas con criterio profesional.
@@ -7,31 +8,56 @@
  * - GenerateMedicalJustificationOutput - Tipo de retorno para generateMedicalJustification.
  */
 
-import {ai} from '@/ai/genkit';
+import {getGenkitInstance} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateMedicalJustificationInputSchema = z.object({
-  conceptToJustify: z.string().describe('El concepto, procedimiento o decisión médica que necesita ser justificada.'),
-  relevantClinicalInfo: z.string().optional().describe('Información clínica relevante del paciente que ayuda a contextualizar y fundamentar la justificación. Incluir detalles como diagnósticos, evolución, tratamientos previos, etc.'),
+  conceptToJustify: z
+    .string()
+    .describe(
+      'El concepto, procedimiento o decisión médica que necesita ser justificada.'
+    ),
+  relevantClinicalInfo: z
+    .string()
+    .optional()
+    .describe(
+      'Información clínica relevante del paciente que ayuda a contextualizar y fundamentar la justificación. Incluir detalles como diagnósticos, evolución, tratamientos previos, etc.'
+    ),
 });
-export type GenerateMedicalJustificationInput = z.infer<typeof GenerateMedicalJustificationInputSchema>;
+
+const GenerateMedicalJustificationInputWithKeySchema =
+  GenerateMedicalJustificationInputSchema.extend({
+    apiKey: z.string().optional().describe('User provided Google AI API key.'),
+  });
+
+export type GenerateMedicalJustificationInput = z.infer<
+  typeof GenerateMedicalJustificationInputSchema
+>;
+export type GenerateMedicalJustificationInputWithKey = z.infer<
+  typeof GenerateMedicalJustificationInputWithKeySchema
+>;
 
 const GenerateMedicalJustificationOutputSchema = z.object({
-  justificationText: z.string().describe('El texto de la justificación médica, redactado de forma profesional, clara, concisa y con criterio médico, adecuado para entornos hospitalarios.'),
+  justificationText: z
+    .string()
+    .describe(
+      'El texto de la justificación médica, redactado de forma profesional, clara, concisa y con criterio médico, adecuado para entornos hospitalarios.'
+    ),
 });
-export type GenerateMedicalJustificationOutput = z.infer<typeof GenerateMedicalJustificationOutputSchema>;
+export type GenerateMedicalJustificationOutput = z.infer<
+  typeof GenerateMedicalJustificationOutputSchema
+>;
 
 export async function generateMedicalJustification(
-  input: GenerateMedicalJustificationInput
+  input: GenerateMedicalJustificationInputWithKey
 ): Promise<GenerateMedicalJustificationOutput> {
-  return generateMedicalJustificationFlow(input);
-}
+  const ai = getGenkitInstance(input.apiKey);
 
-const prompt = ai.definePrompt({
-  name: 'generateMedicalJustificationPrompt',
-  input: {schema: GenerateMedicalJustificationInputSchema},
-  output: {schema: GenerateMedicalJustificationOutputSchema},
-  prompt: `Eres un asistente médico experto en la redacción de justificaciones clínicas para entornos hospitalarios.
+  const prompt = ai.definePrompt({
+    name: `generateMedicalJustificationPrompt_${Date.now()}`,
+    input: {schema: GenerateMedicalJustificationInputSchema},
+    output: {schema: GenerateMedicalJustificationOutputSchema},
+    prompt: `Eres un asistente médico experto en la redacción de justificaciones clínicas para entornos hospitalarios.
 Tu tarea es generar una justificación médica profesional, clara, concisa y fundamentada para el concepto o situación proporcionada.
 
 **Concepto a Justificar:**
@@ -54,16 +80,8 @@ Tu tarea es generar una justificación médica profesional, clara, concisa y fun
 
 Genera la justificación médica:
 `,
-});
+  });
 
-const generateMedicalJustificationFlow = ai.defineFlow(
-  {
-    name: 'generateMedicalJustificationFlow',
-    inputSchema: GenerateMedicalJustificationInputSchema,
-    outputSchema: GenerateMedicalJustificationOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
+  const {output} = await prompt(input);
+  return output!;
+}

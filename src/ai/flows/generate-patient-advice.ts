@@ -8,7 +8,7 @@
  * - GeneratePatientAdviceOutput - Tipo de retorno para generatePatientAdvice.
  */
 
-import {ai} from '@/ai/genkit';
+import {getGenkitInstance} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const ValidatedDiagnosisSchema = z.object({
@@ -17,32 +17,80 @@ const ValidatedDiagnosisSchema = z.object({
 });
 
 const GeneratePatientAdviceInputSchema = z.object({
-  clinicalAnalysis: z.string().optional().describe('El análisis clínico del caso generado por IA (del Módulo 4). (Opcional, no usado directamente para generar consejos si hay diagnósticos validados o texto manual)'),
-  textSummary: z.string().optional().describe('El resumen de información clave (del Módulo 3). (Opcional, no usado directamente para generar consejos si hay diagnósticos validados o texto manual)'),
-  validatedDiagnoses: z.array(ValidatedDiagnosisSchema).optional().describe('Lista de diagnósticos validados por el usuario (del Módulo 5). Fuente prioritaria de información.'),
-  manualDiagnosisOrAnalysis: z.string().optional().describe('Diagnóstico o breve análisis ingresado manually por el usuario. Usado si no hay diagnósticos validados.'),
+  clinicalAnalysis: z
+    .string()
+    .optional()
+    .describe(
+      'El análisis clínico del caso generado por IA (del Módulo 4). (Opcional, no usado directamente para generar consejos si hay diagnósticos validados o texto manual)'
+    ),
+  textSummary: z
+    .string()
+    .optional()
+    .describe(
+      'El resumen de información clave (del Módulo 3). (Opcional, no usado directamente para generar consejos si hay diagnósticos validados o texto manual)'
+    ),
+  validatedDiagnoses: z
+    .array(ValidatedDiagnosisSchema)
+    .optional()
+    .describe(
+      'Lista de diagnósticos validados por el usuario (del Módulo 5). Fuente prioritaria de información.'
+    ),
+  manualDiagnosisOrAnalysis: z
+    .string()
+    .optional()
+    .describe(
+      'Diagnóstico o breve análisis ingresado manually por el usuario. Usado si no hay diagnósticos validados.'
+    ),
 });
-export type GeneratePatientAdviceInput = z.infer<typeof GeneratePatientAdviceInputSchema>;
+
+const GeneratePatientAdviceInputWithKeySchema =
+  GeneratePatientAdviceInputSchema.extend({
+    apiKey: z.string().optional().describe('User provided Google AI API key.'),
+  });
+
+export type GeneratePatientAdviceInput = z.infer<
+  typeof GeneratePatientAdviceInputSchema
+>;
+export type GeneratePatientAdviceInputWithKey = z.infer<
+  typeof GeneratePatientAdviceInputWithKeySchema
+>;
 
 const GeneratePatientAdviceOutputSchema = z.object({
-  generalRecommendations: z.string().describe('Recomendaciones generales para el paciente, EN MAYÚSCULAS, en lenguaje claro y sencillo, formateadas como una lista o párrafos, y comenzando con el título literal "***RECOMENDACIONES GENERALES***" seguido de un salto de línea.'),
-  alarmSigns: z.string().describe('Signos de alarma específicos por los cuales el paciente debería buscar atención médica urgente, EN MAYÚSCULAS, presentados como una lista o párrafos, en lenguaje claro y sencillo, y comenzando con el título literal "⚠️ ***SIGNOS DE ALARMA***" seguido de un salto de línea.'),
-  dietaryIndications: z.string().describe('Indicaciones sobre la dieta para el paciente, EN MAYÚSCULAS, en lenguaje claro y sencillo, y comenzando con el título literal "🍽️ ***INDICACIONES SOBRE LA DIETA***" seguido de un salto de línea.'),
-  generalCare: z.string().describe('Cuidados generales para el paciente, EN MAYÚSCULAS, en lenguaje claro y sencillo, y comenzando con el título literal "⚕️ ***CUIDADOS GENERALES***" seguido de un salto de línea.'),
+  generalRecommendations: z
+    .string()
+    .describe(
+      'Recomendaciones generales para el paciente, EN MAYÚSCULAS, en lenguaje claro y sencillo, formateadas como una lista o párrafos, y comenzando con el título literal "***RECOMENDACIONES GENERALES***" seguido de un salto de línea.'
+    ),
+  alarmSigns: z
+    .string()
+    .describe(
+      'Signos de alarma específicos por los cuales el paciente debería buscar atención médica urgente, EN MAYÚSCULAS, presentados como una lista o párrafos, en lenguaje claro y sencillo, y comenzando con el título literal "⚠️ ***SIGNOS DE ALARMA***" seguido de un salto de línea.'
+    ),
+  dietaryIndications: z
+    .string()
+    .describe(
+      'Indicaciones sobre la dieta para el paciente, EN MAYÚSCULAS, en lenguaje claro y sencillo, y comenzando con el título literal "🍽️ ***INDICACIONES SOBRE LA DIETA***" seguido de un salto de línea.'
+    ),
+  generalCare: z
+    .string()
+    .describe(
+      'Cuidados generales para el paciente, EN MAYÚSCULAS, en lenguaje claro y sencillo, y comenzando con el título literal "⚕️ ***CUIDADOS GENERALES***" seguido de un salto de línea.'
+    ),
 });
-export type GeneratePatientAdviceOutput = z.infer<typeof GeneratePatientAdviceOutputSchema>;
+export type GeneratePatientAdviceOutput = z.infer<
+  typeof GeneratePatientAdviceOutputSchema
+>;
 
 export async function generatePatientAdvice(
-  input: GeneratePatientAdviceInput
+  input: GeneratePatientAdviceInputWithKey
 ): Promise<GeneratePatientAdviceOutput> {
-  return generatePatientAdviceFlow(input);
-}
+  const ai = getGenkitInstance(input.apiKey);
 
-const prompt = ai.definePrompt({
-  name: 'generatePatientAdvicePrompt',
-  input: {schema: GeneratePatientAdviceInputSchema},
-  output: {schema: GeneratePatientAdviceOutputSchema},
-  prompt: `Eres un asistente médico virtual encargado de proporcionar información clara y útil para pacientes.
+  const prompt = ai.definePrompt({
+    name: `generatePatientAdvicePrompt_${Date.now()}`,
+    input: {schema: GeneratePatientAdviceInputSchema},
+    output: {schema: GeneratePatientAdviceOutputSchema},
+    prompt: `Eres un asistente médico virtual encargado de proporcionar información clara y útil para pacientes.
 Tu tarea es generar:
 1.  **Recomendaciones Generales**
 2.  **Indicaciones sobre la Dieta**
@@ -87,16 +135,8 @@ Tu tarea es generar:
 
 Genera las recomendaciones, indicaciones de dieta, cuidados generales y signos de alarma:
 `,
-});
+  });
 
-const generatePatientAdviceFlow = ai.defineFlow(
-  {
-    name: 'generatePatientAdviceFlow',
-    inputSchema: GeneratePatientAdviceInputSchema,
-    outputSchema: GeneratePatientAdviceOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
+  const {output} = await prompt(input);
+  return output!;
+}

@@ -8,7 +8,7 @@
  * - MedicalAssistantChatOutput - The return type for the medicalAssistantChatFlow function.
  */
 
-import {ai} from '@/ai/genkit';
+import {getGenkitInstance} from '@/ai/genkit';
 import {z} from 'genkit';
 
 // Define la estructura de un mensaje individual en el historial para el flujo
@@ -21,28 +21,48 @@ const ChatMessageHistoryItemSchema = z.object({
 export type ChatMessageHistoryItem = z.infer<typeof ChatMessageHistoryItemSchema>;
 
 const MedicalAssistantChatInputSchema = z.object({
-  userInput: z.string().describe('The user\'s current message to the medical assistant.'),
-  chatHistory: z.array(ChatMessageHistoryItemSchema).optional().describe('The history of the conversation so far, with flags for sender type.'),
+  userInput: z
+    .string()
+    .describe("The user's current message to the medical assistant."),
+  chatHistory: z
+    .array(ChatMessageHistoryItemSchema)
+    .optional()
+    .describe(
+      'The history of the conversation so far, with flags for sender type.'
+    ),
 });
-export type MedicalAssistantChatInput = z.infer<typeof MedicalAssistantChatInputSchema>;
+
+const MedicalAssistantChatInputWithKeySchema =
+  MedicalAssistantChatInputSchema.extend({
+    apiKey: z.string().optional().describe('User provided Google AI API key.'),
+  });
+
+export type MedicalAssistantChatInput = z.infer<
+  typeof MedicalAssistantChatInputSchema
+>;
+export type MedicalAssistantChatInputWithKey = z.infer<
+  typeof MedicalAssistantChatInputWithKeySchema
+>;
 
 const MedicalAssistantChatOutputSchema = z.object({
-  assistantResponse: z.string().describe('The medical assistant\'s response to the user.'),
+  assistantResponse: z
+    .string()
+    .describe("The medical assistant's response to the user."),
 });
-export type MedicalAssistantChatOutput = z.infer<typeof MedicalAssistantChatOutputSchema>;
+export type MedicalAssistantChatOutput = z.infer<
+  typeof MedicalAssistantChatOutputSchema
+>;
 
 export async function medicalAssistantChatFlow(
-  input: MedicalAssistantChatInput
+  input: MedicalAssistantChatInputWithKey
 ): Promise<MedicalAssistantChatOutput> {
-  const {output} = await medicalAssistantChatPrompt(input);
-  return output!;
-}
+  const ai = getGenkitInstance(input.apiKey);
 
-const medicalAssistantChatPrompt = ai.definePrompt({
-  name: 'medicalAssistantChatPrompt',
-  input: {schema: MedicalAssistantChatInputSchema},
-  output: {schema: MedicalAssistantChatOutputSchema},
-  prompt: `You are an expert AI Medical Assistant designed to communicate with healthcare professionals. Your primary goal is to provide accurate, evidence-based medical information in a technical and detailed manner. Assume the user is a medical professional with clinical knowledge.
+  const medicalAssistantChatPrompt = ai.definePrompt({
+    name: `medicalAssistantChatPrompt_${Date.now()}`,
+    input: {schema: MedicalAssistantChatInputSchema},
+    output: {schema: MedicalAssistantChatOutputSchema},
+    prompt: `You are an expert AI Medical Assistant designed to communicate with healthcare professionals. Your primary goal is to provide accurate, evidence-based medical information in a technical and detailed manner. Assume the user is a medical professional with clinical knowledge.
 
 {{#if chatHistory.length}}
 This is the conversation history so far:
@@ -67,17 +87,8 @@ Please respond to the user's query:
 - Your response should be in Spanish.
 - IMPORTANT: Do not include any local file paths (e.g., 'C:/Users/...', 'file:///...') or any other user-specific directory information in your response.
 `,
-});
+  });
 
-// The flow is defined but not directly exported as the wrapper function is preferred.
-const flow = ai.defineFlow(
-  {
-    name: 'medicalAssistantChatFlowInternal',
-    inputSchema: MedicalAssistantChatInputSchema,
-    outputSchema: MedicalAssistantChatOutputSchema,
-  },
-  async (input) => {
-    const {output} = await medicalAssistantChatPrompt(input);
-    return output!;
-  }
-);
+  const {output} = await medicalAssistantChatPrompt(input);
+  return output!;
+}

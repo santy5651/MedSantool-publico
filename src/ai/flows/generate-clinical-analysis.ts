@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates a clinical case analysis based on a summary.
@@ -7,31 +8,53 @@
  * - GenerateClinicalAnalysisOutput - The return type for the generateClinicalAnalysis function.
  */
 
-import {ai} from '@/ai/genkit';
+import {getGenkitInstance} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateClinicalAnalysisInputSchema = z.object({
-  clinicalSummary: z.string().describe('Concise summary of key clinical information for the case.'),
+  clinicalSummary: z
+    .string()
+    .describe('Concise summary of key clinical information for the case.'),
 });
-export type GenerateClinicalAnalysisInput = z.infer<typeof GenerateClinicalAnalysisInputSchema>;
+
+const GenerateClinicalAnalysisInputWithKeySchema =
+  GenerateClinicalAnalysisInputSchema.extend({
+    apiKey: z.string().optional().describe('User provided Google AI API key.'),
+  });
+
+export type GenerateClinicalAnalysisInput = z.infer<
+  typeof GenerateClinicalAnalysisInputSchema
+>;
+export type GenerateClinicalAnalysisInputWithKey = z.infer<
+  typeof GenerateClinicalAnalysisInputWithKeySchema
+>;
 
 const GenerateClinicalAnalysisOutputSchema = z.object({
-  comprehensiveAnalysis: z.string().describe('Análisis clínico del caso profesional, claro y completo, en uno o dos párrafos, adecuado para entornos hospitalarios.'),
-  focusedAnalysis: z.string().describe('Un resumen muy breve y enfocado (2-3 líneas máximo) que resuma los hallazgos más críticos, la lista de problemas principales o la impresión diagnóstica primaria.'),
+  comprehensiveAnalysis: z
+    .string()
+    .describe(
+      'Análisis clínico del caso profesional, claro y completo, en uno o dos párrafos, adecuado para entornos hospitalarios.'
+    ),
+  focusedAnalysis: z
+    .string()
+    .describe(
+      'Un resumen muy breve y enfocado (2-3 líneas máximo) que resuma los hallazgos más críticos, la lista de problemas principales o la impresión diagnóstica primaria.'
+    ),
 });
-export type GenerateClinicalAnalysisOutput = z.infer<typeof GenerateClinicalAnalysisOutputSchema>;
+export type GenerateClinicalAnalysisOutput = z.infer<
+  typeof GenerateClinicalAnalysisOutputSchema
+>;
 
 export async function generateClinicalAnalysis(
-  input: GenerateClinicalAnalysisInput
+  input: GenerateClinicalAnalysisInputWithKey
 ): Promise<GenerateClinicalAnalysisOutput> {
-  return generateClinicalAnalysisFlow(input);
-}
+  const ai = getGenkitInstance(input.apiKey);
 
-const prompt = ai.definePrompt({
-  name: 'generateClinicalAnalysisPrompt',
-  input: {schema: GenerateClinicalAnalysisInputSchema},
-  output: {schema: GenerateClinicalAnalysisOutputSchema},
-  prompt: `Eres un médico experto. Basado en el siguiente resumen de información clave, tu tarea es doble:
+  const prompt = ai.definePrompt({
+    name: `generateClinicalAnalysisPrompt_${Date.now()}`,
+    input: {schema: GenerateClinicalAnalysisInputSchema},
+    output: {schema: GenerateClinicalAnalysisOutputSchema},
+    prompt: `Eres un médico experto. Basado en el siguiente resumen de información clave, tu tarea es doble:
 
 1.  **Generar un Análisis Clínico Completo:** Redacta un análisis del caso que sea profesional, claro y completo, en uno o dos párrafos. Debe ser adecuado para un entorno hospitalario, como si estuvieras presentando el caso a colegas. Enfócate en los aspectos más relevantes, implicaciones potenciales y una evaluación estructurada.
 2.  **Generar un Análisis Enfocado:** Redacta un resumen muy breve y directo (máximo 2-3 líneas) que sintetice los hallazgos más críticos, la lista de problemas o la impresión diagnóstica principal.
@@ -43,16 +66,8 @@ Resumen Clínico:
 
 Genera ambos análisis:
 `,
-});
+  });
 
-const generateClinicalAnalysisFlow = ai.defineFlow(
-  {
-    name: 'generateClinicalAnalysisFlow',
-    inputSchema: GenerateClinicalAnalysisInputSchema,
-    outputSchema: GenerateClinicalAnalysisOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
+  const {output} = await prompt(input);
+  return output!;
+}

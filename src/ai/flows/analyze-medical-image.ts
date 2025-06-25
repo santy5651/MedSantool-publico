@@ -9,7 +9,7 @@
  * - AnalyzeMedicalImageOutput - The return type for the analyzeMedicalImage function.
  */
 
-import {ai} from '@/ai/genkit';
+import {getGenkitInstance} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const AnalyzeMedicalImageInputSchema = z.object({
@@ -19,25 +19,42 @@ const AnalyzeMedicalImageInputSchema = z.object({
       "A medical radiograph as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
-export type AnalyzeMedicalImageInput = z.infer<typeof AnalyzeMedicalImageInputSchema>;
+
+const AnalyzeMedicalImageInputWithKeySchema = AnalyzeMedicalImageInput.extend({
+  apiKey: z.string().optional().describe('User provided Google AI API key.'),
+});
+
+export type AnalyzeMedicalImageInput = z.infer<
+  typeof AnalyzeMedicalImageInputSchema
+>;
+export type AnalyzeMedicalImageInputWithKey = z.infer<
+  typeof AnalyzeMedicalImageInputWithKeySchema
+>;
 
 const AnalyzeMedicalImageOutputSchema = z.object({
-  summary: z.string().describe('A concise summary of the key findings in Spanish.'),
-  radiologistReading: z.string().describe('A detailed reading of the radiograph in Spanish, similar to a formal radiological report.'),
+  summary: z
+    .string()
+    .describe('A concise summary of the key findings in Spanish.'),
+  radiologistReading: z
+    .string()
+    .describe(
+      'A detailed reading of the radiograph in Spanish, similar to a formal radiological report.'
+    ),
 });
-export type AnalyzeMedicalImageOutput = z.infer<typeof AnalyzeMedicalImageOutputSchema>;
+export type AnalyzeMedicalImageOutput = z.infer<
+  typeof AnalyzeMedicalImageOutputSchema
+>;
 
 export async function analyzeMedicalImage(
-  input: AnalyzeMedicalImageInput
+  input: AnalyzeMedicalImageInputWithKey
 ): Promise<AnalyzeMedicalImageOutput> {
-  return analyzeMedicalImageFlow(input);
-}
+  const ai = getGenkitInstance(input.apiKey);
 
-const prompt = ai.definePrompt({
-  name: 'analyzeMedicalImagePrompt',
-  input: {schema: AnalyzeMedicalImageInputSchema},
-  output: {schema: AnalyzeMedicalImageOutputSchema},
-  prompt: `Eres un radiólogo experto. Tu tarea es analizar la radiografía proporcionada.
+  const prompt = ai.definePrompt({
+    name: `analyzeMedicalImagePrompt_${Date.now()}`,
+    input: {schema: AnalyzeMedicalImageInputSchema},
+    output: {schema: AnalyzeMedicalImageOutputSchema},
+    prompt: `Eres un radiólogo experto. Tu tarea es analizar la radiografía proporcionada.
 
 Tu análisis debe incluir dos partes:
 1.  Un **resumen conciso de los hallazgos clave** en español.
@@ -47,16 +64,8 @@ Imagen: {{media url=photoDataUri}}
 
 Por favor, estructura tu respuesta según el esquema de salida, asegurándote de completar ambos campos: 'summary' y 'radiologistReading'.
 `,
-});
+  });
 
-const analyzeMedicalImageFlow = ai.defineFlow(
-  {
-    name: 'analyzeMedicalImageFlow',
-    inputSchema: AnalyzeMedicalImageInputSchema,
-    outputSchema: AnalyzeMedicalImageOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
+  const {output} = await prompt(input);
+  return output!;
+}
