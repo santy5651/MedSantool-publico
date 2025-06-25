@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -9,13 +8,12 @@ import { useApiKey } from '@/contexts/api-key-context';
 import Link from 'next/link';
 
 export function ApiKeyDialog() {
-  const { apiKey, setApiKey, isKeyModalOpen, openKeyModal, setIsKeyModalOpen } = useApiKey();
+  const { apiKey, setApiKey, isKeyModalOpen, setIsKeyModalOpen } = useApiKey();
   const [localKey, setLocalKey] = useState('');
 
   useEffect(() => {
-    if (apiKey) {
-      setLocalKey(apiKey);
-    }
+    // Set local key from context, or to an empty string if it's null
+    setLocalKey(apiKey || '');
   }, [apiKey]);
 
   const handleSave = () => {
@@ -52,7 +50,7 @@ export function ApiKeyDialog() {
               placeholder="Ingrese su API Key aquí"
               value={localKey}
               onChange={(e) => setLocalKey(e.target.value)}
-              type="password"
+              type="text"
             />
           </div>
         </div>
