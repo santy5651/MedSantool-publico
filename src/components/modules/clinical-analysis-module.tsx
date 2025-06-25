@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { FileText, Brain, Eraser, Send, Save, Copy } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 import type { ClinicalAnalysisOutputState } from '@/types';
+import { useApiKey } from '@/contexts/api-key-context';
 
 interface ClinicalAnalysisModuleProps {
   id?: string;
@@ -29,6 +30,7 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
   } = useClinicalData();
 
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
+  const { apiKey, openKeyModal } = useApiKey();
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
@@ -61,6 +63,10 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
   };
 
   const handleGenerateAnalysis = async () => {
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
     const currentInput = String(clinicalAnalysisInput || '').trim();
     if (!currentInput) {
       toast({ title: "Sin Resumen Clínico", description: "Por favor, provea un resumen clínico (se obtiene del Módulo 3) para generar el análisis.", variant: "destructive" });
@@ -72,7 +78,7 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
     let analysisOutput: GenerateClinicalAnalysisOutput | null = null;
 
     try {
-      analysisOutput = await generateClinicalAnalysis({ clinicalSummary: currentInput });
+      analysisOutput = await generateClinicalAnalysis({ clinicalSummary: currentInput, apiKey });
       const newComprehensiveAnalysis = (analysisOutput?.comprehensiveAnalysis || '').trim();
       const newFocusedAnalysis = (analysisOutput?.focusedAnalysis || '').trim();
       

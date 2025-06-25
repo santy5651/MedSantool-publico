@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Bot, Send, Eraser, Save, User, AlertCircle } from 'lucide-react';
 import { cn, getTextSummary } from '@/lib/utils';
 import { useView } from '@/contexts/view-context'; // Import useView
+import { useApiKey } from '@/contexts/api-key-context';
 
 interface MedicalAssistantChatModuleProps {
   id?: string;
@@ -36,6 +37,7 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
 
   const [currentUserInput, setCurrentUserInput] = useState('');
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
+  const { apiKey, openKeyModal } = useApiKey();
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const moduleRef = useRef<HTMLDivElement>(null);
@@ -56,6 +58,11 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
   const handleSendMessage = async () => {
     const trimmedInput = currentUserInput.trim();
     if (!trimmedInput) return;
+
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
 
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -80,7 +87,8 @@ export function MedicalAssistantChatModule({ id }: MedicalAssistantChatModulePro
     try {
       const response = await medicalAssistantChatFlow({ 
         userInput: trimmedInput,
-        chatHistory: historyForAI 
+        chatHistory: historyForAI,
+        apiKey
       });
       const aiMessage: ChatMessage = {
         id: `ai-${Date.now()}`,

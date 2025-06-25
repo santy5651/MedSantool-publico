@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { FileSignature, Eraser, Save, Copy, MessageCircleMore } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 import type { MedicalJustificationInputState } from '@/types';
+import { useApiKey } from '@/contexts/api-key-context';
 
 interface MedicalJustificationModuleProps {
   id?: string;
@@ -27,6 +28,7 @@ export function MedicalJustificationModule({ id }: MedicalJustificationModulePro
   } = useClinicalData();
 
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
+  const { apiKey, openKeyModal } = useApiKey();
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +37,10 @@ export function MedicalJustificationModule({ id }: MedicalJustificationModulePro
   };
 
   const handleGenerateJustification = async () => {
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
     const concept = String(justificationInput.conceptToJustify || '').trim();
     if (!concept) {
       toast({ title: "Concepto Requerido", description: "Por favor, ingrese el concepto que desea justificar.", variant: "destructive" });
@@ -51,7 +57,7 @@ export function MedicalJustificationModule({ id }: MedicalJustificationModulePro
     };
 
     try {
-      aiOutput = await generateMedicalJustification(inputForAI);
+      aiOutput = await generateMedicalJustification({ ...inputForAI, apiKey });
       setGeneratedJustification({ justificationText: aiOutput.justificationText });
       toast({ title: "Justificación Generada", description: "La justificación médica ha sido generada por la IA." });
 

@@ -15,6 +15,7 @@ import type { PatientAdviceInputData, ValidatedDiagnosis, PatientAdviceOutputSta
 import { useToast } from '@/hooks/use-toast';
 import { UserCheck, Eraser, Save, Copy, AlertTriangle, Utensils, ShieldPlus, CopyPlus } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
+import { useApiKey } from '@/contexts/api-key-context';
 
 interface PatientAdviceModuleProps {
   id?: string;
@@ -34,6 +35,7 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
   } = useClinicalData();
 
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
+  const { apiKey, openKeyModal } = useApiKey();
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
@@ -84,6 +86,10 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
   };
 
   const handleGenerateAdvice = async () => {
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
     const hasSelectedDx = selectedDiagnoses.length > 0;
     const hasManualText = String(patientAdviceInput.manualDiagnosisOrAnalysis || '').trim() !== '';
 
@@ -111,7 +117,7 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
     }));
 
     try {
-      aiOutput = await generatePatientAdvice(inputForAI);
+      aiOutput = await generatePatientAdvice({ ...inputForAI, apiKey });
       setGeneratedPatientAdvice({ 
         generalRecommendations: aiOutput.generalRecommendations,
         alarmSigns: aiOutput.alarmSigns,

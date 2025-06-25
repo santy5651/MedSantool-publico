@@ -15,6 +15,7 @@ import { analyzeMedicalImage, type AnalyzeMedicalImageOutput } from '@/ai/flows/
 import { useToast } from '@/hooks/use-toast';
 import { ScanSearch, Eraser, Send, Save, Copy, FileJson, ClipboardPaste } from 'lucide-react';
 import type { ImageAnalysisOutputState } from '@/types';
+import { useApiKey } from '@/contexts/api-key-context';
 
 interface ImageAnalysisModuleProps {
   id?: string;
@@ -31,6 +32,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
   } = useClinicalData();
   
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
+  const { apiKey, openKeyModal } = useApiKey();
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const moduleRef = useRef<HTMLDivElement>(null);
@@ -82,6 +84,10 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
 
 
   const handleAnalyzeImage = async () => {
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
     if (!imageFile) {
       toast({ title: "Sin Imagen", description: "Por favor, seleccione una imagen para analizar.", variant: "destructive" });
       return;
@@ -94,7 +100,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
 
     try {
       dataUri = await readFileAsDataURL(imageFile);
-      aiOutput = await analyzeMedicalImage({ photoDataUri: dataUri });
+      aiOutput = await analyzeMedicalImage({ photoDataUri: dataUri, apiKey });
       setImageAnalysisOutput({
         summary: aiOutput.summary,
         radiologistReading: aiOutput.radiologistReading
@@ -203,7 +209,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
       ref={moduleRef}
       id={id}
       title="Análisis Avanzado de Imágenes Médicas"
-      description="Cargue o pegue radiografías o electrocardiogramas (EKG) para análisis por IA. Obtenga un resumen de hallazgos y una lectura detallada."
+      description="Cargue o pegue radiografías para análisis por IA. Obtenga un resumen de hallazgos y una lectura detallada."
       icon={ScanSearch}
       isLoading={isImageAnalyzing}
     >

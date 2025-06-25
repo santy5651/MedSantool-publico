@@ -13,6 +13,7 @@ import type { DischargeSummaryInputState, DischargeSummaryOutputState } from '@/
 import { useToast } from '@/hooks/use-toast';
 import { FileOutput, Eraser, Save, Copy } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
+import { useApiKey } from '@/contexts/api-key-context';
 
 interface DischargeSummaryModuleProps {
   id?: string;
@@ -29,6 +30,7 @@ export function DischargeSummaryModule({ id }: DischargeSummaryModuleProps) {
   } = useClinicalData();
 
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
+  const { apiKey, openKeyModal } = useApiKey();
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
@@ -51,6 +53,10 @@ export function DischargeSummaryModule({ id }: DischargeSummaryModuleProps) {
   };
 
   const handleGenerateSummary = async () => {
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
     setIsGeneratingDischargeSummary(true);
     setDischargeSummaryError(null);
     let aiOutput: GenerateDischargeSummaryOutput | null = null;
@@ -70,7 +76,7 @@ export function DischargeSummaryModule({ id }: DischargeSummaryModuleProps) {
     };
 
     try {
-      aiOutput = await generateDischargeSummary(inputForAI);
+      aiOutput = await generateDischargeSummary({ ...inputForAI, apiKey });
       setGeneratedDischargeSummary({ generatedSummary: aiOutput.generatedSummary });
       toast({ title: "Resumen de Egreso Generado", description: "El resumen ha sido generado por la IA." });
 

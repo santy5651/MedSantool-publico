@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
@@ -14,6 +15,7 @@ import type { ValidatedDiagnosis, PhysicalExamInputState } from '@/types';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useApiKey } from '@/contexts/api-key-context';
 
 interface PhysicalExamModuleProps {
   id?: string;
@@ -31,6 +33,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
   } = useClinicalData();
 
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
+  const { apiKey, openKeyModal } = useApiKey();
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
   const [selectedDiagnoses, setSelectedDiagnoses] = useState<ValidatedDiagnosis[]>([]);
@@ -75,6 +78,10 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
   };
 
   const handleGenerateExam = async () => {
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
     if (selectedDiagnoses.length === 0) {
       toast({ title: "Sin Diagnósticos Seleccionados", description: "Por favor, seleccione al menos un diagnóstico validado para generar el examen.", variant: "destructive" });
       return;
@@ -90,7 +97,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
     };
 
     try {
-      examOutput = await generatePhysicalExam(inputForAI);
+      examOutput = await generatePhysicalExam({ ...inputForAI, apiKey });
       setGeneratedPhysicalExam(examOutput?.physicalExamText || null);
       toast({ title: "Examen Físico Sugerido", description: "Se han generado hallazgos para el examen físico." });
 

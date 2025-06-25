@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { FlaskConical, Eraser, Save, Copy } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
 import type { LabStandardizerOutputState } from '@/types';
+import { useApiKey } from '@/contexts/api-key-context';
 
 interface LabStandardizerModuleProps {
   id?: string;
@@ -27,10 +28,15 @@ export function LabStandardizerModule({ id }: LabStandardizerModuleProps) {
   } = useClinicalData();
 
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
+  const { apiKey, openKeyModal } = useApiKey();
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
   const handleStandardize = async () => {
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
     const rawText = String(labStandardizerInput || '').trim();
     if (!rawText) {
       toast({ title: "Sin Datos", description: "Por favor, ingrese el texto de los paraclínicos para estandarizar.", variant: "destructive" });
@@ -42,7 +48,7 @@ export function LabStandardizerModule({ id }: LabStandardizerModuleProps) {
     let aiOutput: StandardizeLabResultsOutput | null = null;
 
     try {
-      aiOutput = await standardizeLabResults({ rawLabText: rawText });
+      aiOutput = await standardizeLabResults({ rawLabText: rawText, apiKey });
       setLabStandardizerOutput({
         abbreviatedReport: aiOutput.abbreviatedReport,
         fullReport: aiOutput.fullReport,

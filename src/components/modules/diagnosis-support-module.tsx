@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Stethoscope, Eraser, Pin, Star, Save, Lightbulb, GripVertical, Send } from 'lucide-react';
 import { getTextSummary, cn } from '@/lib/utils';
+import { useApiKey } from '@/contexts/api-key-context';
 
 interface DiagnosisSupportModuleProps {
   id?: string;
@@ -46,10 +47,15 @@ export function DiagnosisSupportModule({ id }: DiagnosisSupportModuleProps) {
   }, [diagnosisResults]);
   
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
+  const { apiKey, openKeyModal } = useApiKey();
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
   const handleSuggestDiagnosis = async () => {
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
     const currentInput = String(diagnosisInputData || '');
     if (!currentInput.trim()) {
       toast({ title: "Sin Datos Clínicos", description: "Por favor, ingrese datos clínicos para obtener sugerencias.", variant: "destructive" });
@@ -60,7 +66,7 @@ export function DiagnosisSupportModule({ id }: DiagnosisSupportModuleProps) {
     setDiagnosisError(null);
     
     try {
-      const aiOutput = await suggestDiagnosis({ clinicalData: currentInput });
+      const aiOutput = await suggestDiagnosis({ clinicalData: currentInput, apiKey });
       const initialResults: DiagnosisResult[] = aiOutput.map(d => ({ ...d, isValidated: false, isPrincipal: false }));
       setDiagnosisResults(initialResults); 
       toast({ title: "Sugerencias de Diagnóstico Obtenidas", description: `${initialResults.length} diagnósticos sugeridos.` });

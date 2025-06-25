@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ClipboardEdit, Eraser, Copy, Save, Send, HelpCircle } from 'lucide-react';
 import { getTextSummary, cn } from '@/lib/utils';
 import type { InterrogationQuestion } from '@/types';
+import { useApiKey } from '@/contexts/api-key-context';
 
 
 interface TextAnalysisModuleProps {
@@ -35,10 +36,15 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
   } = useClinicalData();
 
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
+  const { apiKey, openKeyModal } = useApiKey();
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
   const handleImproveWriting = async () => {
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
     const currentText = String(clinicalNotesInput || '').trim();
     if (currentText === '') {
       toast({ title: "Sin Texto", description: "Por favor, ingrese texto para mejorar.", variant: "destructive" });
@@ -50,7 +56,7 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
     let analysisOutput: ImproveMedicalWritingOutput | null = null;
 
     try {
-      analysisOutput = await improveMedicalWriting({ clinicalText: currentText });
+      analysisOutput = await improveMedicalWriting({ clinicalText: currentText, apiKey });
       const newContent = (analysisOutput?.improvedText || '').trim();
       setTextAnalysisSummary(newContent || null);
       toast({ title: "Redacción Mejorada", description: "El texto ha sido mejorado por la IA." });
@@ -108,6 +114,10 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
   };
   
   const handleGenerateQuestions = async () => {
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
     const currentInput = String(textAnalysisSummary || '').trim();
     if (!currentInput) {
       toast({ title: "Sin Texto Base", description: "Primero debe mejorar la redacción de un texto para generar preguntas.", variant: "destructive" });
@@ -119,7 +129,7 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
     let questionsOutput: SuggestInterrogationQuestionsOutput | null = null;
 
     try {
-      questionsOutput = await suggestInterrogationQuestions({ clinicalText: currentInput });
+      questionsOutput = await suggestInterrogationQuestions({ clinicalText: currentInput, apiKey });
       setGeneratedInterrogationQuestions(questionsOutput?.questions || null);
       toast({ title: "Preguntas Sugeridas", description: "Se han generado preguntas para el interrogatorio." });
 

@@ -14,6 +14,7 @@ import { extractInformationFromPdf, type ExtractInformationFromPdfOutput } from 
 import type { PdfStructuredData } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Eraser, Send, Save, ListTree } from 'lucide-react';
+import { useApiKey } from '@/contexts/api-key-context';
 
 interface PdfExtractionModuleProps {
   id?: string;
@@ -32,6 +33,7 @@ export function PdfExtractionModule({ id }: PdfExtractionModuleProps) {
   } = useClinicalData();
   
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
+  const { apiKey, openKeyModal } = useApiKey();
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
@@ -43,6 +45,10 @@ export function PdfExtractionModule({ id }: PdfExtractionModuleProps) {
   };
 
   const handleAnalyzeDocument = async () => {
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
     if (!pdfFile) {
       toast({ title: "Sin Documento", description: "Por favor, seleccione un documento PDF para analizar.", variant: "destructive" });
       return;
@@ -55,7 +61,7 @@ export function PdfExtractionModule({ id }: PdfExtractionModuleProps) {
 
     try {
       dataUri = await readFileAsDataURL(pdfFile);
-      analysisOutput = await extractInformationFromPdf({ pdfDataUri: dataUri });
+      analysisOutput = await extractInformationFromPdf({ pdfDataUri: dataUri, apiKey });
       setPdfExtractedNotes(analysisOutput.clinicalNotes);
       setPdfStructuredData(analysisOutput.structuredData as PdfStructuredData[]);
       toast({ title: "Extracción Completada", description: "La información del PDF ha sido extraída." });

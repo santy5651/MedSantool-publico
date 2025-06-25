@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { FileEdit, Eraser, Save, ClipboardCopy, WrapText, Baseline, ALargeSmall, Calculator } from 'lucide-react';
 import type { MedicalOrderType, TransferConditionType, MedicalOrderInputState, NursingSurveillanceState } from '@/types';
 import { getTextSummary } from '@/lib/utils';
+import { useApiKey } from '@/contexts/api-key-context';
 
 interface MedicalOrdersModuleProps {
   id?: string;
@@ -80,7 +81,7 @@ const surveillanceCategories: Array<{
     items: [
       { key: 'restriccionHidrica800', label: 'Restricción hídrica a 800 cc/24 horas' },
       { key: 'controlLiquidosAdminElim', label: 'Control de líquidos administrados y eliminados' },
-      { key: 'registroBalanceHidrico24h', label: 'Registro de balance hídrico de 24 horas' },
+      { key: 'registroBalanceHidrico24h', label: 'Registro de balance hídrico cada 24 horas' },
       { key: 'calcularDiuresisHoraria', label: 'Calcular diuresis horaria' },
       { key: 'pesoDiario', label: 'Peso diario' },
     ],
@@ -98,6 +99,7 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
   } = useClinicalData();
 
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
+  const { apiKey, openKeyModal } = useApiKey();
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
   const outputTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -157,6 +159,10 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
   };
   
   const handleGenerateOrder = async () => {
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
     if (!medicalOrderInputs.orderType) {
       toast({ title: "Falta Información", description: "Por favor, seleccione el tipo de orden.", variant: "destructive" });
       return;
@@ -186,7 +192,7 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
     };
     
     try {
-      aiOutput = await generateMedicalOrder(inputForAI);
+      aiOutput = await generateMedicalOrder({ ...inputForAI, apiKey });
       setMedicalOrderOutput({ generatedOrderText: aiOutput.generatedOrderText });
       toast({ title: "Órdenes Generadas", description: "Las órdenes médicas han sido generadas." });
 

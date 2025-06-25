@@ -12,6 +12,7 @@ import type { TreatmentPlanInputData, ValidatedDiagnosis } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardPlus, Eraser, Save, Copy, ListChecks } from 'lucide-react';
 import { getTextSummary } from '@/lib/utils';
+import { useApiKey } from '@/contexts/api-key-context';
 
 interface TreatmentPlanModuleProps {
   id?: string;
@@ -30,6 +31,7 @@ export function TreatmentPlanModule({ id }: TreatmentPlanModuleProps) {
   } = useClinicalData();
 
   const { addHistoryEntry, isAutoSaveEnabled } = useHistoryStore();
+  const { apiKey, openKeyModal } = useApiKey();
   const { toast } = useToast();
   const moduleRef = useRef<HTMLDivElement>(null);
 
@@ -47,6 +49,10 @@ export function TreatmentPlanModule({ id }: TreatmentPlanModuleProps) {
   }, [generatedClinicalAnalysis, textAnalysisSummary, diagnosisResults, setTreatmentPlanInput]);
 
   const handleSuggestPlan = async () => {
+    if (!apiKey) {
+      openKeyModal();
+      return;
+    }
     if (!treatmentPlanInput.clinicalAnalysis && !treatmentPlanInput.textSummary && (!treatmentPlanInput.validatedDiagnoses || treatmentPlanInput.validatedDiagnoses.length === 0)) {
       toast({ title: "Datos Insuficientes", description: "Se requiere al menos un análisis clínico, resumen de texto o diagnósticos validados.", variant: "destructive" });
       return;
@@ -63,7 +69,7 @@ export function TreatmentPlanModule({ id }: TreatmentPlanModuleProps) {
     };
 
     try {
-      aiOutput = await suggestTreatmentPlan(inputForAI);
+      aiOutput = await suggestTreatmentPlan({ ...inputForAI, apiKey });
       setGeneratedTreatmentPlan({ suggestedPlanText: aiOutput.suggestedPlanText });
       toast({ title: "Sugerencias de Plan Obtenidas", description: "Se ha generado un plan terapéutico sugerido." });
 
