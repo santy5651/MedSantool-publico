@@ -39,7 +39,7 @@ export function ApiKeyDialog() {
             <Link href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">
               Google AI Studio
             </Link>
-            . Su clave se guarda de forma segura en su navegador.
+            . Su clave se guarda de forma segura en el localStorage de su navegador, por lo que no necesitará volver a ingresarla en futuras visitas.
           </DialogDescription>
         </DialogHeader>
         <div className="flex items-center space-x-2">
