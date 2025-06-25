@@ -8,6 +8,7 @@ interface ApiKeyContextType {
   isKeyModalOpen: boolean;
   setIsKeyModalOpen: (isOpen: boolean) => void; // Allow direct control
   openKeyModal: () => void;
+  clearApiKey: () => void;
 }
 
 const API_KEY_STORAGE_KEY = 'medsantools-api-key';
@@ -50,9 +51,19 @@ export const ApiKeyProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, []);
 
   const openKeyModal = useCallback(() => setIsKeyModalOpen(true), []);
+  
+  const clearApiKey = useCallback(() => {
+    try {
+      localStorage.removeItem(API_KEY_STORAGE_KEY);
+    } catch (error) {
+      console.error("Could not access localStorage for removal", error);
+    }
+    setApiKeyState(null);
+    setIsKeyModalOpen(true);
+  }, []);
 
   return (
-    <ApiKeyContext.Provider value={{ apiKey, setApiKey, isKeyModalOpen, setIsKeyModalOpen, openKeyModal }}>
+    <ApiKeyContext.Provider value={{ apiKey, setApiKey, isKeyModalOpen, setIsKeyModalOpen, openKeyModal, clearApiKey }}>
       {children}
     </ApiKeyContext.Provider>
   );

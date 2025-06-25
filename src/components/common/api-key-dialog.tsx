@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -8,7 +9,7 @@ import { useApiKey } from '@/contexts/api-key-context';
 import Link from 'next/link';
 
 export function ApiKeyDialog() {
-  const { apiKey, setApiKey, isKeyModalOpen, setIsKeyModalOpen } = useApiKey();
+  const { apiKey, setApiKey, isKeyModalOpen, setIsKeyModalOpen, clearApiKey } = useApiKey();
   const [localKey, setLocalKey] = useState('');
 
   useEffect(() => {
@@ -20,6 +21,11 @@ export function ApiKeyDialog() {
     if (localKey.trim()) {
       setApiKey(localKey.trim());
     }
+  };
+  
+  const handleClear = () => {
+    clearApiKey();
+    window.location.reload();
   };
 
   return (
@@ -54,10 +60,17 @@ export function ApiKeyDialog() {
             />
           </div>
         </div>
-        <DialogFooter className="sm:justify-end">
-          <Button type="button" onClick={handleSave} disabled={!localKey.trim()}>
-            Guardar y Continuar
-          </Button>
+        <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between sm:gap-2">
+           {apiKey && (
+            <Button type="button" variant="destructive" onClick={handleClear} className="w-full sm:w-auto">
+              Limpiar Clave y Recargar
+            </Button>
+          )}
+          <div className="flex sm:justify-end w-full">
+            <Button type="button" onClick={handleSave} disabled={!localKey.trim()} className="w-full sm:w-auto">
+              Guardar y Continuar
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
