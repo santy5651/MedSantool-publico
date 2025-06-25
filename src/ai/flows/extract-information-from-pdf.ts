@@ -20,7 +20,7 @@ const ExtractInformationFromPdfInputSchema = z.object({
 });
 
 const ExtractInformationFromPdfInputWithKeySchema =
-  ExtractInformationFromPdfInput.extend({
+  ExtractInformationFromPdfInputSchema.extend({
     apiKey: z.string().optional().describe('User provided Google AI API key.'),
   });
 

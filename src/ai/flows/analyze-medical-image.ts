@@ -20,7 +20,7 @@ const AnalyzeMedicalImageInputSchema = z.object({
     ),
 });
 
-const AnalyzeMedicalImageInputWithKeySchema = AnalyzeMedicalImageInput.extend({
+const AnalyzeMedicalImageInputWithKeySchema = AnalyzeMedicalImageInputSchema.extend({
   apiKey: z.string().optional().describe('User provided Google AI API key.'),
 });
 
