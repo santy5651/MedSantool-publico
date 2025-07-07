@@ -8,7 +8,6 @@
  * - AnalyzeMedicalImageInput - The input type for the analyzeMedicalImage function.
  * - AnalyzeMedicalImageOutput - The return type for the analyzeMedicalImage function.
  */
-
 import {getGenkitInstance} from '@/ai/genkit';
 import {z} from 'genkit';
 
