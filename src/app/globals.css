@@ -33,11 +33,11 @@
     --chart-5: 27 87% 67%;
 
     /* Light Theme Sidebar Colors */
-    --sidebar-config-background: 220 13% 96%;
+    --sidebar-config-background: 220 20% 90%;
     --sidebar-config-foreground: 220 13% 13%;
-    --sidebar-config-accent: 220 13% 91%;
+    --sidebar-config-accent: 220 20% 85%;
     --sidebar-config-accent-foreground: 220 13% 13%;
-    --sidebar-functions-background: 220 13% 94%;
+    --sidebar-functions-background: 0 0% 100%;
     --sidebar-functions-foreground: 220 13% 13%;
     --sidebar-border-color: 220 13% 88%;
   }
