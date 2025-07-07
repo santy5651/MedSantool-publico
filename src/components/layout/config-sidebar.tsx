@@ -42,7 +42,7 @@ export function ConfigSidebar() {
               key={item.id}
               open={openTooltipId === item.id && !isExpanded}
               onOpenChange={(isOpen) => {
-                if (isOpen) {
+                if (isOpen && !isExpanded) {
                   setOpenTooltipId(item.id);
                 } else {
                   setOpenTooltipId(null);
@@ -53,15 +53,16 @@ export function ConfigSidebar() {
                 <button
                   onClick={item.action}
                   className={cn(
-                    "flex h-12 items-center rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden",
-                    isExpanded ? "w-full justify-start px-3" : "w-12 justify-center"
+                    "flex h-12 w-full items-center rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden"
                   )}
                 >
-                  <item.icon className="h-6 w-6 shrink-0" />
+                  <div className="flex h-full w-12 flex-shrink-0 items-center justify-center">
+                      <item.icon className="h-6 w-6 shrink-0" />
+                  </div>
                   <span
                     className={cn(
-                      "text-sm font-medium whitespace-nowrap transition-all duration-300 ease-in-out",
-                      isExpanded ? "ml-4 opacity-100" : "ml-0 w-0 opacity-0"
+                      "text-sm font-medium whitespace-nowrap transition-opacity duration-300",
+                      isExpanded ? "opacity-100" : "opacity-0"
                     )}
                   >
                     {item.label}
