@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -37,7 +36,6 @@ export function ConfigSidebar() {
 
   const bottomNavItems = [
      { id: 'account', icon: UserCircle, label: 'Cuenta', action: () => {} },
-     { id: 'help', icon: HelpCircle, label: 'Ayuda', action: () => {} },
   ];
 
 
@@ -178,7 +176,34 @@ export function ConfigSidebar() {
             </Tooltip>
           ))}
 
-          {/* Separated About link for clarity */}
+          {/* Separated Help link */}
+          <Tooltip
+            key="help"
+            open={openTooltipId === 'help' && !isExpanded}
+            onOpenChange={(isOpen) => setOpenTooltipId(isOpen ? 'help' : null)}
+          >
+            <TooltipTrigger asChild>
+              <Link
+                href="/help"
+                className={cn(
+                  "flex h-12 w-full items-center rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden",
+                  pathname === '/help' && "bg-sidebar-config-accent text-sidebar-config-accent-foreground"
+                )}
+              >
+                <div className="flex h-full w-12 flex-shrink-0 items-center justify-center">
+                    <HelpCircle className="h-6 w-6 shrink-0" />
+                </div>
+                <span className={cn("text-sm font-medium whitespace-nowrap transition-opacity duration-300", isExpanded ? "opacity-100" : "opacity-0")}>
+                  Ayuda
+                </span>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right" align="center">
+              <p>Ayuda</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Separated About link */}
           <Tooltip 
             key="about"
             open={openTooltipId === 'about' && !isExpanded}
