@@ -53,15 +53,15 @@ export async function analyzeMedicalImage(
     name: `analyzeMedicalImagePrompt_${Date.now()}`,
     input: {schema: AnalyzeMedicalImageInputSchema},
     output: {schema: AnalyzeMedicalImageOutputSchema},
-    prompt: `Eres un radiólogo experto. Tu tarea es analizar la radiografía proporcionada.
+    prompt: `You are an expert radiologist. Your task is to analyze the provided X-ray.
 
-Tu análisis debe incluir dos partes:
-1.  Un **resumen conciso de los hallazgos clave** en español.
-2.  Una **lectura detallada** de la imagen, similar a un informe radiológico formal, también en español.
+Your analysis must include two parts:
+1.  A **concise summary of key findings** in Spanish.
+2.  A **detailed interpretation** of the image, similar to a formal radiology report, also in Spanish.
 
-Imagen: {{media url=photoDataUri}}
+Image: {{media url=photoDataUri}}
 
-Por favor, estructura tu respuesta según el esquema de salida, asegurándote de completar ambos campos: 'summary' y 'radiologistReading'.
+Please structure your response according to the output format, making sure to complete both fields: 'summary' and 'radiologistReading'.
 `,
   });
 
