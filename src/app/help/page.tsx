@@ -23,7 +23,16 @@ import {
   Stethoscope,
   ListChecks,
   UserCheck,
-  Bot
+  Bot,
+  Brain,
+  FileEdit,
+  FileOutput,
+  Image as ImageIconLucide,
+  FlaskConical,
+  FileSignature,
+  Calculator,
+  History,
+  Layers,
 } from 'lucide-react';
 import { Alert } from '@/components/ui/alert';
 
@@ -143,8 +152,158 @@ export default function HelpPage() {
               </Card>
             </AccordionContent>
           </AccordionItem>
+          
+          {/* Section 3: Detailed Modules - NEW SECTION */}
+          <AccordionItem value="module-details">
+            <AccordionTrigger className="text-xl font-headline">
+                <Layers className="mr-3 h-6 w-6 text-accent" />
+                Descripción Detallada de Módulos
+            </AccordionTrigger>
+            <AccordionContent className="px-2 pt-2 space-y-2">
+                <p className="text-sm text-muted-foreground mb-4">
+                    Haga clic en cada módulo para expandir y ver una descripción detallada de su función, entradas requeridas y salidas generadas.
+                </p>
+                <Accordion type="multiple" className="w-full">
+                    <AccordionItem value="text-analysis">
+                        <AccordionTrigger><ClipboardEdit className="mr-2 h-5 w-5"/>Mejora de Redacción Médica</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Refina y expande texto clínico, como notas de enfermedad actual o ideas, para crear un párrafo coherente y profesional.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> Texto libre ingresado por el usuario.</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Un texto mejorado que sirve como base para otros módulos de análisis.</p>
+                        </AccordionContent>
+                    </AccordionItem>
+                    
+                    <AccordionItem value="clinical-analysis">
+                        <AccordionTrigger><Brain className="mr-2 h-5 w-5"/>Análisis Clínico Asistido por IA</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> A partir del texto médico mejorado, genera un análisis clínico completo (para contexto profesional) y un resumen enfocado.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> El texto generado por el módulo de "Mejora de Redacción".</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Dos análisis de texto (completo y enfocado) que alimentan el módulo de diagnóstico.</p>
+                        </AccordionContent>
+                    </AccordionItem>
+                    
+                    <AccordionItem value="diagnosis-support">
+                        <AccordionTrigger><Lightbulb className="mr-2 h-5 w-5"/>Diagnóstico Inteligente Asistido por IA</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Sugiere diagnósticos diferenciales (con códigos CIE-10) basados en toda la información clínica consolidada.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> Datos de todos los módulos de entrada (texto, PDF, imágenes).</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Una lista de diagnósticos con puntajes de confianza, que el usuario debe validar. Los diagnósticos validados son cruciales para los módulos de generación.</p>
+                        </AccordionContent>
+                    </AccordionItem>
+                    
+                     <AccordionItem value="physical-exam">
+                        <AccordionTrigger><Stethoscope className="mr-2 h-5 w-5"/>Generador de Examen Físico Dirigido</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Crea una descripción de examen físico modificando una plantilla normal para incluir hallazgos patológicos esperados según los diagnósticos validados.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> Los diagnósticos validados por el usuario.</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Un texto de examen físico listo para ser copiado.</p>
+                        </AccordionContent>
+                    </AccordionItem>
+                    
+                     <AccordionItem value="treatment-plan">
+                        <AccordionTrigger><ListChecks className="mr-2 h-5 w-5"/>Sugerencia de Plan Terapéutico</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Sugiere medicamentos y conductas (ej. paraclínicos, interconsultas) relevantes para los diagnósticos validados.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> Los diagnósticos validados y el contexto de los análisis.</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Una lista de sugerencias de medicamentos y procedimientos.</p>
+                        </AccordionContent>
+                    </AccordionItem>
+                    
+                    <AccordionItem value="medical-orders">
+                        <AccordionTrigger><FileEdit className="mr-2 h-5 w-5"/>Órdenes Médicas Generales</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Genera órdenes médicas completas y estructuradas para hospitalización, observación o egreso.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> Campos estructurados (tipo de orden, oxígeno, medicamentos, dieta, etc.).</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Un texto de órdenes médicas formateado y en mayúsculas.</p>
+                        </AccordionContent>
+                    </AccordionItem>
 
-          {/* Section 3: FAQ */}
+                    <AccordionItem value="patient-advice">
+                        <AccordionTrigger><UserCheck className="mr-2 h-5 w-5"/>Recomendaciones y Consejos para Paciente</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Crea recomendaciones, signos de alarma, indicaciones de dieta y cuidados generales para el paciente.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> Los diagnósticos validados o un texto manual.</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Textos claros y en mayúsculas listos para ser entregados al paciente o incluidos en el resumen de egreso.</p>
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value="discharge-summary">
+                        <AccordionTrigger><FileOutput className="mr-2 h-5 w-5"/>Generador de Resumen de Egreso</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Consolida toda la información de salida en un documento de egreso estructurado.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> Campos como fórmula médica, conciliación, control. Se autocompleta con los datos del módulo de "Consejos para Paciente".</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Un resumen de egreso completo y profesional.</p>
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value="pdf-extraction">
+                        <AccordionTrigger><FileText className="mr-2 h-5 w-5"/>Extracción desde Documentos (PDF)</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Extrae datos estructurados (ej. nombre, fecha) y notas clínicas de un documento PDF.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> Un archivo PDF.</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Una lista de datos clave-valor y un bloque de texto con las notas, que se añade al módulo de "Mejora de Redacción".</p>
+                        </AccordionContent>
+                    </AccordionItem>
+                    
+                    <AccordionItem value="image-analysis">
+                        <AccordionTrigger><ImageIconLucide className="mr-2 h-5 w-5"/>Análisis Avanzado de Imágenes Médicas</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Analiza imágenes radiográficas para identificar hallazgos y generar un reporte.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> Un archivo de imagen (ej. .jpg, .png).</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Un resumen de hallazgos y una lectura radiológica detallada, ambos pueden ser enviados al módulo de "Mejora de Redacción".</p>
+                        </AccordionContent>
+                    </AccordionItem>
+                    
+                    <AccordionItem value="lab-standardizer">
+                        <AccordionTrigger><FlaskConical className="mr-2 h-5 w-5"/>Estandarizador de Paraclínicos</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Convierte texto desestructurado de resultados de laboratorio en dos formatos estándar: uno abreviado para entrega de turno y otro completo para sistemas.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> Texto libre con resultados de laboratorio.</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Dos bloques de texto formateado.</p>
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value="medical-justification">
+                        <AccordionTrigger><FileSignature className="mr-2 h-5 w-5"/>Justificaciones Médicas Asistidas</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Genera un texto profesional para justificar un procedimiento, tratamiento o concepto médico.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> El concepto a justificar y opcionalmente, contexto clínico del paciente.</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Un párrafo de justificación bien redactado.</p>
+                        </AccordionContent>
+                    </AccordionItem>
+                    
+                    <AccordionItem value="medical-chat">
+                        <AccordionTrigger><Bot className="mr-2 h-5 w-5"/>Asistente Médico IA</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Un chatbot para resolver dudas clínicas, discutir tratamientos, mecanismos de acción, etc., con un enfoque técnico.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> Preguntas del usuario en un formato de chat.</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Respuestas basadas en evidencia, citando fuentes cuando es posible.</p>
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value="dose-calculator">
+                        <AccordionTrigger><Calculator className="mr-2 h-5 w-5"/>Calculadora de Dosis y Perfusión</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Calcula dosis en bolo y tasas de infusión para medicamentos comunes en UCI y urgencias.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> Peso del paciente, medicamento, dosis y detalles de dilución.</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> El bolo total calculado o la velocidad de perfusión en ml/hora.</p>
+                        </AccordionContent>
+                    </AccordionItem>
+                    
+                    <AccordionItem value="history">
+                        <AccordionTrigger><History className="mr-2 h-5 w-5"/>Historial de Trabajo</AccordionTrigger>
+                        <AccordionContent>
+                            <p className="text-sm"><strong>Función:</strong> Registra cada operación realizada, permitiendo ver detalles, cargar entradas anteriores a los módulos, y exportar/importar el historial.</p>
+                            <p className="text-sm mt-1"><strong>Entrada:</strong> Se alimenta automáticamente de las acciones en otros módulos (si el guardado automático está activado).</p>
+                            <p className="text-sm mt-1"><strong>Salida:</strong> Un registro cronológico de tu trabajo en la plataforma.</p>
+                        </AccordionContent>
+                    </AccordionItem>
+
+                </Accordion>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 4: FAQ */}
           <AccordionItem value="faq">
             <AccordionTrigger className="text-xl font-headline">
               <HelpCircle className="mr-3 h-6 w-6 text-accent" />
@@ -166,7 +325,7 @@ export default function HelpPage() {
             </AccordionContent>
           </AccordionItem>
 
-          {/* Section 4: Limitations */}
+          {/* Section 5: Limitations */}
           <AccordionItem value="limitations">
             <AccordionTrigger className="text-xl font-headline">
               <AlertTriangle className="mr-3 h-6 w-6 text-accent" />
@@ -183,7 +342,7 @@ export default function HelpPage() {
             </AccordionContent>
           </AccordionItem>
 
-          {/* Section 5: Contact */}
+          {/* Section 6: Contact */}
           <AccordionItem value="contact">
             <AccordionTrigger className="text-xl font-headline">
               <Mail className="mr-3 h-6 w-6 text-accent" />
@@ -194,7 +353,7 @@ export default function HelpPage() {
             </AccordionContent>
           </AccordionItem>
 
-          {/* Section 6: Useful Links */}
+          {/* Section 7: Useful Links */}
           <AccordionItem value="links">
             <AccordionTrigger className="text-xl font-headline">
               <LinkIcon className="mr-3 h-6 w-6 text-accent" />
