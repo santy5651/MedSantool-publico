@@ -216,7 +216,7 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
         <div className="flex space-x-2">
           <Button onClick={handleGenerateAnalysis} disabled={!String(clinicalAnalysisInput || '').trim() || isGeneratingClinicalAnalysis} className="flex-1">
             <Brain className="mr-2 h-4 w-4" />
-            Generar Análisis
+            Generar
           </Button>
           <Button onClick={handleClearModule} variant="outline" disabled={isGeneratingClinicalAnalysis} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />

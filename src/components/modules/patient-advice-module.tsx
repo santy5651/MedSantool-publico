@@ -303,7 +303,7 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
         <div className="flex space-x-2">
           <Button onClick={handleGenerateAdvice} disabled={!canGenerate || isGeneratingPatientAdvice} className="flex-1">
             <UserCheck className="mr-2 h-4 w-4" />
-            Generar Consejos
+            Generar
           </Button>
           <Button onClick={handleClearModule} variant="outline" disabled={isGeneratingPatientAdvice} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
@@ -445,5 +445,3 @@ export function PatientAdviceModule({ id }: PatientAdviceModuleProps) {
     </ModuleCardWrapper>
   );
 }
-
-    

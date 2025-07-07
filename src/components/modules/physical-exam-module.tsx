@@ -231,7 +231,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
 
             <Button onClick={handleGenerateExam} disabled={selectedDiagnoses.length === 0 || isGeneratingPhysicalExam} className="w-full">
                 <Stethoscope className="mr-2 h-4 w-4" />
-                Sugerir Hallazgos
+                Sugerir
             </Button>
 
             {generatedPhysicalExam && (
