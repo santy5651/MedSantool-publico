@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -30,11 +31,7 @@ export function ConfigSidebar() {
     <aside
       className="hidden md:flex fixed left-0 top-0 z-50 h-screen bg-sidebar-config-background text-sidebar-config-foreground transition-[width] duration-300 ease-in-out flex-col border-r border-sidebar-border"
       onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => {
-        setIsExpanded(false);
-        setOpenTooltipId(null);
-        setAccordionValue(''); // Close accordion on sidebar leave
-      }}
+      onMouseLeave={() => setIsExpanded(false)}
     >
       <div 
         className="w-full h-12 flex items-center transition-[width] duration-300 ease-in-out"
@@ -85,14 +82,13 @@ export function ConfigSidebar() {
               value="settings" 
               className="border-b-0"
               onMouseEnter={() => { if (isExpanded) setAccordionValue('settings') }}
+              onMouseLeave={() => { if (isExpanded) setAccordionValue('') }}
             >
               <Tooltip open={openTooltipId === 'settings' && !isExpanded} onOpenChange={(isOpen) => setOpenTooltipId(isOpen ? 'settings' : null)}>
                 <TooltipTrigger asChild>
                   <AccordionTrigger
                     className="p-0 hover:no-underline flex h-12 w-full items-center justify-between rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden"
-                    onClick={(e) => {
-                      e.preventDefault();
-                    }}
+                     onClick={(e) => e.preventDefault()}
                   >
                     <div className="flex items-center">
                       <div className="flex h-full w-12 flex-shrink-0 items-center justify-center">
