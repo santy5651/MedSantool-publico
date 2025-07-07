@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings, UserCircle, HelpCircle, Info, KeyRound, Sun, Moon, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -17,6 +17,15 @@ export function ConfigSidebar() {
   const { openKeyModal } = useApiKey();
   const { theme, setTheme } = useTheme();
   const { fontSize, setFontSize, columnLayout, setColumnLayout, setIsAboutModalOpen } = useView();
+  
+  const [accordionValue, setAccordionValue] = useState('');
+
+  // This effect ensures the accordion closes when the sidebar collapses.
+  useEffect(() => {
+    if (!isExpanded) {
+      setAccordionValue('');
+    }
+  }, [isExpanded]);
 
   const navItems = [
     { id: 'apikey', icon: KeyRound, label: 'API Key', action: openKeyModal },
@@ -24,12 +33,11 @@ export function ConfigSidebar() {
     { id: 'help', icon: HelpCircle, label: 'Ayuda', action: () => {} },
     { id: 'about', icon: Info, label: 'Acerca de', action: () => setIsAboutModalOpen(true) },
   ];
-  
-  const [accordionValue, setAccordionValue] = useState('');
 
   return (
     <aside
-      className="hidden md:flex fixed left-0 top-0 z-50 h-screen bg-sidebar-config-background text-sidebar-config-foreground transition-[width] duration-300 ease-in-out flex-col border-r border-sidebar-border"
+      className="hidden md:flex fixed left-0 top-0 z-50 h-screen bg-sidebar-config text-sidebar-config-foreground transition-[width] duration-300 ease-in-out flex-col border-r border-sidebar-border"
+      style={{ width: isExpanded ? '16rem' : '4rem' }}
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
     >
@@ -82,13 +90,12 @@ export function ConfigSidebar() {
               value="settings" 
               className="border-b-0"
               onMouseEnter={() => { if (isExpanded) setAccordionValue('settings') }}
-              onMouseLeave={() => { if (isExpanded) setAccordionValue('') }}
             >
               <Tooltip open={openTooltipId === 'settings' && !isExpanded} onOpenChange={(isOpen) => setOpenTooltipId(isOpen ? 'settings' : null)}>
                 <TooltipTrigger asChild>
                   <AccordionTrigger
                     className="p-0 hover:no-underline flex h-12 w-full items-center justify-between rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden"
-                     onClick={(e) => e.preventDefault()}
+                     onClick={(e) => e.preventDefault()} // Prevent click from toggling
                   >
                     <div className="flex items-center">
                       <div className="flex h-full w-12 flex-shrink-0 items-center justify-center">
