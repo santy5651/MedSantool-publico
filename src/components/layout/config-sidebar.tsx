@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Settings, UserCircle, HelpCircle, Info, KeyRound, Sun, Moon, Monitor } from 'lucide-react';
-import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -17,7 +16,7 @@ export function ConfigSidebar() {
   const [openTooltipId, setOpenTooltipId] = useState<string | null>(null);
   const { openKeyModal } = useApiKey();
   const { theme, setTheme } = useTheme();
-  const { fontSize, setFontSize, columnLayout, setColumnLayout } = useView();
+  const { fontSize, setFontSize, columnLayout, setColumnLayout, setIsAboutModalOpen } = useView();
   
   const [accordionValue, setAccordionValue] = useState('');
 
@@ -179,8 +178,8 @@ export function ConfigSidebar() {
             onOpenChange={(isOpen) => setOpenTooltipId(isOpen ? 'about' : null)}
           >
             <TooltipTrigger asChild>
-              <Link
-                href="/about"
+              <button
+                onClick={() => setIsAboutModalOpen(true)}
                 className={cn(
                   "flex h-12 w-full items-center rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden"
                 )}
@@ -196,7 +195,7 @@ export function ConfigSidebar() {
                 >
                   Acerca de
                 </span>
-              </Link>
+              </button>
             </TooltipTrigger>
             <TooltipContent side="right" align="center">
               <p>Acerca de</p>

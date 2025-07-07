@@ -7,6 +7,7 @@ import { AppHeader } from '@/components/layout/app-header';
 import { AppFooter } from '@/components/layout/app-footer';
 import { ViewContextLayoutClient } from '@/components/layout/view-context-layout-client';
 import { ApiKeyDialog } from '@/components/common/api-key-dialog';
+import { AboutDialog } from '@/components/common/about-dialog';
 import { ConfigSidebar } from '@/components/layout/config-sidebar';
 import { FunctionsSidebar } from '@/components/layout/functions-sidebar';
 
@@ -44,6 +45,7 @@ export default function RootLayout({
           </div>
           <Toaster />
           <ApiKeyDialog />
+          <AboutDialog />
         </AppProviders>
       </body>
     </html>
