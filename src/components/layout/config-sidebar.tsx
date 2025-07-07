@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -86,25 +85,23 @@ export function ConfigSidebar() {
               value="settings" 
               className="border-b-0"
               onMouseEnter={() => { if (isExpanded) setAccordionValue('settings') }}
-              onMouseLeave={() => { if (isExpanded) setAccordionValue('') }}
             >
               <Tooltip open={openTooltipId === 'settings' && !isExpanded} onOpenChange={(isOpen) => setOpenTooltipId(isOpen ? 'settings' : null)}>
                 <TooltipTrigger asChild>
                   <AccordionTrigger
-                    className="p-0 hover:no-underline flex h-12 w-full items-center rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden [&>svg]:ml-auto [&>svg]:mr-3"
+                    className="p-0 hover:no-underline flex h-12 w-full items-center justify-between rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden"
                     onClick={(e) => {
                       e.preventDefault();
-                      if (isExpanded) {
-                        setAccordionValue(accordionValue === 'settings' ? '' : 'settings');
-                      }
                     }}
                   >
-                    <div className="flex h-full w-12 flex-shrink-0 items-center justify-center">
-                      <Settings className="h-6 w-6 shrink-0" />
+                    <div className="flex items-center">
+                      <div className="flex h-full w-12 flex-shrink-0 items-center justify-center">
+                        <Settings className="h-6 w-6 shrink-0" />
+                      </div>
+                      <span className={cn("text-sm font-medium whitespace-nowrap transition-opacity duration-300", isExpanded ? "opacity-100" : "opacity-0")}>
+                        Configuración
+                      </span>
                     </div>
-                    <span className={cn("text-sm font-medium whitespace-nowrap transition-opacity duration-300", isExpanded ? "opacity-100" : "opacity-0")}>
-                      Configuración
-                    </span>
                   </AccordionTrigger>
                 </TooltipTrigger>
                 <TooltipContent side="right" align="center">
@@ -112,7 +109,7 @@ export function ConfigSidebar() {
                 </TooltipContent>
               </Tooltip>
               <AccordionContent className="pt-2 pb-0">
-                  <div className={cn("pl-[1.125rem] pr-2 space-y-4 text-sm text-sidebar-config-foreground/80")}>
+                  <div className={cn("pl-12 pr-2 space-y-4 text-sm text-sidebar-config-foreground/80")}>
                       <div>
                           <p className="font-medium mb-2">Tema</p>
                           <div className="flex justify-around gap-1">
