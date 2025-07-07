@@ -20,10 +20,11 @@ export function ConfigSidebar() {
   
   const [accordionValue, setAccordionValue] = useState('');
 
-  // This effect ensures the accordion closes when the sidebar collapses.
+  // This effect ensures the accordion and any open tooltips close when the sidebar collapses.
   useEffect(() => {
     if (!isExpanded) {
       setAccordionValue('');
+      setOpenTooltipId(null); // Force close any open tooltips
     }
   }, [isExpanded]);
 
