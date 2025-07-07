@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -11,6 +12,7 @@ import { useView } from '@/contexts/view-context';
 
 export function ConfigSidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [openTooltipId, setOpenTooltipId] = useState<string | null>(null);
   const { openKeyModal } = useApiKey();
   const { theme, setTheme } = useTheme();
   const { fontSize, setFontSize } = useView();
@@ -33,7 +35,17 @@ export function ConfigSidebar() {
       <nav className="flex flex-col items-center gap-2 px-2 py-4 mt-16">
         <TooltipProvider delayDuration={0}>
           {navItems.map((item) => (
-            <Tooltip key={item.id}>
+            <Tooltip 
+              key={item.id}
+              open={openTooltipId === item.id && !isExpanded}
+              onOpenChange={(isOpen) => {
+                if (isOpen) {
+                  setOpenTooltipId(item.id);
+                } else {
+                  setOpenTooltipId(null);
+                }
+              }}
+            >
               <TooltipTrigger asChild>
                 <button
                   onClick={item.action}
@@ -53,11 +65,9 @@ export function ConfigSidebar() {
                   </span>
                 </button>
               </TooltipTrigger>
-              {!isExpanded && (
-                <TooltipContent side="right" align="center">
-                  <p>{item.label}</p>
-                </TooltipContent>
-              )}
+              <TooltipContent side="right" align="center">
+                <p>{item.label}</p>
+              </TooltipContent>
             </Tooltip>
           ))}
         </TooltipProvider>
