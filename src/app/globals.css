@@ -32,13 +32,14 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
 
-    --sidebar-config-background: 240 6% 10%;
-    --sidebar-config-foreground: 210 40% 98%;
-    --sidebar-config-accent: 240 5% 20%;
-    --sidebar-config-accent-foreground: 210 40% 98%;
-    --sidebar-functions-background: 240 6% 14%;
-    --sidebar-functions-foreground: 210 40% 98%;
-    --sidebar-border-color: 240 4% 25%;
+    /* Light Theme Sidebar Colors */
+    --sidebar-config-background: 220 13% 96%;
+    --sidebar-config-foreground: 220 13% 13%;
+    --sidebar-config-accent: 220 13% 91%;
+    --sidebar-config-accent-foreground: 220 13% 13%;
+    --sidebar-functions-background: 220 13% 94%;
+    --sidebar-functions-foreground: 220 13% 13%;
+    --sidebar-border-color: 220 13% 88%;
   }
 
   .dark {
@@ -68,6 +69,7 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
     
+    /* Dark Theme Sidebar Colors */
     --sidebar-config-background: 240 6% 10%;
     --sidebar-config-foreground: 210 40% 98%;
     --sidebar-config-accent: 240 5% 20%;
