@@ -32,13 +32,6 @@ export function ConfigSidebar() {
       setAccordionValue(value);
     }
   };
-  
-  useEffect(() => {
-    if (!isExpanded) {
-      setAccordionValue([]);
-    }
-  }, [isExpanded]);
-
 
   return (
     <aside
@@ -48,6 +41,7 @@ export function ConfigSidebar() {
       onMouseLeave={() => {
         setIsExpanded(false);
         setOpenTooltipId(null);
+        setAccordionValue([]); // Close accordion on leave
       }}
     >
       <nav className="flex flex-col items-center gap-2 px-2 py-4 mt-16 flex-1">
