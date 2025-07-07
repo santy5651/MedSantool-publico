@@ -13,7 +13,7 @@ export const ViewProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
   const [fontSize, setFontSizeState] = useState<FontSize>('normal');
   const [columnLayout, setColumnLayoutState] = useState<ColumnLayout>('two');
-  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // This can be removed if not used anywhere else, but let's leave it for now.
 
   useEffect(() => {
     const storedFontSize = localStorage.getItem(FONT_SIZE_STORAGE_KEY) as FontSize | null;
@@ -36,8 +36,16 @@ export const ViewProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem(COLUMN_LAYOUT_STORAGE_KEY, layout);
   }, []);
 
+  // When a tool view is selected, ensure the 'about' view is turned off.
+  const handleSetActiveView = (view: ActiveView) => {
+      if (view === 'about') {
+        setExpandedModuleId(null); // Collapse any expanded module when showing about page
+      }
+      setActiveView(view);
+  }
+
   return (
-    <ViewContext.Provider value={{ activeView, setActiveView, expandedModuleId, setExpandedModuleId, fontSize, setFontSize, columnLayout, setColumnLayout, isAboutModalOpen, setIsAboutModalOpen }}>
+    <ViewContext.Provider value={{ activeView, setActiveView: handleSetActiveView, expandedModuleId, setExpandedModuleId, fontSize, setFontSize, columnLayout, setColumnLayout, isAboutModalOpen, setIsAboutModalOpen }}>
       {children}
     </ViewContext.Provider>
   );
