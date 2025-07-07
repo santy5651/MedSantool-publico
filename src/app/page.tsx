@@ -1,24 +1,9 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { Eraser } from 'lucide-react';
-import { useClinicalData } from '@/contexts/clinical-data-context';
-import { useToast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useView } from '@/contexts/view-context';
 import { cn } from '@/lib/utils';
 
@@ -54,72 +39,9 @@ const LabStandardizerModule = dynamic(() => import('@/components/modules/lab-sta
 
 export default function MedSanToolsPage() {
   const { activeView, expandedModuleId } = useView();
-  const {
-    clearImageModule,
-    clearPdfModule,
-    clearTextModule,
-    clearPhysicalExamModule,
-    clearClinicalAnalysisModule,
-    clearDiagnosisModule,
-    clearTreatmentPlanModule,
-    clearMedicalOrdersModule,
-    clearPatientAdviceModule,
-    clearDischargeSummaryModule, 
-    clearMedicalJustificationModule,
-    clearChatModule,
-    clearDoseCalculatorModule,
-    clearLabStandardizerModule,
-  } = useClinicalData();
-  const { toast } = useToast();
-  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
-
-  const handleClearAllModules = () => {
-    clearImageModule();
-    clearPdfModule();
-    clearTextModule();
-    clearPhysicalExamModule();
-    clearClinicalAnalysisModule();
-    clearDiagnosisModule();
-    clearTreatmentPlanModule();
-    clearMedicalOrdersModule();
-    clearPatientAdviceModule;
-    clearDischargeSummaryModule(); 
-    clearMedicalJustificationModule();
-    clearChatModule();
-    clearDoseCalculatorModule();
-    clearLabStandardizerModule();
-    toast({
-      title: "Todos los Módulos Limpiados",
-      description: "Se ha restablecido el estado de todos los módulos de datos.",
-    });
-    setShowClearAllConfirm(false);
-  };
 
   return (
     <>
-      <div className="mb-6 flex justify-end">
-        <AlertDialog open={showClearAllConfirm} onOpenChange={setShowClearAllConfirm}>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm">
-              <Eraser className="mr-2 h-4 w-4" />
-              Limpiar Todos los Módulos
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta acción no se puede deshacer. Se restablecerán todos los datos ingresados y generados en los módulos. El historial de trabajo no se verá afectado.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleClearAllModules}>Confirmar Limpieza</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-
       <div
         className={cn(
           "grid gap-6", 

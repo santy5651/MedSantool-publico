@@ -505,6 +505,38 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }));
   }, []);
 
+  const clearAllModules = useCallback(() => {
+    clearImageModule();
+    clearPdfModule();
+    clearTextModule();
+    clearPhysicalExamModule();
+    clearClinicalAnalysisModule();
+    clearDiagnosisModule();
+    clearMedicalOrdersModule();
+    clearTreatmentPlanModule();
+    clearPatientAdviceModule();
+    clearMedicalJustificationModule();
+    clearChatModule();
+    clearDoseCalculatorModule();
+    clearDischargeSummaryModule();
+    clearLabStandardizerModule();
+  }, [
+    clearImageModule,
+    clearPdfModule,
+    clearTextModule,
+    clearPhysicalExamModule,
+    clearClinicalAnalysisModule,
+    clearDiagnosisModule,
+    clearMedicalOrdersModule,
+    clearTreatmentPlanModule,
+    clearPatientAdviceModule,
+    clearMedicalJustificationModule,
+    clearChatModule,
+    clearDoseCalculatorModule,
+    clearDischargeSummaryModule,
+    clearLabStandardizerModule,
+  ]);
+
 
   const contextValue: ClinicalDataContextType = {
     ...state,
@@ -583,6 +615,7 @@ export const ClinicalDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     clearDoseCalculatorModule,
     clearDischargeSummaryModule,
     clearLabStandardizerModule,
+    clearAllModules,
   };
 
   return (

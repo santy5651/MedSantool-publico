@@ -447,6 +447,7 @@ export interface ClinicalDataContextActions {
   clearDoseCalculatorModule: () => void;
   clearDischargeSummaryModule: () => void;
   clearLabStandardizerModule: () => void;
+  clearAllModules: () => void;
 }
 
 export type ClinicalDataContextType = ClinicalDataContextState & ClinicalDataContextActions;
