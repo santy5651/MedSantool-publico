@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Settings, UserCircle, HelpCircle, Info, KeyRound, Sun, Moon, Monitor } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -16,7 +17,7 @@ export function ConfigSidebar() {
   const [openTooltipId, setOpenTooltipId] = useState<string | null>(null);
   const { openKeyModal } = useApiKey();
   const { theme, setTheme } = useTheme();
-  const { fontSize, setFontSize, columnLayout, setColumnLayout, setIsAboutModalOpen } = useView();
+  const { fontSize, setFontSize, columnLayout, setColumnLayout } = useView();
   
   const [accordionValue, setAccordionValue] = useState('');
 
@@ -32,7 +33,6 @@ export function ConfigSidebar() {
     { id: 'apikey', icon: KeyRound, label: 'API Key', action: openKeyModal },
     { id: 'account', icon: UserCircle, label: 'Cuenta', action: () => {} },
     { id: 'help', icon: HelpCircle, label: 'Ayuda', action: () => {} },
-    { id: 'about', icon: Info, label: 'Acerca de', action: () => setIsAboutModalOpen(true) },
   ];
 
   return (
@@ -90,11 +90,11 @@ export function ConfigSidebar() {
             <AccordionItem 
               value="settings" 
               className="border-b-0"
-              onMouseEnter={() => { if (isExpanded) setAccordionValue('settings') }}
             >
               <Tooltip open={openTooltipId === 'settings' && !isExpanded} onOpenChange={(isOpen) => setOpenTooltipId(isOpen ? 'settings' : null)}>
                 <TooltipTrigger asChild>
                   <AccordionTrigger
+                    onMouseEnter={() => { if (isExpanded) setAccordionValue('settings') }}
                     className="p-0 hover:no-underline flex h-12 w-full items-center justify-between rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden"
                      onClick={(e) => e.preventDefault()} // Prevent click from toggling
                   >
@@ -173,6 +173,35 @@ export function ConfigSidebar() {
               </TooltipContent>
             </Tooltip>
           ))}
+          <Tooltip 
+            key='about'
+            open={openTooltipId === 'about' && !isExpanded}
+            onOpenChange={(isOpen) => setOpenTooltipId(isOpen ? 'about' : null)}
+          >
+            <TooltipTrigger asChild>
+              <Link
+                href="/about"
+                className={cn(
+                  "flex h-12 w-full items-center rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden"
+                )}
+              >
+                <div className="flex h-full w-12 flex-shrink-0 items-center justify-center">
+                    <Info className="h-6 w-6 shrink-0" />
+                </div>
+                <span
+                  className={cn(
+                    "text-sm font-medium whitespace-nowrap transition-opacity duration-300",
+                    isExpanded ? "opacity-100" : "opacity-0"
+                  )}
+                >
+                  Acerca de
+                </span>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right" align="center">
+              <p>Acerca de</p>
+            </TooltipContent>
+          </Tooltip>
         </TooltipProvider>
       </nav>
     </aside>

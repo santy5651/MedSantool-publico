@@ -9,7 +9,6 @@ import { ViewContextLayoutClient } from '@/components/layout/view-context-layout
 import { ApiKeyDialog } from '@/components/common/api-key-dialog';
 import { ConfigSidebar } from '@/components/layout/config-sidebar';
 import { FunctionsSidebar } from '@/components/layout/functions-sidebar';
-import { AboutDialog } from '@/components/common/about-dialog';
 
 
 export const metadata: Metadata = {
@@ -45,7 +44,6 @@ export default function RootLayout({
           </div>
           <Toaster />
           <ApiKeyDialog />
-          <AboutDialog />
         </AppProviders>
       </body>
     </html>

@@ -463,6 +463,4 @@ export interface ViewContextType {
   setFontSize: (size: FontSize) => void;
   columnLayout: ColumnLayout;
   setColumnLayout: (layout: ColumnLayout) => void;
-  isAboutModalOpen: boolean;
-  setIsAboutModalOpen: (isOpen: boolean) => void;
 }

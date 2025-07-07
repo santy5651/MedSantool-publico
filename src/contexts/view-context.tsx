@@ -13,7 +13,6 @@ export const ViewProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
   const [fontSize, setFontSizeState] = useState<FontSize>('normal');
   const [columnLayout, setColumnLayoutState] = useState<ColumnLayout>('two');
-  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
 
   useEffect(() => {
     const storedFontSize = localStorage.getItem(FONT_SIZE_STORAGE_KEY) as FontSize | null;
@@ -37,7 +36,7 @@ export const ViewProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   return (
-    <ViewContext.Provider value={{ activeView, setActiveView, expandedModuleId, setExpandedModuleId, fontSize, setFontSize, columnLayout, setColumnLayout, isAboutModalOpen, setIsAboutModalOpen }}>
+    <ViewContext.Provider value={{ activeView, setActiveView, expandedModuleId, setExpandedModuleId, fontSize, setFontSize, columnLayout, setColumnLayout }}>
       {children}
     </ViewContext.Provider>
   );
