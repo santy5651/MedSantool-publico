@@ -3,6 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Settings, UserCircle, HelpCircle, Info, KeyRound, Sun, Moon, Monitor } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -16,7 +18,8 @@ export function ConfigSidebar() {
   const [openTooltipId, setOpenTooltipId] = useState<string | null>(null);
   const { openKeyModal } = useApiKey();
   const { theme, setTheme } = useTheme();
-  const { fontSize, setFontSize, columnLayout, setColumnLayout, setActiveView } = useView();
+  const { fontSize, setFontSize, columnLayout, setColumnLayout } = useView();
+  const pathname = usePathname();
   
   const [accordionValue, setAccordionValue] = useState('');
 
@@ -28,12 +31,15 @@ export function ConfigSidebar() {
     }
   }, [isExpanded]);
 
-  const navItems = [
+  const topNavItems = [
     { id: 'apikey', icon: KeyRound, label: 'API Key', action: openKeyModal },
-    { id: 'account', icon: UserCircle, label: 'Cuenta', action: () => {} },
-    { id: 'help', icon: HelpCircle, label: 'Ayuda', action: () => {} },
-    { id: 'about', icon: Info, label: 'Acerca de', action: () => setActiveView('about') }
   ];
+
+  const bottomNavItems = [
+     { id: 'account', icon: UserCircle, label: 'Cuenta', action: () => {} },
+     { id: 'help', icon: HelpCircle, label: 'Ayuda', action: () => {} },
+  ];
+
 
   return (
     <aside
@@ -48,7 +54,7 @@ export function ConfigSidebar() {
       ></div>
       <nav className="flex flex-col items-center gap-2 px-2 py-4 mt-16 flex-1">
         <TooltipProvider delayDuration={0}>
-          {navItems.slice(0, 1).map((item) => (
+          {topNavItems.map((item) => (
             <Tooltip 
               key={item.id}
               open={openTooltipId === item.id && !isExpanded}
@@ -94,9 +100,7 @@ export function ConfigSidebar() {
               <Tooltip open={openTooltipId === 'settings' && !isExpanded} onOpenChange={(isOpen) => setOpenTooltipId(isOpen ? 'settings' : null)}>
                 <TooltipTrigger asChild>
                   <AccordionTrigger
-                    onMouseEnter={() => { if (isExpanded) setAccordionValue('settings') }}
                     className="p-0 hover:no-underline flex h-12 w-full items-center justify-between rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden"
-                     onClick={(e) => e.preventDefault()} // Prevent click from toggling
                   >
                     <div className="flex items-center">
                       <div className="flex h-full w-12 flex-shrink-0 items-center justify-center">
@@ -142,7 +146,7 @@ export function ConfigSidebar() {
             </AccordionItem>
           </Accordion>
 
-          {navItems.slice(1).map((item) => (
+          {bottomNavItems.map((item) => (
             <Tooltip 
               key={item.id}
               open={openTooltipId === item.id && !isExpanded}
@@ -173,6 +177,34 @@ export function ConfigSidebar() {
               </TooltipContent>
             </Tooltip>
           ))}
+
+          {/* Separated About link for clarity */}
+          <Tooltip 
+            key="about"
+            open={openTooltipId === 'about' && !isExpanded}
+            onOpenChange={(isOpen) => setOpenTooltipId(isOpen ? 'about' : null)}
+          >
+            <TooltipTrigger asChild>
+              <Link
+                href="/about"
+                className={cn(
+                  "flex h-12 w-full items-center rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden",
+                  pathname === '/about' && "bg-sidebar-config-accent text-sidebar-config-accent-foreground"
+                )}
+              >
+                <div className="flex h-full w-12 flex-shrink-0 items-center justify-center">
+                    <Info className="h-6 w-6 shrink-0" />
+                </div>
+                <span className={cn("text-sm font-medium whitespace-nowrap transition-opacity duration-300", isExpanded ? "opacity-100" : "opacity-0")}>
+                  Acerca de
+                </span>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right" align="center">
+              <p>Acerca de</p>
+            </TooltipContent>
+          </Tooltip>
+
         </TooltipProvider>
       </nav>
     </aside>

@@ -3,15 +3,25 @@
 
 import { useView } from '@/contexts/view-context';
 import { Button } from '@/components/ui/button';
+import { useRouter, usePathname } from 'next/navigation';
 
 export function FunctionsSidebar() {
   const { activeView, setActiveView } = useView();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const navItems = [
     { view: 'analysis', label: 'Herramientas de Análisis' },
     { view: 'other', label: 'Otras Herramientas' },
     { view: 'all', label: 'Mostrar Todas' },
   ];
+
+  const handleNav = (view: 'analysis' | 'other' | 'all') => {
+    setActiveView(view);
+    if (pathname !== '/') {
+        router.push('/');
+    }
+  }
 
   return (
     <aside className="hidden md:flex fixed left-16 top-0 z-40 h-screen w-64 bg-sidebar-functions text-sidebar-functions-foreground border-r border-sidebar-border flex-col">
@@ -20,8 +30,8 @@ export function FunctionsSidebar() {
         {navItems.map((item) => (
             <Button
               key={item.view}
-              onClick={() => setActiveView(item.view as 'analysis' | 'other' | 'all')}
-              variant={activeView === item.view ? 'secondary' : 'ghost'}
+              onClick={() => handleNav(item.view as 'analysis' | 'other' | 'all')}
+              variant={activeView === item.view && pathname === '/' ? 'secondary' : 'ghost'}
               className="w-full justify-start text-base py-6"
             >
               {item.label}

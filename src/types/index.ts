@@ -1,8 +1,9 @@
 
 
+
 export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'InterrogationQuestions' | 'PhysicalExam' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator' | 'DischargeSummary' | 'LabStandardizer';
 
-export type ActiveView = 'analysis' | 'other' | 'all' | 'about';
+export type ActiveView = 'analysis' | 'other' | 'all';
 export type FontSize = 'small' | 'normal' | 'large';
 export type ColumnLayout = 'one' | 'two';
 
@@ -464,6 +465,4 @@ export interface ViewContextType {
   setFontSize: (size: FontSize) => void;
   columnLayout: ColumnLayout;
   setColumnLayout: (layout: ColumnLayout) => void;
-  isAboutModalOpen: boolean;
-  setIsAboutModalOpen: (isOpen: boolean) => void;
 }

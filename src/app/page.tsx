@@ -6,7 +6,6 @@ import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useView } from '@/contexts/view-context';
 import { cn } from '@/lib/utils';
-import { AboutContent } from '@/components/common/about-content';
 
 const ModuleLoadingSkeleton = () => (
     <div className="p-4 border rounded-lg shadow-sm bg-card h-[300px] flex flex-col">
@@ -40,10 +39,6 @@ const LabStandardizerModule = dynamic(() => import('@/components/modules/lab-sta
 
 export default function MedSanToolsPage() {
   const { activeView, expandedModuleId, columnLayout } = useView();
-
-  if (activeView === 'about') {
-    return <AboutContent />;
-  }
 
   return (
     <>
