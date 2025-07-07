@@ -1,8 +1,8 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Settings, UserCircle, HelpCircle, Info, KeyRound, Palette, Sun, Moon, Monitor, ChevronDown, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings, UserCircle, HelpCircle, Info, KeyRound, Sun, Moon, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -25,13 +25,7 @@ export function ConfigSidebar() {
     { id: 'about', icon: Info, label: 'Acerca de', action: () => {} },
   ];
   
-  const [accordionValue, setAccordionValue] = useState<string[]>([]);
-  
-  const handleAccordionChange = (value: string[]) => {
-    if (isExpanded) {
-      setAccordionValue(value);
-    }
-  };
+  const [accordionValue, setAccordionValue] = useState('');
 
   return (
     <aside
@@ -41,7 +35,7 @@ export function ConfigSidebar() {
       onMouseLeave={() => {
         setIsExpanded(false);
         setOpenTooltipId(null);
-        setAccordionValue([]); // Close accordion on leave
+        setAccordionValue(''); // Close accordion on sidebar leave
       }}
     >
       <nav className="flex flex-col items-center gap-2 px-2 py-4 mt-16 flex-1">
@@ -78,13 +72,18 @@ export function ConfigSidebar() {
             </Tooltip>
           ))}
 
-          <Accordion type="single" collapsible className="w-full" value={accordionValue[0]} onValueChange={(val) => handleAccordionChange(val ? [val] : [])}>
-            <AccordionItem value="settings" className="border-b-0">
+          <Accordion type="single" collapsible className="w-full" value={accordionValue}>
+            <AccordionItem 
+              value="settings" 
+              className="border-b-0"
+              onMouseEnter={() => { if (isExpanded) setAccordionValue('settings') }}
+              onMouseLeave={() => { if (isExpanded) setAccordionValue('') }}
+            >
               <Tooltip open={openTooltipId === 'settings' && !isExpanded} onOpenChange={(isOpen) => setOpenTooltipId(isOpen ? 'settings' : null)}>
                 <TooltipTrigger asChild>
                   <AccordionTrigger
-                    disabled={!isExpanded}
                     className="p-0 hover:no-underline flex h-12 w-full items-center rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden [&>svg]:ml-auto [&>svg]:mr-3"
+                    onClick={(e) => e.preventDefault()}
                   >
                     <div className="flex h-full w-12 flex-shrink-0 items-center justify-center">
                       <Settings className="h-6 w-6 shrink-0" />
