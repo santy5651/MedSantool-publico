@@ -16,21 +16,20 @@ export function ConfigSidebar() {
   const [openTooltipId, setOpenTooltipId] = useState<string | null>(null);
   const { openKeyModal } = useApiKey();
   const { theme, setTheme } = useTheme();
-  const { fontSize, setFontSize, columnLayout, setColumnLayout } = useView();
+  const { fontSize, setFontSize, columnLayout, setColumnLayout, setIsAboutModalOpen } = useView();
 
   const navItems = [
     { id: 'apikey', icon: KeyRound, label: 'API Key', action: openKeyModal },
     { id: 'account', icon: UserCircle, label: 'Cuenta', action: () => {} },
     { id: 'help', icon: HelpCircle, label: 'Ayuda', action: () => {} },
-    { id: 'about', icon: Info, label: 'Acerca de', action: () => {} },
+    { id: 'about', icon: Info, label: 'Acerca de', action: () => setIsAboutModalOpen(true) },
   ];
   
   const [accordionValue, setAccordionValue] = useState('');
 
   return (
     <aside
-      className="hidden md:flex fixed left-0 top-0 z-50 h-screen bg-sidebar-config text-sidebar-config-foreground transition-[width] duration-300 ease-in-out flex-col border-r border-sidebar-border"
-      style={{ width: isExpanded ? '16rem' : '4rem' }}
+      className="hidden md:flex fixed left-0 top-0 z-50 h-screen bg-sidebar-config-background text-sidebar-config-foreground transition-[width] duration-300 ease-in-out flex-col border-r border-sidebar-border"
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => {
         setIsExpanded(false);
@@ -38,6 +37,10 @@ export function ConfigSidebar() {
         setAccordionValue(''); // Close accordion on sidebar leave
       }}
     >
+      <div 
+        className="w-full h-12 flex items-center transition-[width] duration-300 ease-in-out"
+        style={{ width: isExpanded ? '16rem' : '4rem' }}
+      ></div>
       <nav className="flex flex-col items-center gap-2 px-2 py-4 mt-16 flex-1">
         <TooltipProvider delayDuration={0}>
           {navItems.slice(0, 1).map((item) => (
@@ -72,7 +75,13 @@ export function ConfigSidebar() {
             </Tooltip>
           ))}
 
-          <Accordion type="single" collapsible className="w-full" value={accordionValue}>
+          <Accordion 
+              type="single" 
+              collapsible 
+              className="w-full" 
+              value={accordionValue} 
+              onValueChange={setAccordionValue}
+          >
             <AccordionItem 
               value="settings" 
               className="border-b-0"
@@ -83,7 +92,12 @@ export function ConfigSidebar() {
                 <TooltipTrigger asChild>
                   <AccordionTrigger
                     className="p-0 hover:no-underline flex h-12 w-full items-center rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden [&>svg]:ml-auto [&>svg]:mr-3"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (isExpanded) {
+                        setAccordionValue(accordionValue === 'settings' ? '' : 'settings');
+                      }
+                    }}
                   >
                     <div className="flex h-full w-12 flex-shrink-0 items-center justify-center">
                       <Settings className="h-6 w-6 shrink-0" />

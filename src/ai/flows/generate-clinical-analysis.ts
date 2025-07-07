@@ -33,12 +33,12 @@ const GenerateClinicalAnalysisOutputSchema = z.object({
   comprehensiveAnalysis: z
     .string()
     .describe(
-      'Análisis clínico del caso profesional, claro y completo, en uno o dos párrafos, adecuado para entornos hospitalarios.'
+      'Clinical analysis of the case: professional, clear, and complete, in one or two paragraphs, suitable for hospital settings, in spanish.'
     ),
   focusedAnalysis: z
     .string()
     .describe(
-      'Un resumen muy breve y enfocado (2-3 líneas máximo) que resuma los hallazgos más críticos, la lista de problemas principales o la impresión diagnóstica primaria.'
+      'A very brief and focused summary (maximum 2–3 lines) highlighting the most critical findings, main problem list, or primary diagnostic impression, in spanish.'
     ),
 });
 export type GenerateClinicalAnalysisOutput = z.infer<
@@ -54,17 +54,17 @@ export async function generateClinicalAnalysis(
     name: `generateClinicalAnalysisPrompt_${Date.now()}`,
     input: {schema: GenerateClinicalAnalysisInputSchema},
     output: {schema: GenerateClinicalAnalysisOutputSchema},
-    prompt: `Eres un médico experto. Basado en el siguiente resumen de información clave, tu tarea es doble:
+    prompt: `You are an expert physician. Based on the following summary of key information, your task is twofold:
 
-1.  **Generar un Análisis Clínico Completo:** Redacta un análisis del caso que sea profesional, claro y completo, en uno o dos párrafos. Debe ser adecuado para un entorno hospitalario, como si estuvieras presentando el caso a colegas. Enfócate en los aspectos más relevantes, implicaciones potenciales y una evaluación estructurada.
-2.  **Generar un Análisis Enfocado:** Redacta un resumen muy breve y directo (máximo 2-3 líneas) que sintetice los hallazgos más críticos, la lista de problemas o la impresión diagnóstica principal.
+1.  **Generate a Complete Clinical Analysis**: Write a case analysis that is professional, clear, and comprehensive, in one or two paragraphs. It should be suitable for a hospital setting, as if you were presenting the case to colleagues. Focus on the most relevant aspects, potential implications, and a structured assessment.
+2.  **Generate a Focused Analysis**: Write a very brief and direct summary (maximum 2–3 lines) that synthesizes the most critical findings, the problem list, or the primary diagnostic impression.
 
-La salida debe estar en español y seguir el esquema de salida proporcionado.
+The output must be in Spanish and follow the provided output format.
 
-Resumen Clínico:
+Clinical Summary:
 {{{clinicalSummary}}}
 
-Genera ambos análisis:
+Generate both analyses:
 `,
   });
 

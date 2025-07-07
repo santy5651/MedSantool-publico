@@ -47,12 +47,12 @@ export async function improveMedicalWriting(
     name: `improveMedicalWritingPrompt_${Date.now()}`,
     input: {schema: ImproveMedicalWritingInputSchema},
     output: {schema: ImproveMedicalWritingOutputSchema},
-    prompt: `Eres un asistente experto en redacción médica. Tu tarea es tomar el siguiente texto clínico, que puede ser una idea, una nota breve o un borrador, y mejorarlo significativamente.
-  Debes ampliarlo, corregir la gramática y la ortografía, y reescribirlo para que siga un estilo de redacción médica profesional, claro y formal.
-  Además, estructura el texto de una manera lógica y coherente, similar a una sección de "Enfermedad Actual" en una historia clínica, organizando la información de forma cronológica o por sistemas si es apropiado.
-  La salida debe estar en español.
+    prompt: `You are an expert assistant in medical writing. Your task is to take the following clinical text—which may be an idea, a brief note, or a draft—and significantly improve it.
+You must expand it, correct grammar and spelling, and rewrite it to follow a professional, clear, and formal medical writing style.
+Additionally, structure the text in a logical and coherent manner, similar to a "History of present illness" section in a medical history, organizing the information chronologically or by systems if appropriate.
+The output must be in Spanish.
 
-  Texto a mejorar: {{{clinicalText}}}
+  Text to improve: {{{clinicalText}}}
   `,
   });
 
