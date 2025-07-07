@@ -216,11 +216,11 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
         <div className="flex space-x-2">
           <Button onClick={handleGenerateAnalysis} disabled={!String(clinicalAnalysisInput || '').trim() || isGeneratingClinicalAnalysis} className="flex-1">
             <Brain className="mr-2 h-4 w-4" />
-            Generar Análisis Clínico
+            Generar Análisis
           </Button>
           <Button onClick={handleClearModule} variant="outline" disabled={isGeneratingClinicalAnalysis} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
-            Limpiar Análisis
+            Limpiar
           </Button>
         </div>
 
@@ -237,7 +237,7 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
                 />
                 <Button onClick={() => handleCopyToClipboard(generatedClinicalAnalysis.focusedAnalysis, 'Enfocado')} variant="outline" size="sm">
                   <Copy className="mr-2 h-4 w-4" />
-                  Copiar Análisis Enfocado
+                  Copiar Resumen
                 </Button>
               </div>
             )}
@@ -254,11 +254,11 @@ export function ClinicalAnalysisModule({ id }: ClinicalAnalysisModuleProps) {
                 <div className="flex space-x-2">
                    <Button onClick={() => handleCopyToClipboard(generatedClinicalAnalysis.comprehensiveAnalysis, 'Completo')} variant="outline" size="sm">
                     <Copy className="mr-2 h-4 w-4" />
-                    Copiar Análisis Completo
+                    Copiar Análisis
                   </Button>
                   <Button onClick={handleSendToDiagnosis} variant="default" size="sm">
                     <Send className="mr-2 h-4 w-4" />
-                    Usar Análisis Completo en Diagnóstico
+                    Usar en Diagnóstico
                   </Button>
                 </div>
               </div>

@@ -292,11 +292,11 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
         <div className="flex space-x-2">
           <Button onClick={handleImproveWriting} disabled={!String(clinicalNotesInput || '').trim() || isTextAnalyzing || isGeneratingInterrogationQuestions} className="flex-1">
             <ClipboardEdit className="mr-2 h-4 w-4" />
-            Mejorar Redacción
+            Mejorar
           </Button>
           <Button onClick={handleClearText} variant="outline" disabled={isTextAnalyzing || isGeneratingInterrogationQuestions} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
-            Limpiar Texto
+            Limpiar
           </Button>
         </div>
 
@@ -312,7 +312,7 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
             <div className="flex flex-wrap items-center gap-2">
               <Button onClick={() => handleCopyToClipboard('improvedText')} variant="outline" size="sm" disabled={(textAnalysisSummary === null || textAnalysisSummary.trim() === '')}>
                 <Copy className="mr-2 h-4 w-4" />
-                Copiar Texto
+                Copiar
               </Button>
               <Button 
                 onClick={handleSendTextToDiagnosis} 
@@ -345,7 +345,7 @@ export function TextAnalysisModule({ id }: TextAnalysisModuleProps) {
                   <div className="flex w-full justify-end">
                     <div className={cn(buttonVariants({ variant: 'ghost' }), "inline-flex items-center")}>
                       <HelpCircle className="mr-2 h-4 w-4" />
-                      Sugerir Preguntas de Interrogatorio
+                      Sugerir Preguntas
                     </div>
                   </div>
                 </AccordionTrigger>

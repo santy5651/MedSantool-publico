@@ -186,11 +186,11 @@ export function MedicalJustificationModule({ id }: MedicalJustificationModulePro
         <div className="flex space-x-2">
           <Button onClick={handleGenerateJustification} disabled={!canGenerate || isGeneratingJustification} className="flex-1">
             <MessageCircleMore className="mr-2 h-4 w-4" />
-            Generar Justificación
+            Generar
           </Button>
           <Button onClick={handleClearModule} variant="outline" disabled={isGeneratingJustification} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
-            Limpiar Campos
+            Limpiar
           </Button>
         </div>
 
@@ -208,7 +208,7 @@ export function MedicalJustificationModule({ id }: MedicalJustificationModulePro
             <div className="flex space-x-2">
                <Button onClick={handleCopyToClipboard} variant="outline" size="sm" disabled={isGeneratingJustification || !generatedJustification.justificationText}>
                 <Copy className="mr-2 h-4 w-4" />
-                Copiar Justificación
+                Copiar
               </Button>
             </div>
           </div>

@@ -253,11 +253,11 @@ export function DiagnosisSupportModule({ id }: DiagnosisSupportModuleProps) {
         <div className="flex space-x-2">
           <Button onClick={handleSuggestDiagnosis} disabled={!String(diagnosisInputData || '').trim() || isDiagnosing} className="flex-1">
             <Stethoscope className="mr-2 h-4 w-4" />
-            Sugerir Diagnósticos
+            Sugerir
           </Button>
           <Button onClick={handleClearData} variant="outline" disabled={isDiagnosing} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
-            Limpiar Datos
+            Limpiar
           </Button>
         </div>
 
@@ -306,7 +306,7 @@ export function DiagnosisSupportModule({ id }: DiagnosisSupportModuleProps) {
               className="w-full"
             >
               <Send className="mr-2 h-4 w-4" />
-              Usar Dx. Validados en Plan Terapéutico
+              Usar en Plan
             </Button>
           </div>
         )}

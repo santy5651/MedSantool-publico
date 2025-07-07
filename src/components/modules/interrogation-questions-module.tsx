@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useRef } from 'react';
@@ -163,7 +164,7 @@ export function InterrogationQuestionsModule({ id }: InterrogationQuestionsModul
                     <div className="flex space-x-2">
                         <Button onClick={handleCopyToClipboard} variant="outline" size="sm">
                             <Copy className="mr-2 h-4 w-4" />
-                            Copiar Preguntas
+                            Copiar
                         </Button>
                         <Button onClick={handleClearModule} variant="outline" size="sm">
                             <Eraser className="mr-2 h-4 w-4" />

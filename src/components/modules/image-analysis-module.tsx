@@ -243,11 +243,11 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
         <div className="flex space-x-2">
           <Button onClick={handleAnalyzeImage} disabled={!imageFile || isImageAnalyzing} className="flex-1">
             <ScanSearch className="mr-2 h-4 w-4" />
-            Analizar Radiografía
+            Analizar
           </Button>
           <Button onClick={handleClearSelection} variant="outline" disabled={isImageAnalyzing} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
-            Limpiar Selección
+            Limpiar
           </Button>
         </div>
 
@@ -267,7 +267,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
               </Button>
               <Button onClick={handleSendSummaryToText} variant="default" size="sm">
                 <Send className="mr-2 h-4 w-4" />
-                Usar Resumen en Comprensión de Texto
+                Usar Resumen
               </Button>
             </div>
           </div>
@@ -292,7 +292,7 @@ export function ImageAnalysisModule({ id }: ImageAnalysisModuleProps) {
               </Button>
                <Button onClick={handleSendReadingToText} variant="default" size="sm">
                 <Send className="mr-2 h-4 w-4" />
-                Usar Lectura en Comprensión de Texto
+                Usar Lectura
               </Button>
             </div>
           </div>

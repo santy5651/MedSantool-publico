@@ -231,7 +231,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
 
             <Button onClick={handleGenerateExam} disabled={selectedDiagnoses.length === 0 || isGeneratingPhysicalExam} className="w-full">
                 <Stethoscope className="mr-2 h-4 w-4" />
-                Sugerir Hallazgos de Examen Físico
+                Sugerir Hallazgos
             </Button>
 
             {generatedPhysicalExam && (
@@ -246,7 +246,7 @@ export function PhysicalExamModule({ id }: PhysicalExamModuleProps) {
                     <div className="flex space-x-2">
                         <Button onClick={handleCopyToClipboard} variant="outline" size="sm">
                             <Copy className="mr-2 h-4 w-4" />
-                            Copiar Hallazgos
+                            Copiar
                         </Button>
                         <Button onClick={handleClearModule} variant="outline" size="sm">
                             <Eraser className="mr-2 h-4 w-4" />

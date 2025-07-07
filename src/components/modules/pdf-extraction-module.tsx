@@ -166,11 +166,11 @@ export function PdfExtractionModule({ id }: PdfExtractionModuleProps) {
         <div className="flex space-x-2">
           <Button onClick={handleAnalyzeDocument} disabled={!pdfFile || isPdfExtracting} className="flex-1">
             <FileText className="mr-2 h-4 w-4" />
-            Analizar Documento
+            Analizar
           </Button>
           <Button onClick={handleClearSelection} variant="outline" disabled={isPdfExtracting} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
-            Limpiar Selección
+            Limpiar
           </Button>
         </div>
 
@@ -205,7 +205,7 @@ export function PdfExtractionModule({ id }: PdfExtractionModuleProps) {
             />
             <Button onClick={handleSendNotesToText} variant="default" size="sm">
               <Send className="mr-2 h-4 w-4" />
-              Usar Notas para Comprensión de Texto
+              Usar Notas
             </Button>
           </div>
         )}

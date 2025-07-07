@@ -212,11 +212,11 @@ export function DischargeSummaryModule({ id }: DischargeSummaryModuleProps) {
         <div className="flex space-x-2">
           <Button onClick={handleGenerateSummary} disabled={isGeneratingDischargeSummary} className="flex-1">
             <FileOutput className="mr-2 h-4 w-4" />
-            Generar Resumen de Egreso
+            Generar
           </Button>
           <Button onClick={handleClearModule} variant="outline" disabled={isGeneratingDischargeSummary} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
-            Limpiar Campos
+            Limpiar
           </Button>
         </div>
 
@@ -234,7 +234,7 @@ export function DischargeSummaryModule({ id }: DischargeSummaryModuleProps) {
             <div className="flex space-x-2">
                <Button onClick={handleCopyToClipboard} variant="outline" size="sm" disabled={isGeneratingDischargeSummary || !generatedDischargeSummary.generatedSummary}>
                 <Copy className="mr-2 h-4 w-4" />
-                Copiar Resumen
+                Copiar
               </Button>
             </div>
           </div>

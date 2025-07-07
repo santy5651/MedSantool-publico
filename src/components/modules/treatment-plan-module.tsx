@@ -187,7 +187,7 @@ export function TreatmentPlanModule({ id }: TreatmentPlanModuleProps) {
         <div className="flex space-x-2">
           <Button onClick={handleSuggestPlan} disabled={!canGenerate || isGeneratingTreatmentPlan} className="flex-1">
             <ClipboardPlus className="mr-2 h-4 w-4" />
-            Sugerir Plan Terapéutico
+            Sugerir Plan
           </Button>
           <Button onClick={handleClearModule} variant="outline" disabled={isGeneratingTreatmentPlan} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
@@ -208,7 +208,7 @@ export function TreatmentPlanModule({ id }: TreatmentPlanModuleProps) {
             <div className="flex space-x-2">
                <Button onClick={handleCopyToClipboard} variant="outline" size="sm" disabled={isGeneratingTreatmentPlan || !generatedTreatmentPlan.suggestedPlanText}>
                 <Copy className="mr-2 h-4 w-4" />
-                Copiar Sugerencias
+                Copiar
               </Button>
             </div>
           </div>

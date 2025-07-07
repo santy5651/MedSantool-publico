@@ -239,7 +239,7 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
     const textToCopy = medicalOrderOutput.generatedOrderText;
     if (textToCopy) {
       navigator.clipboard.writeText(textToCopy)
-        .then(() => toast({ title: "Copiado al Portapapeles", description: "Las órdenes médicas generadas han sido copiadas." }))
+        .then(() => toast({ title: "Órdenes Copiadas", description: "Las órdenes médicas generadas han sido copiadas." }))
         .catch(() => toast({ title: "Error al Copiar", variant: "destructive" }));
     } else {
       toast({ title: "Nada que Copiar", description: "No hay órdenes generadas para copiar." });
@@ -510,11 +510,11 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <Button onClick={handleGenerateOrder} disabled={isGeneratingMedicalOrder || !medicalOrderInputs.orderType || !medicalOrderInputs.transferConditions} className="flex-1">
             <FileEdit className="mr-2 h-4 w-4" />
-            Generar Órdenes
+            Generar
           </Button>
           <Button onClick={handleClearSelection} variant="outline" disabled={isGeneratingMedicalOrder} className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
-            Limpiar Campos
+            Limpiar
           </Button>
         </div>
 
@@ -532,7 +532,7 @@ export function MedicalOrdersModule({ id }: MedicalOrdersModuleProps) {
             <div className="flex flex-wrap gap-2">
               <Button onClick={handleCopyToClipboard} variant="outline" size="sm" disabled={isGeneratingMedicalOrder}>
                 <ClipboardCopy className="mr-2 h-4 w-4" />
-                Copiar Selección
+                Copiar
               </Button>
               <Button onClick={handleCapitalizeSentenceCase} variant="outline" size="sm" disabled={isGeneratingMedicalOrder}>
                 <Baseline className="mr-2 h-4 w-4" /> 

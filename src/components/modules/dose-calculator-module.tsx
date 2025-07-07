@@ -529,11 +529,11 @@ export function DoseCalculatorModule({ id }: DoseCalculatorModuleProps) {
         <div className="flex space-x-2">
           <Button onClick={performCalculations} disabled={isCalculatingDose || !doseCalculatorInputs.patientWeight || (!doseCalculatorInputs.selectedMedication && !doseCalculatorInputs.medicationName.trim()) || !doseCalculatorInputs.doseToUse || !doseCalculatorInputs.doseUnit } className="flex-1">
             <Calculator className="mr-2 h-4 w-4" />
-            Calcular Dosis/Infusión
+            Calcular
           </Button>
           <Button onClick={handleClear} variant="outline" className="flex-1">
             <Eraser className="mr-2 h-4 w-4" />
-            Limpiar Campos
+            Limpiar
           </Button>
         </div>
 
