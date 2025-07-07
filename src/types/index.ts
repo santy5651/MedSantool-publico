@@ -3,6 +3,7 @@ export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'I
 
 export type ActiveView = 'analysis' | 'other' | 'all';
 export type FontSize = 'small' | 'normal' | 'large';
+export type ColumnLayout = 'one' | 'two';
 
 // --- Medication Info for Dose Calculator ---
 export interface MedicationUsage {
@@ -460,4 +461,6 @@ export interface ViewContextType {
   setExpandedModuleId: (id: string | null) => void;
   fontSize: FontSize;
   setFontSize: (size: FontSize) => void;
+  columnLayout: ColumnLayout;
+  setColumnLayout: (layout: ColumnLayout) => void;
 }

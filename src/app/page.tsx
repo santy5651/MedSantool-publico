@@ -38,14 +38,14 @@ const LabStandardizerModule = dynamic(() => import('@/components/modules/lab-sta
 
 
 export default function MedSanToolsPage() {
-  const { activeView, expandedModuleId } = useView();
+  const { activeView, expandedModuleId, columnLayout } = useView();
 
   return (
     <>
       <div
         className={cn(
           "grid gap-6", 
-          expandedModuleId ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2" 
+          expandedModuleId ? "grid-cols-1" : (columnLayout === 'one' ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2")
         )}
       >
         {/* Herramientas de Análisis */}

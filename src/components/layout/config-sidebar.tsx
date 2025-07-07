@@ -16,7 +16,7 @@ export function ConfigSidebar() {
   const [openTooltipId, setOpenTooltipId] = useState<string | null>(null);
   const { openKeyModal } = useApiKey();
   const { theme, setTheme } = useTheme();
-  const { fontSize, setFontSize } = useView();
+  const { fontSize, setFontSize, columnLayout, setColumnLayout } = useView();
 
   const navItems = [
     { id: 'apikey', icon: KeyRound, label: 'API Key', action: openKeyModal },
@@ -113,6 +113,13 @@ export function ConfigSidebar() {
                             <Button variant={fontSize === 'small' ? 'secondary' : 'ghost'} size="sm" className="h-auto py-1 w-full justify-start" onClick={() => setFontSize('small')}>Pequeña</Button>
                             <Button variant={fontSize === 'normal' ? 'secondary' : 'ghost'} size="sm" className="h-auto py-1 w-full justify-start" onClick={() => setFontSize('normal')}>Normal</Button>
                             <Button variant={fontSize === 'large' ? 'secondary' : 'ghost'} size="sm" className="h-auto py-1 w-full justify-start" onClick={() => setFontSize('large')}>Grande</Button>
+                          </div>
+                      </div>
+                      <div>
+                          <p className="font-medium mb-2">Disposición</p>
+                          <div className="flex flex-col gap-1">
+                            <Button variant={columnLayout === 'one' ? 'secondary' : 'ghost'} size="sm" className="h-auto py-1 w-full justify-start" onClick={() => setColumnLayout('one')}>Una Columna</Button>
+                            <Button variant={columnLayout === 'two' ? 'secondary' : 'ghost'} size="sm" className="h-auto py-1 w-full justify-start" onClick={() => setColumnLayout('two')}>Dos Columnas</Button>
                           </div>
                       </div>
                   </div>
