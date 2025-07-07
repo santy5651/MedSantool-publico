@@ -105,7 +105,7 @@ export function ConfigSidebar() {
                 </TooltipContent>
               </Tooltip>
               <AccordionContent className="pt-2 pb-0">
-                  <div className={cn("pl-[1.125rem] pr-2 space-y-4 text-sm text-sidebar-config-foreground/80 transition-opacity duration-200", isExpanded ? "opacity-100" : "opacity-0")}>
+                  <div className={cn("pl-[1.125rem] pr-2 space-y-4 text-sm text-sidebar-config-foreground/80")}>
                       <div>
                           <p className="font-medium mb-2">Tema</p>
                           <div className="flex justify-around gap-1">
