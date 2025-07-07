@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -55,16 +56,17 @@ export default {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
-        sidebar: {
-          DEFAULT: 'hsl(var(--sidebar-background))',
-          foreground: 'hsl(var(--sidebar-foreground))',
-          primary: 'hsl(var(--sidebar-primary))',
-          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-          accent: 'hsl(var(--sidebar-accent))',
-          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-          border: 'hsl(var(--sidebar-border))',
-          ring: 'hsl(var(--sidebar-ring))',
+        'sidebar-config': {
+          DEFAULT: 'hsl(var(--sidebar-config-background))',
+          foreground: 'hsl(var(--sidebar-config-foreground))',
+          accent: 'hsl(var(--sidebar-config-accent))',
+          'accent-foreground': 'hsl(var(--sidebar-config-accent-foreground))',
         },
+        'sidebar-functions': {
+          DEFAULT: 'hsl(var(--sidebar-functions-background))',
+          foreground: 'hsl(var(--sidebar-functions-foreground))',
+        },
+        'sidebar-border': 'hsl(var(--sidebar-border-color))',
       },
       borderRadius: {
         lg: 'var(--radius)',

@@ -7,6 +7,8 @@ import { AppHeader } from '@/components/layout/app-header';
 import { AppFooter } from '@/components/layout/app-footer';
 import { ViewContextLayoutClient } from '@/components/layout/view-context-layout-client';
 import { ApiKeyDialog } from '@/components/common/api-key-dialog';
+import { ConfigSidebar } from '@/components/layout/config-sidebar';
+import { FunctionsSidebar } from '@/components/layout/functions-sidebar';
 
 
 export const metadata: Metadata = {
@@ -29,15 +31,19 @@ export default function RootLayout({
       </head>
       <body>
         <AppProviders>
-          <ViewContextLayoutClient>
-            <AppHeader />
-            <main className="flex-grow container mx-auto px-4 py-8">
-              {children}
-            </main>
-            <AppFooter />
-            <Toaster />
-            <ApiKeyDialog />
-          </ViewContextLayoutClient>
+          <div className="flex min-h-screen w-full">
+            <ConfigSidebar />
+            <FunctionsSidebar />
+            <ViewContextLayoutClient>
+              <AppHeader />
+              <main className="flex-grow p-4 md:p-6 bg-muted/20">
+                {children}
+              </main>
+              <AppFooter />
+            </ViewContextLayoutClient>
+          </div>
+          <Toaster />
+          <ApiKeyDialog />
         </AppProviders>
       </body>
     </html>
