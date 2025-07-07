@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -39,12 +38,17 @@ export function ConfigSidebar() {
                 <button
                   onClick={item.action}
                   className={cn(
-                    "flex h-12 items-center rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground",
+                    "flex h-12 items-center rounded-lg text-sidebar-config-foreground transition-colors hover:bg-sidebar-config-accent hover:text-sidebar-config-accent-foreground overflow-hidden",
                     isExpanded ? "w-full justify-start px-3" : "w-12 justify-center"
                   )}
                 >
                   <item.icon className="h-6 w-6 shrink-0" />
-                  <span className={cn('ml-4 text-sm font-medium whitespace-nowrap transition-opacity duration-200 ease-in-out', isExpanded ? 'opacity-100' : 'opacity-0')}>
+                  <span
+                    className={cn(
+                      "text-sm font-medium whitespace-nowrap transition-all duration-300 ease-in-out",
+                      isExpanded ? "ml-4 opacity-100" : "ml-0 w-0 opacity-0"
+                    )}
+                  >
                     {item.label}
                   </span>
                 </button>
