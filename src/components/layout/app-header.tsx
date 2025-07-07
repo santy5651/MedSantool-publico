@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
+import { TextFormatPopover } from '@/components/common/text-format-popover';
 
 export function AppHeader() {
   const { clearAllModules } = useClinicalData();
@@ -41,6 +42,7 @@ export function AppHeader() {
         </Link>
       </div>
       <div className="ml-auto flex items-center gap-2">
+        <TextFormatPopover />
         <AlertDialog open={showClearAllConfirm} onOpenChange={setShowClearAllConfirm}>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" size="sm">
