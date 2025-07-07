@@ -30,7 +30,10 @@ export function ConfigSidebar() {
       className="hidden md:flex fixed left-0 top-0 z-50 h-screen bg-sidebar-config text-sidebar-config-foreground transition-all duration-300 ease-in-out flex-col border-r border-sidebar-border"
       style={{ width: isExpanded ? '16rem' : '4rem' }}
       onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
+      onMouseLeave={() => {
+        setIsExpanded(false);
+        setOpenTooltipId(null);
+      }}
     >
       <nav className="flex flex-col items-center gap-2 px-2 py-4 mt-16">
         <TooltipProvider delayDuration={0}>
