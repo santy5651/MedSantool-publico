@@ -4,6 +4,7 @@
 import { useView } from '@/contexts/view-context';
 import { Button } from '@/components/ui/button';
 import { useRouter, usePathname } from 'next/navigation';
+import type { ActiveView } from '@/types';
 
 export function FunctionsSidebar() {
   const { activeView, setActiveView } = useView();
@@ -11,12 +12,14 @@ export function FunctionsSidebar() {
   const pathname = usePathname();
 
   const navItems = [
+    { view: 'consultorio', label: 'Flujo de Consultorio' },
+    { view: 'egreso', label: 'Flujo de Egreso' },
     { view: 'analysis', label: 'Herramientas de Análisis' },
     { view: 'other', label: 'Otras Herramientas' },
     { view: 'all', label: 'Mostrar Todas' },
   ];
 
-  const handleNav = (view: 'analysis' | 'other' | 'all') => {
+  const handleNav = (view: ActiveView) => {
     setActiveView(view);
     if (pathname !== '/') {
         router.push('/');
@@ -30,7 +33,7 @@ export function FunctionsSidebar() {
         {navItems.map((item) => (
             <Button
               key={item.view}
-              onClick={() => handleNav(item.view as 'analysis' | 'other' | 'all')}
+              onClick={() => handleNav(item.view as ActiveView)}
               variant={activeView === item.view && pathname === '/' ? 'secondary' : 'ghost'}
               className="w-full justify-start text-base py-6"
             >

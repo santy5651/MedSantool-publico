@@ -1,9 +1,10 @@
 
 
 
+
 export type ModuleType = 'ImageAnalysis' | 'PdfExtraction' | 'TextAnalysis' | 'InterrogationQuestions' | 'PhysicalExam' | 'ClinicalAnalysis' | 'DiagnosisSupport' | 'MedicalOrders' | 'TreatmentPlanSuggestion' | 'PatientAdvice' | 'MedicalJustification' | 'MedicalAssistantChat' | 'DoseCalculator' | 'DischargeSummary' | 'LabStandardizer';
 
-export type ActiveView = 'analysis' | 'other' | 'all';
+export type ActiveView = 'analysis' | 'other' | 'all' | 'consultorio' | 'egreso';
 export type FontSize = 'small' | 'normal' | 'large';
 export type ColumnLayout = 'one' | 'two';
 

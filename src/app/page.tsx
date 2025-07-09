@@ -40,6 +40,21 @@ const LabStandardizerModule = dynamic(() => import('@/components/modules/lab-sta
 export default function MedSanToolsPage() {
   const { activeView, expandedModuleId, columnLayout } = useView();
 
+  const consultorioModules = ['text-analysis-module', 'clinical-analysis-module', 'diagnosis-support-module', 'physical-exam-module', 'treatment-plan-module', 'medical-orders-module'];
+  const egresoModules = ['diagnosis-support-module', 'patient-advice-module', 'discharge-summary-module'];
+  const analysisModules = ['text-analysis-module', 'clinical-analysis-module', 'diagnosis-support-module', 'physical-exam-module', 'treatment-plan-module', 'medical-orders-module', 'patient-advice-module', 'discharge-summary-module'];
+  const otherModules = ['pdf-extraction-module', 'image-analysis-module', 'lab-standardizer-module', 'medical-justification-module', 'medical-assistant-chat-module', 'dose-calculator-module'];
+
+  const shouldShow = (view: typeof activeView, moduleId: string) => {
+    if (expandedModuleId) return expandedModuleId === moduleId;
+    if (view === 'all') return true;
+    if (view === 'consultorio') return consultorioModules.includes(moduleId);
+    if (view === 'egreso') return egresoModules.includes(moduleId);
+    if (view === 'analysis') return analysisModules.includes(moduleId);
+    if (view === 'other') return otherModules.includes(moduleId);
+    return false;
+  };
+
   return (
     <>
       <div
@@ -48,23 +63,21 @@ export default function MedSanToolsPage() {
           expandedModuleId ? "grid-cols-1" : (columnLayout === 'one' ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2")
         )}
       >
-        {/* Herramientas de Análisis */}
-        { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'text-analysis-module') && <TextAnalysisModule id="text-analysis-module" /> }
-        { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'clinical-analysis-module') && <ClinicalAnalysisModule id="clinical-analysis-module" /> }
-        { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'diagnosis-support-module') && <DiagnosisSupportModule id="diagnosis-support-module" /> }
-        { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'physical-exam-module') && <PhysicalExamModule id="physical-exam-module" /> }
-        { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'treatment-plan-module') && <TreatmentPlanModule id="treatment-plan-module" /> }
-        { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'medical-orders-module') && <MedicalOrdersModule id="medical-orders-module" /> }
-        { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'patient-advice-module') && <PatientAdviceModule id="patient-advice-module" /> }
-        { (activeView === 'analysis' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'discharge-summary-module') && <DischargeSummaryModule id="discharge-summary-module" /> }
+        { shouldShow(activeView, 'text-analysis-module') && <TextAnalysisModule id="text-analysis-module" /> }
+        { shouldShow(activeView, 'clinical-analysis-module') && <ClinicalAnalysisModule id="clinical-analysis-module" /> }
+        { shouldShow(activeView, 'diagnosis-support-module') && <DiagnosisSupportModule id="diagnosis-support-module" /> }
+        { shouldShow(activeView, 'physical-exam-module') && <PhysicalExamModule id="physical-exam-module" /> }
+        { shouldShow(activeView, 'treatment-plan-module') && <TreatmentPlanModule id="treatment-plan-module" /> }
+        { shouldShow(activeView, 'medical-orders-module') && <MedicalOrdersModule id="medical-orders-module" /> }
+        { shouldShow(activeView, 'patient-advice-module') && <PatientAdviceModule id="patient-advice-module" /> }
+        { shouldShow(activeView, 'discharge-summary-module') && <DischargeSummaryModule id="discharge-summary-module" /> }
         
-        {/* Otras Herramientas */}
-        { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'pdf-extraction-module') && <PdfExtractionModule id="pdf-extraction-module" /> }
-        { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'image-analysis-module') && <ImageAnalysisModule id="image-analysis-module" /> }
-        { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'lab-standardizer-module') && <LabStandardizerModule id="lab-standardizer-module" /> }
-        { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'medical-justification-module') && <MedicalJustificationModule id="medical-justification-module" /> }
-        { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'medical-assistant-chat-module') && <MedicalAssistantChatModule id="medical-assistant-chat-module" /> }
-        { (activeView === 'other' || activeView === 'all') && (!expandedModuleId || expandedModuleId === 'dose-calculator-module') && <DoseCalculatorModule id="dose-calculator-module" /> }
+        { shouldShow(activeView, 'pdf-extraction-module') && <PdfExtractionModule id="pdf-extraction-module" /> }
+        { shouldShow(activeView, 'image-analysis-module') && <ImageAnalysisModule id="image-analysis-module" /> }
+        { shouldShow(activeView, 'lab-standardizer-module') && <LabStandardizerModule id="lab-standardizer-module" /> }
+        { shouldShow(activeView, 'medical-justification-module') && <MedicalJustificationModule id="medical-justification-module" /> }
+        { shouldShow(activeView, 'medical-assistant-chat-module') && <MedicalAssistantChatModule id="medical-assistant-chat-module" /> }
+        { shouldShow(activeView, 'dose-calculator-module') && <DoseCalculatorModule id="dose-calculator-module" /> }
       </div>
 
       {/* History Module Section - se muestra siempre abajo y a todo lo ancho */}

@@ -5,11 +5,12 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useCa
 
 const FONT_SIZE_STORAGE_KEY = 'medsantools-font-size-preference';
 const COLUMN_LAYOUT_STORAGE_KEY = 'medsantools-column-layout-preference';
+const ACTIVE_VIEW_STORAGE_KEY = 'medsantools-active-view-preference';
 
 const ViewContext = createContext<GlobalViewContextType | undefined>(undefined);
 
 export const ViewProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [activeView, setActiveView] = useState<ActiveView>('analysis');
+  const [activeView, setActiveViewState] = useState<ActiveView>('consultorio');
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
   const [fontSize, setFontSizeState] = useState<FontSize>('normal');
   const [columnLayout, setColumnLayoutState] = useState<ColumnLayout>('two');
@@ -23,6 +24,10 @@ export const ViewProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (storedColumnLayout && ['one', 'two'].includes(storedColumnLayout)) {
         setColumnLayoutState(storedColumnLayout);
     }
+    const storedActiveView = localStorage.getItem(ACTIVE_VIEW_STORAGE_KEY) as ActiveView | null;
+    if (storedActiveView) {
+      setActiveViewState(storedActiveView);
+    }
   }, []);
 
   const setFontSize = useCallback((size: FontSize) => {
@@ -35,12 +40,13 @@ export const ViewProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem(COLUMN_LAYOUT_STORAGE_KEY, layout);
   }, []);
 
-  const handleSetActiveView = (view: ActiveView) => {
-      setActiveView(view);
-  }
+  const setActiveView = useCallback((view: ActiveView) => {
+      setActiveViewState(view);
+      localStorage.setItem(ACTIVE_VIEW_STORAGE_KEY, view);
+  }, []);
 
   return (
-    <ViewContext.Provider value={{ activeView, setActiveView: handleSetActiveView, expandedModuleId, setExpandedModuleId, fontSize, setFontSize, columnLayout, setColumnLayout }}>
+    <ViewContext.Provider value={{ activeView, setActiveView, expandedModuleId, setExpandedModuleId, fontSize, setFontSize, columnLayout, setColumnLayout }}>
       {children}
     </ViewContext.Provider>
   );
